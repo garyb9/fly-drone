@@ -101,6 +101,20 @@ try {
   assert.equal(await text(page, "#episode"), episode);
   passed.push("reconnect keeps the running simulation (same episode, tick continues)");
 
+  await page.selectOption("#task", "looming");
+  await page.selectOption("#ablation", "sensory");
+  await page.fill("#seed", "1003");
+  await page.getByRole("button", { name: "Run trial" }).click();
+  await page.waitForFunction(() => {
+    const trial = document.querySelector("#trial")?.textContent ?? "";
+    return trial.includes("SEED 1003") && trial.includes("LOOMING") && trial.includes("SENSORY");
+  });
+  await page.waitForFunction(() =>
+    (document.querySelector("#outcome")?.textContent ?? "").includes("obstacle"),
+  );
+  assert.ok((await page.locator("#report option").count()) >= 1);
+  passed.push("trial reset with seed/task/ablation and live looming outcome");
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: join(tmpdir(), "fly-drone-mobile.png"), fullPage: true });
   assert.equal(

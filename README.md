@@ -62,6 +62,28 @@ trained brain against zeroed features, silenced visual inputs and shuffled featu
 
 ## Interact
 
+### Trials and evaluation replay
+
+Panel **05 · Trials & Replay** re-runs any evaluation episode exactly. Seeds fully determine
+target placement, obstacle launch, brain noise and rendering on one machine.
+
+1. Start the service with the policies you want to watch (this skips the extension rebuild):
+   ```bash
+   scripts/venv.sh fly-drone serve --policy runs/<steering-run>/actor.json \
+       --looming-policy runs/<looming-run>/actor.json
+   ```
+2. **Run a trial:** choose the task (steer to target / dodge obstacle), the brain condition
+   (intact, zeroed features, vision silenced, shuffled features) and a seed, then press
+   **Run trial**.
+3. **Replay an evaluation:** pick any `evaluation*.json` under `runs/` or `docs/results/`. Its seeds
+   appear as pass/fail buttons for the selected condition. Clicking one loads that report's policy
+   and replays the episode. The outcome line shows live bearing or obstacle distance, then
+   PASSED/FAILED using the same rules as `fly-drone evaluate`.
+
+Only `.json` actors under `runs/` or `docs/results/` can be loaded from the browser.
+
+### Scene controls
+
 - Orbit/zoom the main scene, or follow the drone.
 - Pause or reset all clocks and bodies together.
 - Move the visual target left/centre/right, and place an obstacle ahead.

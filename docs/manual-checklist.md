@@ -74,6 +74,13 @@ Last full pass: 2026-09-13, commit `f272977` (Playwright 1.63 / Chromium, PID ba
       without errors.
 - [x] The service rejects unrelated WebSocket origins (`test_server.py::test_service_rejects_unrelated_origin`).
 - [x] 390 px mobile layout has no horizontal scroll.
+- [x] Trials: reset accepts seed, task and ablation; frames report them with a live outcome; policy
+      paths outside `runs/` and `docs/results/` are rejected
+      (`test_server.py::test_replay_reset_task_ablation_and_policy_guard`; `yarn browser:check`).
+- [x] Illustrative fly stays in view under steady tonic power (20 s, within 2 m of home)
+      (`test_env.py::test_fly_stays_in_view_under_tonic_power`).
+- [ ] Replaying a failed evaluation seed visibly reproduces the failure (e.g. a turn that stalls, or
+      a collision). Needs a human eye.
 - [ ] Silencing a displayed neuron visibly dims it in the Living Graph. Needs a human eye; the
       browser check only asserts the command is accepted.
 - [ ] With `yarn dev:policy <actor.json>`, moving the target Left/Right turns the drone towards
