@@ -22,6 +22,10 @@ class ArenaSpec:
     floor_luma: float = 0.35
     pillar_slots: int = 16
     pillar_radius: float = 0.3
+    # None: whole pillar near-black. A height: grey pillar with a dark ring at eye level,
+    # so distant pillars sweeping past during turns stay below the loom threshold.
+    pillar_ring: float | None = None
+    pillar_luma: float = 0.35
     pillar_height: float = 3.0
     pillar_spacing: float = 2.5
     spawn_clear: float = 2.0

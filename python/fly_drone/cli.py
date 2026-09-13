@@ -55,8 +55,21 @@ def main():
     p.add_argument("--hover-episodes", type=int, default=5)
     p.add_argument("--hover-seconds", type=float, default=30)
     p.add_argument("--task", choices=list(TASKS), default="visual")
+    p = sub.add_parser("roam-feasibility")
+    p.add_argument("--output", default="runs/roam-feasibility.json")
+    p.add_argument("--episodes", type=int, default=20)
+    p.add_argument("--seconds", type=float, default=120)
+    p.add_argument("--workers", type=int, default=16)
+    p.add_argument("--level", type=int, default=3)
     args = parser.parse_args()
-    if args.command == "serve":
+    if args.command == "roam-feasibility":
+        from .feasibility import run
+
+        report = run(args.output, args.episodes, args.seconds, args.workers, args.level)
+        print(
+            json.dumps({"sensors": report["sensors"], "gate": report["gate"]}, indent=2)
+        )
+    elif args.command == "serve":
         import uvicorn
 
         from .server import make_app

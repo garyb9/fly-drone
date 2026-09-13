@@ -148,6 +148,12 @@ class DronePlant(BaseAviary):
         # the computed extent and blind the eyes within ~0.5-1.8 m; pin it to the legacy
         # room's 17 m (near clip 0.17 m).
         ET.SubElement(xml, "statistic", extent="17", center="0 0 1")
+        # Flat lighting: with 0.3 ambient / 0.6 diffuse, grey walls and pillars seen at
+        # grazing angles render below the 0.18 dark threshold, and every turn read as
+        # looming (59% of frames with nothing dark in the room; 0% with this setting).
+        xml.find("visual/headlight").attrib.update(
+            ambient="0.6 0.6 0.6", diffuse="0.3 0.3 0.3"
+        )
         xml.find("asset/material[@name='groundplane']").set("reflectance", "0")
         ET.SubElement(
             xml.find("asset"),
@@ -220,14 +226,28 @@ class DronePlant(BaseAviary):
                 mocap="true",
                 pos=f"0 0 {PARK_Z}",
             )
+            dark = "0.03 0.03 0.04 1"
             ET.SubElement(
                 pillar,
                 "geom",
                 name=f"pillar_{i}",
                 type="cylinder",
                 size=f"{spec.pillar_radius} {spec.pillar_height / 2}",
-                rgba="0.03 0.03 0.04 1",
+                rgba=dark if spec.pillar_ring is None else _grey(spec.pillar_luma),
             )
+            if spec.pillar_ring is not None:
+                # Visual only; the body offset puts the ring centre at z = 1 m.
+                ET.SubElement(
+                    pillar,
+                    "geom",
+                    name=f"pillar_{i}_ring",
+                    type="cylinder",
+                    pos=f"0 0 {1.0 - spec.pillar_height / 2}",
+                    size=f"{spec.pillar_radius + 0.005} {spec.pillar_ring / 2}",
+                    rgba=dark,
+                    contype="0",
+                    conaffinity="0",
+                )
 
     def reset(self, seed=None, options=None):
         obs = super().reset(seed=seed, options=options)
@@ -292,6 +312,8 @@ class DronePlant(BaseAviary):
             raise ValueError("ghost objects exist only in the free-roam arena")
         self.ghost = bool(ghost)
         names = ["obstacle"] + [f"pillar_{i}" for i in range(self.arena.pillar_slots)]
+        if self.arena.pillar_ring is not None:
+            names += [f"pillar_{i}_ring" for i in range(self.arena.pillar_slots)]
         for name in names:
             geom = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)
             self.model.geom_rgba[geom, 3] = 0.0 if self.ghost else 1.0
