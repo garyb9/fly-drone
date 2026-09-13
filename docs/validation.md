@@ -7,23 +7,50 @@ Raw reports are in [`results/`](results/). Measurements were taken on an x86-64 
 
 ## Acceptance summary
 
-| Criterion                                                  | Target                                              | Measured                                                               | Status     |
-| ---------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------- | ---------- |
-| Physics: equal thrust hovers, motor signs, lag, saturation | pass                                                | `tests/test_physics.py` (7 tests, incl. moved-obstacle contact)        | ✅         |
-| PID hover baseline, 30 s                                   | altitude RMS < 0.15 m                               | 0.000 m, all motors 14,475.8 RPM (= analytic ω_h)                      | ✅         |
-| Rust golden trace                                          | stable                                              | `golden_trace.rs` (2 tests)                                            | ✅         |
-| Python binding, reset isolation, seed replay               | pass                                                | `test_runtime.py`, `test_env.py`                                       | ✅         |
-| Export parity Rust ↔ PyTorch                               | ≤ 1e−4                                              | ≈ 4e−6                                                                 | ✅         |
-| Sensory causality (synthetic + rendered, with silencing)   | separation, silencing removes it                    | L/R Δ 0.817, silencing Δ 0.587, rendered L/R Δ 0.800, silenced Δ 0.000 | ✅         |
-| Cue sign follows target side                               | correct sign, \|Δ\| > 0.5 for \|β\| ∈ 0.1…0.6       | `test_light_cue_sign_follows_target_side`                              | ✅         |
-| Visual steering, 50 held-out seeds                         | ≥ 80%, balanced left/right ≥ 80%                    | **100%** (50/50), balanced 100%, final \|β\| 0.024 rad                 | ✅         |
-| Ablations degrade steering                                 | trained > zero, sensory, shuffle (raw and balanced) | balanced 1.00 vs 0.00 / 0.00 / 0.12                                    | ✅         |
-| Policy hover, 30 s, 5 seeds                                | settled RMS < 0.15 m                                | 0.028 m                                                                | ✅         |
-| Looming-obstacle response                                  | avoidance ≥ 80% balanced, above ablations           | training in progress                                                   | ⏳         |
-| Viewer: pause, reset, reconnect, interventions, telemetry  | pass                                                | `yarn browser:check`: 9/9                                              | ✅         |
-| Real-time loop                                             | ≥ 1× with full graph                                | 1.24× offline (was 0.72×); live server re-check pending                | ✅ offline |
+| Criterion                                                  | Target                                                    | Measured                                                               | Status     |
+| ---------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------- | ---------- |
+| Physics: equal thrust hovers, motor signs, lag, saturation | pass                                                      | `tests/test_physics.py` (7 tests, incl. moved-obstacle contact)        | ✅         |
+| PID hover baseline, 30 s                                   | altitude RMS < 0.15 m                                     | 0.000 m, all motors 14,475.8 RPM (= analytic ω_h)                      | ✅         |
+| Rust golden trace                                          | stable                                                    | `golden_trace.rs` (2 tests)                                            | ✅         |
+| Python binding, reset isolation, seed replay               | pass                                                      | `test_runtime.py`, `test_env.py`                                       | ✅         |
+| Export parity Rust ↔ PyTorch                               | ≤ 1e−4                                                    | ≈ 4e−6                                                                 | ✅         |
+| Sensory causality (synthetic + rendered, with silencing)   | separation, silencing removes it                          | L/R Δ 0.817, silencing Δ 0.587, rendered L/R Δ 0.800, silenced Δ 0.000 | ✅         |
+| Cue sign follows target side                               | correct sign, \|Δ\| > 0.5 for \|β\| ∈ 0.1…0.6             | `test_light_cue_sign_follows_target_side`                              | ✅         |
+| Visual steering, 50 held-out seeds                         | ≥ 80%, balanced left/right ≥ 80%                          | **100%** (50/50), balanced 1.00, final \|β\| 0.013 rad (encoder v4)    | ✅         |
+| Ablations degrade steering                                 | trained > zero, sensory, shuffle (raw and balanced)       | balanced 1.00 vs 0.00 / 0.00 / 0.17 (raw 1.00 vs 0.40 / 0.00 / 0.22)   | ✅         |
+| Policy hover, 30 s, 5 seeds                                | settled RMS < 0.15 m                                      | 0.020 m (encoder v4)                                                   | ✅         |
+| Looming-obstacle response                                  | threat-specific avoidance ≥ 80% balanced, above ablations | evaluation in progress (dodge-teacher warm start + PPO, encoder v4)    | ⏳         |
+| Viewer: pause, reset, reconnect, interventions, telemetry  | pass                                                      | `yarn browser:check`: 9/9                                              | ✅         |
+| Real-time loop                                             | ≥ 1× with full graph                                      | 1.24× offline (was 0.72×); live server re-check pending                | ✅ offline |
 
-## Visual steering (encoder v3) — accepted
+## Visual steering (encoder v4) — accepted
+
+Policy `runs/v4-closed-s04/actor.json`. Encoder v4 raises the loom gain from 12 to 150 (so looming
+cells fire at 1.5–2 m; see [`sensory-model.md`](sensory-model.md)). The report is
+[`results/evaluation-visual-v4.json`](results/evaluation-visual-v4.json): 50 held-out seeds × 4
+conditions plus 5 × 30 s hover, 334 s wall time.
+
+| Condition              | Success  | Left targets | Right targets | Balanced | Mean final \|β\| (rad) |
+| ---------------------- | -------- | ------------ | ------------- | -------- | ---------------------- |
+| trained                | **100%** | 100%         | 100%          | **1.00** | 0.013                  |
+| zero features          | 40%      | 0%           | 77%           | 0.00     | 0.563                  |
+| silenced visual inputs | 0%       | 0%           | 0%            | 0.00     | 0.960                  |
+| shuffled features      | 22%      | 17%          | 27%           | 0.17     | 0.899                  |
+
+Hover: settled altitude RMS 0.020 m over 5 × 30 s runs.
+
+**What broke and how it was fixed.** Retraining the v3 recipe on encoder v4 collapsed to **8%**
+steering, and even its supervised warm start failed (0/6 seeds). During closed-loop steering the
+loom cue now crosses the firing threshold in **9–15% of frames**, because turning sweeps
+dark edges through each eye. Static-frame calibration never contains that input, so a decoder fitted on
+static frames meets a different feature distribution in flight. **Closed-loop calibration**
+(`fly-drone calibrate --closed-loop`) records features while a noisy proportional yaw teacher flies
+the drone (64 flights × 100 frames). Labels still come from simulator bearing, offline only. Its warm
+start alone scored 10/10 seeds, and after 30k PPO steps the policy passes all 50 held-out seeds. The
+zeroed-feature ablation now turns one way (40% raw, 0.00 balanced), the same blind-turner pattern
+that balanced success exists to reject.
+
+## Visual steering (encoder v3) — accepted, superseded by v4
 
 Policy `runs/v3-s04/actor.json`: calibration with 256 rendered trials, supervised warm start
 (teacher scale 0.4), then 30,000 PPO steps across 4 environments. The report is
@@ -121,6 +148,6 @@ few pixels per frame. It is not a change to the brain. Expected failures outside
 
 ## Open items
 
-- Train and evaluate the looming task (obstacle launched at the drone; see [`training.md`](training.md)).
-- Live `yarn dev:policy runs/v3-s04/actor.json` check: turning towards Left/Right targets, and the
-  deadline count at the new render cost.
+- Looming: record the 50-seed evaluation of the dodge-teacher policy (threat-specific success).
+- Live `scripts/venv.sh fly-drone serve --policy runs/v4-closed-s04/actor.json` check with the
+  Trials & Replay panel, plus the deadline count at the current render cost.
