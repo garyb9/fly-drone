@@ -355,6 +355,7 @@ class DronePlant(BaseAviary):
                     "center": [float(x), float(y), float(half_height)],
                     "radius": float(radius),
                     "height": float(2 * half_height),
+                    "ring_height": self.arena.pillar_ring,
                 }
             )
 
