@@ -33,6 +33,8 @@ def main():
     p = sub.add_parser("calibrate")
     p.add_argument("--output", default="runs/calibration.npz")
     p.add_argument("--trials", type=int, default=64)
+    p.add_argument("--closed-loop", action="store_true")
+    p.add_argument("--frames", type=int, default=100)
     p = sub.add_parser("evaluate")
     p.add_argument("--policy", required=True)
     p.add_argument("--episodes", type=int, default=50)
@@ -92,9 +94,12 @@ def main():
                 viewer.close()
             plant.close()
     elif args.command == "calibrate":
-        from .calibration import collect
+        from .calibration import collect, collect_closed_loop
 
-        collect(args.output, args.trials)
+        if args.closed_loop:
+            collect_closed_loop(args.output, args.trials, args.frames)
+        else:
+            collect(args.output, args.trials)
     elif args.command == "train":
         from .training import train
 

@@ -53,6 +53,52 @@ def collect(path="runs/calibration.npz", trials=64):
         p.close()
 
 
+def collect_closed_loop(
+    path="runs/calibration.npz", trials=64, frames=100, noise=0.3, teacher_scale=0.4
+):
+    """Record features while a noisy proportional yaw teacher flies the drone.
+
+    Static frames never contain rotation-induced loom input; features seen in
+    closed-loop flight do, so a decoder fitted only on static frames fails there.
+    Labels still come from simulator bearing, used offline only.
+    """
+    from .env import ConnectomeEnv
+
+    env = ConnectomeEnv(task="visual")
+    rng = np.random.default_rng(72)
+    xs = []
+    ys = []
+    angles = []
+    try:
+        for trial in range(trials):
+            obs, info = env.reset(seed=trial + 200)
+            for _ in range(frames):
+                label = float(np.clip(info["bearing"] * 1.5 / 0.8, -1, 1))
+                xs.append(obs)
+                ys.append([0, 0, 0, label])
+                angles.append(info["bearing"])
+                yaw = np.clip(teacher_scale * label + rng.normal(0, noise), -1, 1)
+                obs, _, done, _, info = env.step(np.array([0, 0, 0, yaw]))
+                if done:
+                    break
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        np.savez(
+            path,
+            x=np.array(xs),
+            y=np.array(ys, dtype=np.float32),
+            angles=np.array(angles),
+            dataset_hash=env.brain.dataset_hash,
+            encoder_version=ENCODER_VERSION,
+            mode="closed-loop",
+        )
+        print(
+            f"Collected {len(xs)} closed-loop neural observations from {trials} flights",
+            flush=True,
+        )
+    finally:
+        env.close()
+
+
 def warm_start(model, path, dataset_hash, steps=1500, yaw_scale=0.4):
     import torch
 
