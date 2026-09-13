@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .brain import BrainRuntime
+from .brain import ENCODER_VERSION, BrainRuntime
 from .plant import DronePlant
 
 
@@ -43,7 +43,7 @@ def collect(path="runs/calibration.npz", trials=64):
             y=np.array(ys, dtype=np.float32),
             angles=np.array(angles),
             dataset_hash=b.dataset_hash,
-            encoder_version="bright-contrast-400-v1",
+            encoder_version=ENCODER_VERSION,
         )
         print(
             f"Collected {len(xs)} neural observations from {trials} rendered target positions",
@@ -59,6 +59,8 @@ def warm_start(model, path, dataset_hash, steps=1500, yaw_scale=0.4):
     d = np.load(path)
     if str(d["dataset_hash"]) != dataset_hash:
         raise ValueError("calibration graph mismatch")
+    if str(d["encoder_version"]) != ENCODER_VERSION:
+        raise ValueError("calibration was collected with a different camera/encoder")
     x = torch.tensor(d["x"])
     y = torch.tensor(d["y"])
     y[:, 3] *= yaw_scale

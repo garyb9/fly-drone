@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
+from .brain import ENCODER_VERSION
 from .plant import LIMITS
 
 
@@ -25,7 +26,7 @@ def export_actor(model, brain, path):
             raise ValueError("only tanh MLP export supported")
     payload = {
         "version": 1,
-        "encoder_version": "bright-contrast-400-v1",
+        "encoder_version": ENCODER_VERSION,
         "dataset_hash": brain.dataset_hash,
         "feature_ids": brain.feature_ids,
         "mean": model.policy.features_extractor.mean.cpu().tolist()

@@ -17,20 +17,48 @@ slightly up):
 | Resolution         | 64 × 48 px (`P = 3072` px per eye)                                    |
 | Vertical FOV       | `fovy = 75°`                                                          |
 | Horizontal FOV     | `fovx = 2·atan(tan(fovy/2) · 64/48) = 2·atan(0.7673 · 1.333) ≈ 91.3°` |
-| Yaw splay          | left `+0.45 rad` (+25.8°), right `−0.45 rad` (body `+Y` is left)      |
+| Yaw splay          | left `+0.75 rad` (+43.0°), right `−0.75 rad` (body `+Y` is left)      |
 | Angular resolution | `64 px / 91.3° ≈ 0.70 px/deg`                                         |
 
 In MuJoCo a camera looks along its local `−Z`. `xyaxes = (sin ψ, −cos ψ, 0; 0, 0, 1)` puts local
 `+Y` world-up and the view direction at body yaw `ψ`. Horizontal coverage per eye is `ψ ± 45.6°`:
 
 ```
-left eye   [−19.8°, +71.4°]
-right eye  [−71.4°, +19.8°]
-binocular overlap  ±19.8°  (39.7° wide), total field ±71.4° (142.7°)
+left eye   [−2.6°, +88.6°]
+right eye  [−88.6°, +2.6°]
+binocular overlap  ±2.6°  (5.3° wide), total field ±88.6° (177°)
 ```
 
-A target straight ahead is seen by both eyes about equally. As its bearing moves past ±19.8°, it
-leaves one eye. That left/right imbalance is the signal a steering decoder can exploit.
+A target straight ahead is seen by both eyes equally. Once it is more than ≈ 2.6° to one side it
+leaves the other eye, so the sign of `c_L − c_R` gives the side of the target down to small
+bearings. That sign is the signal a steering decoder needs.
+
+### Why the splay is 0.75 rad, not 0.45 rad (measured)
+
+With the earlier 0.45 rad splay the overlap was ±19.8°. The target (≈ 12.6° wide at 2 m) then
+sat inside _both_ fields for any bearing within ≈ ±0.3 rad. Both light cues saturated near 2, and
+the residual difference was small **and had the wrong sign** (the far eye's view is brighter near
+its image edge). A trained decoder stopped turning at ≈ 0.25–0.36 rad in every failed evaluation
+trial (see [`results/evaluation-conservative-baseline.json`](results/evaluation-conservative-baseline.json)).
+Measured sustained cues, target at 2 m (scratch experiment, `brain.sense` twice per frame so the
+transient term is zero):
+
+| bearing (rad) | splay 0.45: `c_L − c_R` | splay 0.75: `c_L − c_R` |
+| ------------- | ----------------------- | ----------------------- |
+| −0.60         | −1.76                   | −1.72                   |
+| −0.30         | **+0.09**               | −2.00                   |
+| −0.20         | **+0.22**               | −2.00                   |
+| −0.10         | +0.04                   | −1.93                   |
+| 0.00          | 0.00                    | 0.00                    |
+| +0.10         | −0.03                   | +1.96                   |
+| +0.20         | **−0.23**               | +2.00                   |
+| +0.30         | **−0.17**               | +2.00                   |
+| +0.60         | +1.78                   | +1.79                   |
+
+Bold marks sign errors (a target on the right reading brighter on the left). The wider splay
+removes the dead zone. `tests/test_assay.py::test_light_cue_sign_follows_target_side` guards it.
+Changing camera geometry changes the encoder identity (`ENCODER_VERSION`
+`bright-contrast-400-splay075-v2`), so older calibrations and actors are rejected at load.
 
 ### Worked example: how big is the target?
 

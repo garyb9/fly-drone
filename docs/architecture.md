@@ -16,7 +16,7 @@ The viewer enlarges the drone 6x for legibility; world positions, target geometr
 
 ## Vision and learning
 
-Two 64×48 cameras have 75° vertical FOV and ±0.45 rad horizontal splay. The Rust encoder emphasizes luminance above 0.55 with gain 400, followed by bounded sustained ON current and positive temporal change. The threshold and gain are engineering calibration for the demonstrator's camera range. Dark-area expansion drives annotated left/right LC4/LPLC2 looming populations. This is not retinal reconstruction or optical-flow estimation; brightness changes and rotation can confound these proxies.
+Two 64×48 cameras have 75° vertical FOV and ±0.75 rad horizontal splay (±2.6° binocular overlap; see sensory-model.md). The Rust encoder emphasizes luminance above 0.55 with gain 400, followed by bounded sustained ON current and positive temporal change. The threshold and gain are engineering calibration for the demonstrator's camera range. Dark-area expansion drives annotated left/right LC4/LPLC2 looming populations. This is not retinal reconstruction or optical-flow estimation; brightness changes and rotation can confound these proxies.
 
 Visual currents enter the original annotated Mi1/Tm3 sets. The neural graph, synaptic weights, neuron equations and tonic power-cell bias remain fixed. PPO learns a small tanh MLP decoder with optional fixed feature normalization. An optional supervised warm start labels rendered camera trials with desired yaw, using simulator bearing only to construct training labels. Rust actor inference accepts only neural activity. `calibrate`, `train --calibration`, and `evaluate` distinguish calibration fit, policy optimization and held-out flight tests.
 

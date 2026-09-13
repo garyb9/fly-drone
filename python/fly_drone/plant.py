@@ -16,7 +16,8 @@ LIMITS = np.array([0.4, 0.4, 0.2, 0.8])
 
 
 class DronePlant(BaseAviary):
-    def __init__(self, vision=True, motor_tau=0.025, drag=True):
+    def __init__(self, vision=True, motor_tau=0.025, drag=True, eye_splay=0.75):
+        self.eye_splay = float(eye_splay)
         self.motor_tau = float(motor_tau)
         if self.motor_tau < 0:
             raise ValueError("motor_tau must be nonnegative")
@@ -34,7 +35,7 @@ class DronePlant(BaseAviary):
         )
         world = xml.find("worldbody")
         body = world.find("body[@name='drone0']")
-        for name, angle in [("eye_l", 0.45), ("eye_r", -0.45)]:
+        for name, angle in [("eye_l", self.eye_splay), ("eye_r", -self.eye_splay)]:
             # Camera looks down local -Z, local Y is world up. Body +X forward, +Y left.
             ET.SubElement(
                 body,

@@ -1,4 +1,8 @@
 use serde::{Deserialize, Serialize};
+
+/// Camera geometry + cue encoder identity; decoders trained on another encoder are rejected.
+pub const ENCODER_VERSION: &str = "bright-contrast-400-splay075-v2";
+
 #[derive(Serialize, Deserialize)]
 pub struct Layer {
     pub weights: Vec<Vec<f32>>,
@@ -19,7 +23,7 @@ impl Policy {
     pub fn from_json(s: &str) -> Result<Self, String> {
         let p: Self = serde_json::from_str(s).map_err(|e| e.to_string())?;
         let n = p.feature_ids.len();
-        if p.encoder_version != "bright-contrast-400-v1"
+        if p.encoder_version != ENCODER_VERSION
             || p.version != 1
             || n == 0
             || p.mean.len() != n

@@ -45,7 +45,7 @@ def test_target_bearing_wraps_to_pi():
 def test_evaluate_smoke_with_zero_policy(tmp_path):
     import json
 
-    from fly_drone.brain import BrainRuntime
+    from fly_drone.brain import ENCODER_VERSION, BrainRuntime
     from fly_drone.training import evaluate
 
     brain = BrainRuntime()
@@ -55,7 +55,7 @@ def test_evaluate_smoke_with_zero_policy(tmp_path):
         json.dumps(
             {
                 "version": 1,
-                "encoder_version": "bright-contrast-400-v1",
+                "encoder_version": ENCODER_VERSION,
                 "dataset_hash": brain.dataset_hash,
                 "feature_ids": brain.feature_ids,
                 "mean": [0.0] * n,
