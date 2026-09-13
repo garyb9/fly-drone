@@ -1,0 +1,2110 @@
+{
+  "policy": "/home/gb/projects/fly-drone/runs/conservative/actor.json",
+  "episodes": 50,
+  "seconds": 10,
+  "workers": 12,
+  "wall_seconds": 411.9445282980014,
+  "modes": {
+    "none": {
+      "success_rate": 0.4,
+      "collision_rate": 0.0,
+      "mean_final_bearing": 0.25858546144964445,
+      "real_time_factor": 0.43336660476397,
+      "runs": [
+        {
+          "seed": 1000,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.637606863701764,
+          "final_bearing": 0.29552502651815143,
+          "altitude_rms": 7.315860052252145e-05,
+          "settled_altitude_rms": 8.02384751027915e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1001,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.30584410445295146,
+          "final_bearing": 0.31324698144149454,
+          "altitude_rms": 0.00012953568083294112,
+          "settled_altitude_rms": 0.00014446670254127653,
+          "frames": 250
+        },
+        {
+          "seed": 1002,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6039297311989783,
+          "final_bearing": 0.21366553688485584,
+          "altitude_rms": 9.979849826684343e-05,
+          "settled_altitude_rms": 0.0001072417131206971,
+          "frames": 250
+        },
+        {
+          "seed": 1003,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6106634711981239,
+          "final_bearing": 0.11692934550801648,
+          "altitude_rms": 6.572158433591101e-05,
+          "settled_altitude_rms": 7.024399263454972e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1004,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6099074885269484,
+          "final_bearing": 0.2688879786195139,
+          "altitude_rms": 6.920310551227564e-05,
+          "settled_altitude_rms": 7.345634055675342e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1005,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34310868142062523,
+          "final_bearing": 0.2548640432243953,
+          "altitude_rms": 2.42642500141098e-05,
+          "settled_altitude_rms": 2.6651589037734875e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1006,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.41783802871608966,
+          "final_bearing": 0.25392926771953706,
+          "altitude_rms": 0.00014161048359223342,
+          "settled_altitude_rms": 0.00015801158321073275,
+          "frames": 250
+        },
+        {
+          "seed": 1007,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.305851347009629,
+          "final_bearing": 0.28853621999521584,
+          "altitude_rms": 0.00016016162750502743,
+          "settled_altitude_rms": 0.0001766721436913342,
+          "frames": 250
+        },
+        {
+          "seed": 1008,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5870780345597247,
+          "final_bearing": 0.3425821146116926,
+          "altitude_rms": 0.00013697524646293855,
+          "settled_altitude_rms": 0.00015180549812784873,
+          "frames": 250
+        },
+        {
+          "seed": 1009,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5248600649934746,
+          "final_bearing": 0.34248808934122127,
+          "altitude_rms": 5.1231350866605e-05,
+          "settled_altitude_rms": 5.36557639881005e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1010,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5640228624869612,
+          "final_bearing": 0.3167719094555287,
+          "altitude_rms": 0.00012460233763029855,
+          "settled_altitude_rms": 0.00013873208249000834,
+          "frames": 250
+        },
+        {
+          "seed": 1011,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.5393648742593474,
+          "final_bearing": 0.24573072038812652,
+          "altitude_rms": 0.00025825714243866277,
+          "settled_altitude_rms": 0.0002882086793450387,
+          "frames": 250
+        },
+        {
+          "seed": 1012,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.38443170479272626,
+          "final_bearing": 0.26038949349620955,
+          "altitude_rms": 0.0002712719395589701,
+          "settled_altitude_rms": 0.00030188070514889357,
+          "frames": 250
+        },
+        {
+          "seed": 1013,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39447822674674193,
+          "final_bearing": 0.2914261351836456,
+          "altitude_rms": 1.648909227364956e-05,
+          "settled_altitude_rms": 1.4631347237603408e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1014,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.522054254097721,
+          "final_bearing": 0.21150934121406284,
+          "altitude_rms": 0.0002581267007066751,
+          "settled_altitude_rms": 0.0002871569390314115,
+          "frames": 250
+        },
+        {
+          "seed": 1015,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.37396901281432604,
+          "final_bearing": 0.24271431698654922,
+          "altitude_rms": 0.00032024249627888484,
+          "settled_altitude_rms": 0.0003563279012787582,
+          "frames": 250
+        },
+        {
+          "seed": 1016,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34673465102847423,
+          "final_bearing": 0.32795292182991076,
+          "altitude_rms": 0.0002481196871853154,
+          "settled_altitude_rms": 0.00027700196349458633,
+          "frames": 250
+        },
+        {
+          "seed": 1017,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.474759385303617,
+          "final_bearing": 0.03847942365514667,
+          "altitude_rms": 0.0003452800819062056,
+          "settled_altitude_rms": 0.0003847935318689586,
+          "frames": 250
+        },
+        {
+          "seed": 1018,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31469457590009714,
+          "final_bearing": 0.3368793917829985,
+          "altitude_rms": 0.0003340642179563024,
+          "settled_altitude_rms": 0.00037174224932748937,
+          "frames": 250
+        },
+        {
+          "seed": 1019,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.5591523122174411,
+          "final_bearing": 0.10008041802897603,
+          "altitude_rms": 0.00011613077230834682,
+          "settled_altitude_rms": 0.00012846983346749097,
+          "frames": 250
+        },
+        {
+          "seed": 1020,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5325412705422087,
+          "final_bearing": 0.3229827109692677,
+          "altitude_rms": 0.00017301482298348684,
+          "settled_altitude_rms": 0.00019273224835429146,
+          "frames": 250
+        },
+        {
+          "seed": 1021,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31156472582601136,
+          "final_bearing": 0.29979657662767717,
+          "altitude_rms": 7.486327757051485e-05,
+          "settled_altitude_rms": 8.032432599294265e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1022,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4619369841084675,
+          "final_bearing": 0.26370002636195844,
+          "altitude_rms": 0.0002989235406042858,
+          "settled_altitude_rms": 0.00033209731569765606,
+          "frames": 250
+        },
+        {
+          "seed": 1023,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.32276435775576956,
+          "final_bearing": 0.3467627521606737,
+          "altitude_rms": 0.00039562601970421764,
+          "settled_altitude_rms": 0.00044200712051026324,
+          "frames": 250
+        },
+        {
+          "seed": 1024,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6047200814036473,
+          "final_bearing": 0.028420684139920604,
+          "altitude_rms": 0.00012997293008909353,
+          "settled_altitude_rms": 0.00014439530311324096,
+          "frames": 250
+        },
+        {
+          "seed": 1025,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.40838252087646615,
+          "final_bearing": 0.09239404543844998,
+          "altitude_rms": 0.00029956987069599335,
+          "settled_altitude_rms": 0.000334328503213561,
+          "frames": 250
+        },
+        {
+          "seed": 1026,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3524256876692283,
+          "final_bearing": 0.36864330482265806,
+          "altitude_rms": 0.0004540095522598355,
+          "settled_altitude_rms": 0.000506853730541149,
+          "frames": 250
+        },
+        {
+          "seed": 1027,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3175347542938109,
+          "final_bearing": 0.34143406740242327,
+          "altitude_rms": 0.0006766270968740696,
+          "settled_altitude_rms": 0.000756297581928108,
+          "frames": 250
+        },
+        {
+          "seed": 1028,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.5724331485270293,
+          "final_bearing": 0.09374745709619758,
+          "altitude_rms": 0.000267296292328435,
+          "settled_altitude_rms": 0.00029728479266693365,
+          "frames": 250
+        },
+        {
+          "seed": 1029,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.5663956343126254,
+          "final_bearing": 0.23314726725354945,
+          "altitude_rms": 0.00012816587102836406,
+          "settled_altitude_rms": 0.00014293917048059784,
+          "frames": 250
+        },
+        {
+          "seed": 1030,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5468486552254946,
+          "final_bearing": 0.34436314915246236,
+          "altitude_rms": 0.0003213721096975212,
+          "settled_altitude_rms": 0.00035879206809139887,
+          "frames": 250
+        },
+        {
+          "seed": 1031,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6307003658711755,
+          "final_bearing": 0.2617699618738866,
+          "altitude_rms": 4.9199583532449575e-05,
+          "settled_altitude_rms": 5.230458563905776e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1032,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.3934604726024486,
+          "final_bearing": 0.15270753615817498,
+          "altitude_rms": 0.00033043417710411013,
+          "settled_altitude_rms": 0.0003688781095667137,
+          "frames": 250
+        },
+        {
+          "seed": 1033,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4513620610692442,
+          "final_bearing": 0.3454430991891201,
+          "altitude_rms": 0.00035024827792203716,
+          "settled_altitude_rms": 0.0003910117384704832,
+          "frames": 250
+        },
+        {
+          "seed": 1034,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4714833902794821,
+          "final_bearing": 0.28597273642819604,
+          "altitude_rms": 0.00021882107209991606,
+          "settled_altitude_rms": 0.00024433988058773803,
+          "frames": 250
+        },
+        {
+          "seed": 1035,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6315097745656301,
+          "final_bearing": 0.24450377243443294,
+          "altitude_rms": 0.00010433270266836002,
+          "settled_altitude_rms": 0.00011406317522748279,
+          "frames": 250
+        },
+        {
+          "seed": 1036,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.536752820437848,
+          "final_bearing": 0.28069603998974246,
+          "altitude_rms": 9.737975433276897e-05,
+          "settled_altitude_rms": 0.00010707335326786113,
+          "frames": 250
+        },
+        {
+          "seed": 1037,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.299479108035663,
+          "final_bearing": 0.29274573285248234,
+          "altitude_rms": 8.853750299191771e-05,
+          "settled_altitude_rms": 9.696353893672401e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1038,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.43917878180907577,
+          "final_bearing": 0.269207425679683,
+          "altitude_rms": 3.959904950892074e-05,
+          "settled_altitude_rms": 4.311554936406581e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1039,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40395010140788484,
+          "final_bearing": 0.2875102875101709,
+          "altitude_rms": 0.00021113254877205479,
+          "settled_altitude_rms": 0.00023478400699322485,
+          "frames": 250
+        },
+        {
+          "seed": 1040,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39995261009403843,
+          "final_bearing": 0.2944163109565165,
+          "altitude_rms": 0.00022004860963489018,
+          "settled_altitude_rms": 0.0002459211634628055,
+          "frames": 250
+        },
+        {
+          "seed": 1041,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5286499445091039,
+          "final_bearing": 0.33995238872305233,
+          "altitude_rms": 0.0008626163593423213,
+          "settled_altitude_rms": 0.000964061336590546,
+          "frames": 250
+        },
+        {
+          "seed": 1042,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6065883057020267,
+          "final_bearing": 0.21725103391745673,
+          "altitude_rms": 0.00013922168744795316,
+          "settled_altitude_rms": 0.00015474449069261123,
+          "frames": 250
+        },
+        {
+          "seed": 1043,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46080424675415704,
+          "final_bearing": 0.31651558361682114,
+          "altitude_rms": 0.0002159722528616368,
+          "settled_altitude_rms": 0.00024114879564724408,
+          "frames": 250
+        },
+        {
+          "seed": 1044,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.625989424849421,
+          "final_bearing": 0.2691455781563857,
+          "altitude_rms": 7.547739506777076e-05,
+          "settled_altitude_rms": 8.189187657225886e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1045,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.4833759652762147,
+          "final_bearing": 0.20033303198368768,
+          "altitude_rms": 0.00021497147344877454,
+          "settled_altitude_rms": 0.0002400144760119582,
+          "frames": 250
+        },
+        {
+          "seed": 1046,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6252010723978625,
+          "final_bearing": 0.30113495025477943,
+          "altitude_rms": 0.00012469298743467082,
+          "settled_altitude_rms": 0.00013817886820892563,
+          "frames": 250
+        },
+        {
+          "seed": 1047,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.3278214152858163,
+          "final_bearing": 0.15664169109516574,
+          "altitude_rms": 0.0003777756011594856,
+          "settled_altitude_rms": 0.0004213220811667416,
+          "frames": 250
+        },
+        {
+          "seed": 1048,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46463063432612944,
+          "final_bearing": 0.36323008088111736,
+          "altitude_rms": 0.000312420654906605,
+          "settled_altitude_rms": 0.00034874195381816926,
+          "frames": 250
+        },
+        {
+          "seed": 1049,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40292676992511095,
+          "final_bearing": 0.25211511347086385,
+          "altitude_rms": 7.350600302234345e-05,
+          "settled_altitude_rms": 8.200704700458458e-05,
+          "frames": 250
+        }
+      ]
+    },
+    "zero": {
+      "success_rate": 0.0,
+      "collision_rate": 0.0,
+      "mean_final_bearing": 2.577617395254323,
+      "real_time_factor": 0.47627807499720565,
+      "runs": [
+        {
+          "seed": 1000,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.637606863701764,
+          "final_bearing": 3.07155957473187,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1001,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.30584410445295146,
+          "final_bearing": 2.879033014810544,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1002,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6039297311989783,
+          "final_bearing": 3.1053051234713998,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1003,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6106634711981239,
+          "final_bearing": 3.0985573317810373,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1004,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6099074885269484,
+          "final_bearing": 3.099314882914467,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1005,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34310868142062523,
+          "final_bearing": 2.2285360762219035,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1006,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.41783802871608966,
+          "final_bearing": 2.1537310699189782,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1007,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.305851347009629,
+          "final_bearing": 2.265842208044738,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1008,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5870780345597247,
+          "final_bearing": 3.1221927723809024,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1009,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5248600649934746,
+          "final_bearing": 2.0466548918994865,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1010,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5640228624869612,
+          "final_bearing": 2.0074886968589523,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1011,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5393648742593474,
+          "final_bearing": 2.032147791148823,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1012,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.38443170479272626,
+          "final_bearing": 2.957841307359483,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1013,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39447822674674193,
+          "final_bearing": 2.177111259663392,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1014,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.522054254097721,
+          "final_bearing": 3.0958201784942854,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1015,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.37396901281432604,
+          "final_bearing": 2.947349764059708,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1016,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34673465102847423,
+          "final_bearing": 2.9200394598106,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1017,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.474759385303617,
+          "final_bearing": 3.0484084731136547,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1018,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31469457590009714,
+          "final_bearing": 2.887908730858918,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1019,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5591523122174411,
+          "final_bearing": 3.133004851331684,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1020,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5325412705422087,
+          "final_bearing": 2.038972321574004,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1021,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31156472582601136,
+          "final_bearing": 2.260120883010832,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1022,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4619369841084675,
+          "final_bearing": 3.0355532794782563,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1023,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.32276435775576956,
+          "final_bearing": 2.896001460082146,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1024,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6047200814036473,
+          "final_bearing": 3.1045131145805005,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1025,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40838252087646615,
+          "final_bearing": 2.9818573986323074,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1026,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3524256876692283,
+          "final_bearing": 2.925746459102032,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1027,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3175347542938109,
+          "final_bearing": 2.254142729055908,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1028,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5724331485270293,
+          "final_bearing": 3.1368697905439316,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1029,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5663956343126254,
+          "final_bearing": 2.0051160039557354,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1030,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5468486552254946,
+          "final_bearing": 3.120672993681829,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1031,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6307003658711755,
+          "final_bearing": 1.9408257756285794,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1032,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3934604726024486,
+          "final_bearing": 2.966894812743311,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1033,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4513620610692442,
+          "final_bearing": 3.0249509831087757,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1034,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4714833902794821,
+          "final_bearing": 2.1000504234888298,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1035,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6315097745656301,
+          "final_bearing": 1.9400167009105043,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1036,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.536752820437848,
+          "final_bearing": 3.1105536240937317,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1037,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.299479108035663,
+          "final_bearing": 2.272223504481799,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1038,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.43917878180907577,
+          "final_bearing": 2.132374340108383,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1039,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40395010140788484,
+          "final_bearing": 2.977412984701198,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1040,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39995261009403843,
+          "final_bearing": 2.1716318286631777,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1041,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5286499445091039,
+          "final_bearing": 2.042864296454439,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1042,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6065883057020267,
+          "final_bearing": 1.9649296084151,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1043,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46080424675415704,
+          "final_bearing": 2.110735295786643,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1044,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.625989424849421,
+          "final_bearing": 1.9455348472146976,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1045,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4833759652762147,
+          "final_bearing": 2.0881522332753573,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1046,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6252010723978625,
+          "final_bearing": 1.946322899233,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1047,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3278214152858163,
+          "final_bearing": 2.9010728609234224,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1048,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46463063432612944,
+          "final_bearing": 3.0382538553916647,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        },
+        {
+          "seed": 1049,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40292676992511095,
+          "final_bearing": 2.1686549955212353,
+          "altitude_rms": 0.00031568591433682594,
+          "settled_altitude_rms": 0.0003521135800908265,
+          "frames": 250
+        }
+      ]
+    },
+    "sensory": {
+      "success_rate": 0.0,
+      "collision_rate": 0.0,
+      "mean_final_bearing": 1.3566495990481744,
+      "real_time_factor": 0.519048132002117,
+      "runs": [
+        {
+          "seed": 1000,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.637606863701764,
+          "final_bearing": 1.9813771844861572,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1001,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.30584410445295146,
+          "final_bearing": 1.6478819383693555,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1002,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6039297311989783,
+          "final_bearing": 1.9475345511044333,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1003,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6106634711981239,
+          "final_bearing": 1.954301761694334,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1004,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6099074885269484,
+          "final_bearing": 1.9535420303693887,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1005,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34310868142062523,
+          "final_bearing": 0.996861434936625,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1006,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.41783802871608966,
+          "final_bearing": 0.9221439654518708,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1007,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.305851347009629,
+          "final_bearing": 1.0341350865948364,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1008,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5870780345597247,
+          "final_bearing": 1.9305983289679491,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1009,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5248600649934746,
+          "final_bearing": 0.8152415233140414,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1010,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5640228624869612,
+          "final_bearing": 0.7761517859176373,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1011,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5393648742593474,
+          "final_bearing": 0.8007619886301409,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1012,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.38443170479272626,
+          "final_bearing": 1.726885027258129,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1013,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39447822674674193,
+          "final_bearing": 0.9454936612695501,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1014,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.522054254097721,
+          "final_bearing": 1.865239785651858,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1015,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.37396901281432604,
+          "final_bearing": 1.716366531063808,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1016,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34673465102847423,
+          "final_bearing": 1.6889874651313739,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1017,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.474759385303617,
+          "final_bearing": 1.8176952144225238,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1018,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31469457590009714,
+          "final_bearing": 1.656778648781586,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1019,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5591523122174411,
+          "final_bearing": 1.9025303533006768,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1020,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5325412705422087,
+          "final_bearing": 0.8075734386374046,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1021,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31156472582601136,
+          "final_bearing": 1.028418247244689,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1022,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4619369841084675,
+          "final_bearing": 1.8048045535526924,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1023,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.32276435775576956,
+          "final_bearing": 1.6648907430572129,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1024,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6047200814036473,
+          "final_bearing": 1.948328839100519,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1025,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40838252087646615,
+          "final_bearing": 1.7509638511206627,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1026,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3524256876692283,
+          "final_bearing": 1.6947086597250318,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1027,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3175347542938109,
+          "final_bearing": 1.0224449731429273,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1028,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5724331485270293,
+          "final_bearing": 1.9158791606340069,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1029,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5663956343126254,
+          "final_bearing": 0.7737839289887213,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1030,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5468486552254946,
+          "final_bearing": 1.8901632543374975,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1031,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6307003658711755,
+          "final_bearing": 0.709632990073717,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1032,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3934604726024486,
+          "final_bearing": 1.7359620167846659,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1033,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4513620610692442,
+          "final_bearing": 1.7941732174716196,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1034,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4714833902794821,
+          "final_bearing": 0.8685436515872775,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1035,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6315097745656301,
+          "final_bearing": 0.7088257645901195,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1036,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.536752820437848,
+          "final_bearing": 1.8800150506256492,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1037,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.299479108035663,
+          "final_bearing": 1.0405115935528477,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1038,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.43917878180907577,
+          "final_bearing": 0.9008175032862519,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1039,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40395010140788484,
+          "final_bearing": 1.7465077238270834,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1040,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39995261009403843,
+          "final_bearing": 0.9400211257319993,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1041,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5286499445091039,
+          "final_bearing": 0.8114580432334247,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1042,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6065883057020267,
+          "final_bearing": 0.7336827934014563,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1043,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46080424675415704,
+          "final_bearing": 0.8792114177971855,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1044,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.625989424849421,
+          "final_bearing": 0.7143313437546854,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1045,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4833759652762147,
+          "final_bearing": 0.8566651444072435,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1046,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6252010723978625,
+          "final_bearing": 0.7151176097379235,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1047,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3278214152858163,
+          "final_bearing": 1.6699743851697808,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1048,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46463063432612944,
+          "final_bearing": 1.807512557618394,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        },
+        {
+          "seed": 1049,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40292676992511095,
+          "final_bearing": 0.9370481034997449,
+          "altitude_rms": 0.00044859130378354506,
+          "settled_altitude_rms": 0.0005006099521307652,
+          "frames": 250
+        }
+      ]
+    },
+    "shuffle": {
+      "success_rate": 0.12,
+      "collision_rate": 0.0,
+      "mean_final_bearing": 1.1219533406255509,
+      "real_time_factor": 0.4538974067087805,
+      "runs": [
+        {
+          "seed": 1000,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.637606863701764,
+          "final_bearing": 1.8520541079686412,
+          "altitude_rms": 0.0005679000514552539,
+          "settled_altitude_rms": 0.0006333285653199682,
+          "frames": 250
+        },
+        {
+          "seed": 1001,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.30584410445295146,
+          "final_bearing": 1.207120612969953,
+          "altitude_rms": 0.0002486344382887386,
+          "settled_altitude_rms": 0.0002772717089296168,
+          "frames": 250
+        },
+        {
+          "seed": 1002,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6039297311989783,
+          "final_bearing": 1.0574500459281402,
+          "altitude_rms": 0.0003634629768999856,
+          "settled_altitude_rms": 0.0004054217994804936,
+          "frames": 250
+        },
+        {
+          "seed": 1003,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.6106634711981239,
+          "final_bearing": 0.19552375058445537,
+          "altitude_rms": 0.0007116775538675745,
+          "settled_altitude_rms": 0.0007946000565826713,
+          "frames": 250
+        },
+        {
+          "seed": 1004,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6099074885269484,
+          "final_bearing": 1.9556720226758917,
+          "altitude_rms": 0.00042405799792579396,
+          "settled_altitude_rms": 0.0004728381314216734,
+          "frames": 250
+        },
+        {
+          "seed": 1005,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34310868142062523,
+          "final_bearing": 2.9411415116921775,
+          "altitude_rms": 5.02890274600048e-05,
+          "settled_altitude_rms": 5.608480603220437e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1006,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.41783802871608966,
+          "final_bearing": 0.14095243860953982,
+          "altitude_rms": 0.00014438084897918402,
+          "settled_altitude_rms": 0.00016123785851286158,
+          "frames": 250
+        },
+        {
+          "seed": 1007,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.305851347009629,
+          "final_bearing": 0.35499314275200744,
+          "altitude_rms": 0.0005364620752505399,
+          "settled_altitude_rms": 0.0005980293381573398,
+          "frames": 250
+        },
+        {
+          "seed": 1008,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5870780345597247,
+          "final_bearing": 1.6972314303345228,
+          "altitude_rms": 0.00044674292724716406,
+          "settled_altitude_rms": 0.0004992216825519677,
+          "frames": 250
+        },
+        {
+          "seed": 1009,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5248600649934746,
+          "final_bearing": 1.2989896306044824,
+          "altitude_rms": 0.0002549064833101012,
+          "settled_altitude_rms": 0.00028392365261640373,
+          "frames": 250
+        },
+        {
+          "seed": 1010,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.5640228624869612,
+          "final_bearing": 0.20089589941823938,
+          "altitude_rms": 0.00010163081828674021,
+          "settled_altitude_rms": 0.00011172988515855668,
+          "frames": 250
+        },
+        {
+          "seed": 1011,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5393648742593474,
+          "final_bearing": 0.7042878701264961,
+          "altitude_rms": 0.0002395304714591843,
+          "settled_altitude_rms": 0.00026717470251867806,
+          "frames": 250
+        },
+        {
+          "seed": 1012,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.38443170479272626,
+          "final_bearing": 1.0128030520902125,
+          "altitude_rms": 0.00042128294168409126,
+          "settled_altitude_rms": 0.0004702645389822256,
+          "frames": 250
+        },
+        {
+          "seed": 1013,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39447822674674193,
+          "final_bearing": 0.6519421119728104,
+          "altitude_rms": 0.0006034756313026436,
+          "settled_altitude_rms": 0.0006731840162360442,
+          "frames": 250
+        },
+        {
+          "seed": 1014,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.522054254097721,
+          "final_bearing": 1.4236779007493845,
+          "altitude_rms": 0.0002634445311803514,
+          "settled_altitude_rms": 0.0002940190099905772,
+          "frames": 250
+        },
+        {
+          "seed": 1015,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.37396901281432604,
+          "final_bearing": 1.8275048093545168,
+          "altitude_rms": 0.001187294399187642,
+          "settled_altitude_rms": 0.0013242220557552738,
+          "frames": 250
+        },
+        {
+          "seed": 1016,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.34673465102847423,
+          "final_bearing": 2.2201070187377363,
+          "altitude_rms": 7.598352122171554e-05,
+          "settled_altitude_rms": 8.48863557666465e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1017,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.474759385303617,
+          "final_bearing": 0.7940691147467123,
+          "altitude_rms": 0.00020318335412386222,
+          "settled_altitude_rms": 0.0002266649500136726,
+          "frames": 250
+        },
+        {
+          "seed": 1018,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.31469457590009714,
+          "final_bearing": 0.3026694959475248,
+          "altitude_rms": 0.00019944368929467903,
+          "settled_altitude_rms": 0.00022250553577267496,
+          "frames": 250
+        },
+        {
+          "seed": 1019,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5591523122174411,
+          "final_bearing": 2.7807118016213095,
+          "altitude_rms": 0.00029639414146431727,
+          "settled_altitude_rms": 0.0003306397545691602,
+          "frames": 250
+        },
+        {
+          "seed": 1020,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5325412705422087,
+          "final_bearing": 1.3879232131509345,
+          "altitude_rms": 6.395198227431894e-05,
+          "settled_altitude_rms": 7.122731367973403e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1021,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.31156472582601136,
+          "final_bearing": 0.05620442698962308,
+          "altitude_rms": 0.0001973992876931731,
+          "settled_altitude_rms": 0.0002201951860094255,
+          "frames": 250
+        },
+        {
+          "seed": 1022,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4619369841084675,
+          "final_bearing": 0.6403878084146918,
+          "altitude_rms": 0.0006286528562429552,
+          "settled_altitude_rms": 0.0007015100199279364,
+          "frames": 250
+        },
+        {
+          "seed": 1023,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.32276435775576956,
+          "final_bearing": 1.0003292263039671,
+          "altitude_rms": 0.00020349402123071546,
+          "settled_altitude_rms": 0.0002266445404300512,
+          "frames": 250
+        },
+        {
+          "seed": 1024,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6047200814036473,
+          "final_bearing": 0.7290075710260515,
+          "altitude_rms": 2.106449833218213e-05,
+          "settled_altitude_rms": 2.3090602104395213e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1025,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40838252087646615,
+          "final_bearing": 0.3286209224439799,
+          "altitude_rms": 0.00018437244716171052,
+          "settled_altitude_rms": 0.0002053223865401179,
+          "frames": 250
+        },
+        {
+          "seed": 1026,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3524256876692283,
+          "final_bearing": 0.3592209903118346,
+          "altitude_rms": 0.0012508610402348424,
+          "settled_altitude_rms": 0.001394513030833369,
+          "frames": 250
+        },
+        {
+          "seed": 1027,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3175347542938109,
+          "final_bearing": 2.0820960045735655,
+          "altitude_rms": 5.009187559790957e-05,
+          "settled_altitude_rms": 5.5810490220763935e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1028,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5724331485270293,
+          "final_bearing": 1.9298346953315533,
+          "altitude_rms": 0.00014106589232855393,
+          "settled_altitude_rms": 0.00015741602817268813,
+          "frames": 250
+        },
+        {
+          "seed": 1029,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5663956343126254,
+          "final_bearing": 1.0973456588384118,
+          "altitude_rms": 1.069698901529714e-05,
+          "settled_altitude_rms": 1.1797438761156584e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1030,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5468486552254946,
+          "final_bearing": 0.6197195416984531,
+          "altitude_rms": 0.0004512291311660884,
+          "settled_altitude_rms": 0.00050439264420811,
+          "frames": 250
+        },
+        {
+          "seed": 1031,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6307003658711755,
+          "final_bearing": 0.38016958165148745,
+          "altitude_rms": 0.00030768479141948026,
+          "settled_altitude_rms": 0.0003431787987640855,
+          "frames": 250
+        },
+        {
+          "seed": 1032,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.3934604726024486,
+          "final_bearing": 0.37349473134513633,
+          "altitude_rms": 2.8946624925609762e-05,
+          "settled_altitude_rms": 3.1873489740032366e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1033,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.4513620610692442,
+          "final_bearing": 0.11710407333326434,
+          "altitude_rms": 0.00022012483475145948,
+          "settled_altitude_rms": 0.0002443292012933293,
+          "frames": 250
+        },
+        {
+          "seed": 1034,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4714833902794821,
+          "final_bearing": 0.6537194980275624,
+          "altitude_rms": 0.0002222983521895939,
+          "settled_altitude_rms": 0.00024851967676201714,
+          "frames": 250
+        },
+        {
+          "seed": 1035,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6315097745656301,
+          "final_bearing": 2.1529575590176537,
+          "altitude_rms": 1.783301386600118e-05,
+          "settled_altitude_rms": 1.991580397115414e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1036,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.536752820437848,
+          "final_bearing": 2.77766792985205,
+          "altitude_rms": 0.00010105689746842372,
+          "settled_altitude_rms": 0.00010934597543228405,
+          "frames": 250
+        },
+        {
+          "seed": 1037,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.299479108035663,
+          "final_bearing": 0.3574814432803218,
+          "altitude_rms": 0.00021370034552824262,
+          "settled_altitude_rms": 0.00023777015418137459,
+          "frames": 250
+        },
+        {
+          "seed": 1038,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.43917878180907577,
+          "final_bearing": 0.5037517359381949,
+          "altitude_rms": 0.00024047470942478415,
+          "settled_altitude_rms": 0.000267987977540247,
+          "frames": 250
+        },
+        {
+          "seed": 1039,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40395010140788484,
+          "final_bearing": 0.22637905803098018,
+          "altitude_rms": 4.160006748622746e-05,
+          "settled_altitude_rms": 4.621511757104993e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1040,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.39995261009403843,
+          "final_bearing": 2.1296276404706966,
+          "altitude_rms": 0.0008055968517438137,
+          "settled_altitude_rms": 0.0008991968307222788,
+          "frames": 250
+        },
+        {
+          "seed": 1041,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.5286499445091039,
+          "final_bearing": 0.6374166245857786,
+          "altitude_rms": 0.00034716694840555883,
+          "settled_altitude_rms": 0.0003863795715858926,
+          "frames": 250
+        },
+        {
+          "seed": 1042,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6065883057020267,
+          "final_bearing": 0.7803331050110185,
+          "altitude_rms": 0.00012095520798788502,
+          "settled_altitude_rms": 0.00013521794900396393,
+          "frames": 250
+        },
+        {
+          "seed": 1043,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46080424675415704,
+          "final_bearing": 0.48619346939150315,
+          "altitude_rms": 0.00029680698400470675,
+          "settled_altitude_rms": 0.000330837198631011,
+          "frames": 250
+        },
+        {
+          "seed": 1044,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.625989424849421,
+          "final_bearing": 1.952281728517068,
+          "altitude_rms": 4.579892823106962e-05,
+          "settled_altitude_rms": 4.66734361473578e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1045,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.4833759652762147,
+          "final_bearing": 0.8876629219276289,
+          "altitude_rms": 0.00028159008962057617,
+          "settled_altitude_rms": 0.0003147592461375285,
+          "frames": 250
+        },
+        {
+          "seed": 1046,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.6252010723978625,
+          "final_bearing": 0.6284844425393439,
+          "altitude_rms": 0.0001236946710646378,
+          "settled_altitude_rms": 0.0001379577503124313,
+          "frames": 250
+        },
+        {
+          "seed": 1047,
+          "success": true,
+          "collision": false,
+          "initial_bearing": 0.3278214152858163,
+          "final_bearing": 0.10960088371741339,
+          "altitude_rms": 6.093690401002021e-05,
+          "settled_altitude_rms": 6.806423636454738e-05,
+          "frames": 250
+        },
+        {
+          "seed": 1048,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.46463063432612944,
+          "final_bearing": 3.006605256508802,
+          "altitude_rms": 0.0005979488341113277,
+          "settled_altitude_rms": 0.0006668827169147764,
+          "frames": 250
+        },
+        {
+          "seed": 1049,
+          "success": false,
+          "collision": false,
+          "initial_bearing": 0.40292676992511095,
+          "final_bearing": 3.0862475201638055,
+          "altitude_rms": 9.636850876950571e-05,
+          "settled_altitude_rms": 0.00010770793547075428,
+          "frames": 250
+        }
+      ]
+    }
+  },
+  "hover": {
+    "seconds": 30,
+    "settle_seconds": 2.0,
+    "max_settled_altitude_rms": 0.00048637889797487066,
+    "runs": [
+      {
+        "seed": 2000,
+        "success": false,
+        "collision": false,
+        "initial_bearing": 0.3304222723188873,
+        "final_bearing": 0.34257754460927414,
+        "altitude_rms": 7.497609120368749e-05,
+        "settled_altitude_rms": 7.728624727665619e-05,
+        "frames": 750
+      },
+      {
+        "seed": 2001,
+        "success": false,
+        "collision": false,
+        "initial_bearing": 0.31236770928716695,
+        "final_bearing": 0.2326488456573707,
+        "altitude_rms": 0.00043857326957924694,
+        "settled_altitude_rms": 0.00045333582688947965,
+        "frames": 750
+      },
+      {
+        "seed": 2002,
+        "success": true,
+        "collision": false,
+        "initial_bearing": 0.6265689809515773,
+        "final_bearing": 0.15591768772161407,
+        "altitude_rms": 0.0003028565037251839,
+        "settled_altitude_rms": 0.00031320710308973637,
+        "frames": 750
+      },
+      {
+        "seed": 2003,
+        "success": false,
+        "collision": false,
+        "initial_bearing": 0.6357686596363838,
+        "final_bearing": 0.32792991775343167,
+        "altitude_rms": 0.00016036436027397645,
+        "settled_altitude_rms": 0.00016558143413114408,
+        "frames": 750
+      },
+      {
+        "seed": 2004,
+        "success": true,
+        "collision": false,
+        "initial_bearing": 0.5861424786214804,
+        "final_bearing": 0.2845141845988411,
+        "altitude_rms": 0.00046994436307392945,
+        "settled_altitude_rms": 0.00048637889797487066,
+        "frames": 750
+      }
+    ]
+  },
+  "acceptance": {
+    "steering_success_rate": 0.4,
+    "steering_passed": false,
+    "ablation_success_rates": {
+      "zero": 0.0,
+      "sensory": 0.0,
+      "shuffle": 0.12
+    },
+    "ablation_passed": true,
+    "hover_passed": true,
+    "note": "Hover uses the trained policy with a lateral target for 30 s; settled RMS excludes the first 2 s."
+  }
+}
