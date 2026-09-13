@@ -56,7 +56,10 @@ def test_replay_reset_task_ablation_and_policy_guard():
         with client.websocket_connect("/ws") as ws:
             from fly_drone.env import TASKS
 
-            assert ws.receive_json()["tasks"] == list(TASKS)
+            metadata = ws.receive_json()
+            assert metadata["tasks"] == list(TASKS)
+            assert metadata["room"]["kind"] == "legacy"
+            assert len(metadata["room"]["walls"]) == 3
             ws.send_json(
                 {"op": "reset", "seed": 1003, "task": "looming", "ablation": "sensory"}
             )
@@ -64,6 +67,13 @@ def test_replay_reset_task_ablation_and_policy_guard():
                 pass
             assert frame["task"] == "looming" and frame["ablation"] == "sensory"
             assert frame["seed"] == 1003 and "obstacle_distance" in frame["outcome"]
+            ws.send_json({"op": "reset", "seed": 5, "task": "free_roam"})
+            while (message := ws.receive_json()).get("type") != "room" or message[
+                "kind"
+            ] != "arena":
+                pass
+            assert len(message["walls"]) == 4 and len(message["bands"]) == 4
+            assert len(message["pillars"]) == 16 and message["half_size"] == 8.0
             ws.send_json({"op": "reset", "policy": "/etc/passwd.json"})
             while not (frame := ws.receive_json())["error"]:
                 pass

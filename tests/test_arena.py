@@ -62,6 +62,24 @@ def test_half_of_beacons_spawn_out_of_view():
     assert 0.35 < np.mean(hidden) < 0.65
 
 
+def test_room_geometry_describes_active_objects():
+    legacy = DronePlant(vision=False)
+    plant = DronePlant(vision=False, arena=ArenaSpec())
+    try:
+        assert legacy.room()["kind"] == "legacy" and len(legacy.room()["walls"]) == 3
+        plant.set_pillars([[2.0, 1.0], [-3.0, 4.0]])
+        room = plant.room()
+        assert room["kind"] == "arena" and room["half_size"] == 8.0
+        assert len(room["walls"]) == 4 and len(room["bands"]) == 4
+        assert [p["center"][:2] for p in room["pillars"]] == [[2.0, 1.0], [-3.0, 4.0]]
+        assert room["pillars"][0]["height"] == 3.0
+        assert room["beacon_radius"] == 0.3 and room["threat_radius"] == 0.25
+        assert all(b["center"][2] == 1.0 for b in room["bands"])
+    finally:
+        legacy.close()
+        plant.close()
+
+
 def test_pillar_contact_registers():
     plant = DronePlant(vision=False, arena=ArenaSpec())
     try:

@@ -311,6 +311,46 @@ class DronePlant(BaseAviary):
         self.hold = self.pos[0].copy()
         self.yaw_target = float(self.rpy[0, 2])
 
+    def room(self):
+        """Static room geometry for the viewer, read from the compiled model (Z-up m)."""
+        m = self.model
+        walls, bands, pillars = [], [], []
+        for g in range(m.ngeom):
+            name = mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_GEOM, g) or ""
+            box = {
+                "center": m.geom_pos[g].tolist(),
+                "half_extents": m.geom_size[g].tolist(),
+            }
+            if name.endswith("_band"):
+                bands.append(box)
+            elif name.startswith("wall_") or name in ("back", "left", "right"):
+                walls.append(box)
+        for i, (x, y) in enumerate(self.pillars):
+            geom = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, f"pillar_{i}")
+            radius, half_height = m.geom_size[geom][:2]
+            pillars.append(
+                {
+                    "center": [float(x), float(y), float(half_height)],
+                    "radius": float(radius),
+                    "height": float(2 * half_height),
+                }
+            )
+
+        def radius(name):
+            return float(
+                m.geom_size[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, name)][0]
+            )
+
+        return {
+            "kind": "legacy" if self.arena is None else "arena",
+            "half_size": None if self.arena is None else self.arena.half_size,
+            "walls": walls,
+            "bands": bands,
+            "pillars": pillars,
+            "beacon_radius": radius("target"),
+            "threat_radius": radius("obstacle"),
+        }
+
     def camera(self):
         if not self.vision:
             return self.images

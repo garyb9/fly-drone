@@ -95,6 +95,8 @@ class Session:
         self.lock = threading.Lock()
         self.latest = None
         self.metadata = None
+        self.room = None
+        self.room_seq = 0
         self.error = None
         self.thread = threading.Thread(target=self.run, daemon=True)
 
@@ -103,6 +105,12 @@ class Session:
 
     def submit(self, command):
         self.commands.put_nowait(command)
+
+    def publish_room(self, room):
+        """Room geometry changes only on reset (legacy room <-> free-roam arena)."""
+        with self.lock:
+            self.room = room
+            self.room_seq += 1
 
     def run(self):
         env = None
@@ -154,7 +162,9 @@ class Session:
                 "tasks": list(TASKS),
                 "ablations": list(ABLATION_MODES),
                 "dataset_hash": env.brain.dataset_hash,
+                "room": env.plant.room(),
             }
+            self.publish_room(self.metadata["room"])
             episode = 0
             paused = False
             seq = 0
@@ -188,6 +198,7 @@ class Session:
                             _, info = env.reset(seed=seed)
                             tracker = EpisodeTracker(env.task, info)
                             result = None
+                            self.publish_room(env.plant.room())
                             fly.reset()
                             episode += 1
                             paused = False
@@ -343,12 +354,19 @@ def make_app(policy=None, looming_policy=None, task_policies=None):
                 await asyncio.sleep(0.1)
             await ws.send_json({"type": "metadata", **session.metadata})
             last = -1
+            # metadata already carries the room; a newer one is sent when resets change it.
+            last_room = 1
             while not reader.done():
                 with session.lock:
                     frame = session.latest
                 if session.error:
                     await ws.send_json({"error": session.error})
                     return
+                with session.lock:
+                    room, room_seq = session.room, session.room_seq
+                if room_seq != last_room:
+                    await ws.send_json({"type": "room", **room})
+                    last_room = room_seq
                 if frame and frame["seq"] != last:
                     await asyncio.wait_for(
                         ws.send_json({"type": "frame", **frame}), timeout=5
