@@ -25,6 +25,8 @@ def main():
     p.add_argument("--envs", type=int, default=4)
     p.add_argument("--teacher-scale", type=float, default=0.4)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--learning-rate", type=float, default=3e-4)
+    p.add_argument("--log-std", type=float)
     p = sub.add_parser("export")
     p.add_argument("checkpoint")
     p.add_argument("--output", required=True)
@@ -105,6 +107,8 @@ def main():
             args.envs,
             args.teacher_scale,
             args.seed,
+            args.learning_rate,
+            args.log_std,
         )
     elif args.command == "export":
         from .training import export_checkpoint

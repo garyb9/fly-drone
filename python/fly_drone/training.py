@@ -74,6 +74,8 @@ def train(
     envs=4,
     teacher_scale=0.4,
     seed=42,
+    learning_rate=3e-4,
+    log_std=None,
 ):
     import torch
     from stable_baselines3 import PPO
@@ -106,6 +108,13 @@ def train(
     try:
         if resume:
             model = PPO.load(resume, env=vec, device="cpu")
+            # A warm-started checkpoint carries lr 1e-5 and log_std -2.5; keeping them
+            # froze a resumed looming run (log_std unchanged after 30k steps).
+            model.learning_rate = learning_rate
+            model.lr_schedule = lambda _: learning_rate
+            if log_std is not None:
+                with torch.no_grad():
+                    model.policy.log_std.fill_(log_std)
         else:
             model = PPO(
                 "MlpPolicy",
@@ -153,6 +162,8 @@ def train(
                     "envs": envs,
                     "teacher_scale": teacher_scale if calibration else None,
                     "resume": resume,
+                    "learning_rate": learning_rate if resume else None,
+                    "log_std": log_std,
                     "export_max_error": error,
                 },
                 indent=2,
