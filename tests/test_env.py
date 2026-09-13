@@ -77,6 +77,10 @@ def test_evaluate_smoke_with_zero_policy(tmp_path):
     assert set(report["modes"]) == {"none", "zero", "sensory", "shuffle"}
     assert all(len(m["runs"]) == 2 for m in report["modes"].values())
     assert len(report["hover"]["runs"]) == 1
+    none = report["modes"]["none"]
+    assert set(none["success_by_side"]) == {"left", "right"}
+    assert 0.0 <= none["balanced_success"] <= 1.0
+    assert all(r["target_side"] in ("left", "right") for r in none["runs"])
     # A zero decoder cannot steer, so no ablation can be beaten.
     assert report["acceptance"]["steering_passed"] is False
     assert json.loads((tmp_path / "evaluation.json").read_text())["episodes"] == 2

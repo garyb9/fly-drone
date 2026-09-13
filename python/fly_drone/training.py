@@ -192,6 +192,7 @@ def _rollout_chunk(job):
     try:
         for seed in seeds:
             obs, info = env.reset(seed=int(seed))
+            side = 1 if info["bearing"] > 0 else -1
             initial = abs(info["bearing"])
             zs = []
             collision = False
@@ -210,6 +211,7 @@ def _rollout_chunk(job):
             runs.append(
                 {
                     "seed": int(seed),
+                    "target_side": "left" if side > 0 else "right",
                     "success": bool(not collision and final < initial * 0.5),
                     "collision": collision,
                     "initial_bearing": initial,
@@ -227,8 +229,17 @@ def _rollout_chunk(job):
 
 
 def _summary(runs, sim_seconds, wall_seconds):
+    by_side = {
+        s: [r["success"] for r in runs if r.get("target_side") == s]
+        for s in ("left", "right")
+    }
+    side_rates = {s: float(np.mean(v)) if v else None for s, v in by_side.items()}
+    # A blind policy that always turns one way scores ~50% success but ~0% balanced.
+    balanced = min((v for v in side_rates.values() if v is not None), default=0.0)
     return {
         "success_rate": float(np.mean([r["success"] for r in runs])),
+        "success_by_side": side_rates,
+        "balanced_success": balanced,
         "collision_rate": float(np.mean([r["collision"] for r in runs])),
         "mean_final_bearing": float(np.mean([r["final_bearing"] for r in runs])),
         "real_time_factor": sim_seconds / wall_seconds if wall_seconds else None,
@@ -295,10 +306,17 @@ def evaluate(
     }
     report["acceptance"] = {
         "steering_success_rate": modes["none"]["success_rate"],
-        "steering_passed": modes["none"]["success_rate"] >= 0.8,
+        "steering_balanced_success": modes["none"]["balanced_success"],
+        "steering_passed": modes["none"]["success_rate"] >= 0.8
+        and modes["none"]["balanced_success"] >= 0.8,
         "ablation_success_rates": {m: modes[m]["success_rate"] for m in ABLATIONS},
+        "ablation_balanced_success": {
+            m: modes[m]["balanced_success"] for m in ABLATIONS
+        },
         "ablation_passed": all(
-            modes["none"]["success_rate"] > modes[m]["success_rate"] for m in ABLATIONS
+            modes["none"]["success_rate"] > modes[m]["success_rate"]
+            and modes["none"]["balanced_success"] > modes[m]["balanced_success"]
+            for m in ABLATIONS
         ),
         "hover_passed": bool(
             hover_runs
