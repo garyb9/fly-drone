@@ -184,6 +184,8 @@ def export_checkpoint(checkpoint, output):
 
 
 ABLATIONS = ("zero", "sensory", "shuffle")
+THREAT_RANGE = 2.0
+MAX_DISPLACEMENT_AT_THREAT = 0.25
 FRAME_HZ = 25
 SETTLE_SECONDS = 2.0
 
@@ -216,6 +218,7 @@ def _rollout_chunk(job):
             collision = False
             min_distance = info["obstacle_distance"]
             pre_launch_displacement = 0.0
+            displacement_at_threat = None
             for _ in range(frames):
                 obs, _, done, truncated, info = env.step(brain.infer(obs) / LIMITS)
                 zs.append(float(env.plant.pos[0, 2]))
@@ -224,6 +227,11 @@ def _rollout_chunk(job):
                     pre_launch_displacement = max(
                         pre_launch_displacement, info["displacement"]
                     )
+                elif (
+                    displacement_at_threat is None
+                    and info["obstacle_distance"] < THREAT_RANGE
+                ):
+                    displacement_at_threat = info["displacement"]
                 if done:
                     terminated = True
                     collision = info["collision"]
@@ -234,8 +242,15 @@ def _rollout_chunk(job):
             zs = np.asarray(zs)
             settled = zs[int(SETTLE_SECONDS * FRAME_HZ) :]
             final = abs(info["bearing"])
+            if displacement_at_threat is None:
+                displacement_at_threat = info["displacement"]
             if task == "looming":
-                success = not terminated
+                # Survival alone rewards blind fleeing; require the drone to still be
+                # near its start when the obstacle first comes within threat range.
+                success = (
+                    not terminated
+                    and displacement_at_threat < MAX_DISPLACEMENT_AT_THREAT
+                )
             else:
                 success = not terminated and final < initial * 0.5
             runs.append(
@@ -250,6 +265,8 @@ def _rollout_chunk(job):
                     "final_bearing": final,
                     "min_obstacle_distance": float(min_distance),
                     "pre_launch_displacement": float(pre_launch_displacement),
+                    "displacement_at_threat": float(displacement_at_threat),
+                    "survived": not terminated,
                     "final_displacement": float(info["displacement"]),
                     "altitude_rms": float(np.sqrt(np.mean((zs - 1) ** 2))),
                     "settled_altitude_rms": float(np.sqrt(np.mean((settled - 1) ** 2)))
@@ -279,6 +296,10 @@ def _summary(runs, sim_seconds, wall_seconds):
         "mean_pre_launch_displacement": float(
             np.mean([r["pre_launch_displacement"] for r in runs])
         ),
+        "mean_displacement_at_threat": float(
+            np.mean([r["displacement_at_threat"] for r in runs])
+        ),
+        "survival_rate": float(np.mean([r["survived"] for r in runs])),
         "mean_final_bearing": float(np.mean([r["final_bearing"] for r in runs])),
         "real_time_factor": sim_seconds / wall_seconds if wall_seconds else None,
         "runs": sorted(runs, key=lambda r: r["seed"]),
@@ -358,9 +379,9 @@ def evaluate(
             and none["balanced_success"] >= 0.8,
             "ablations": ablations,
             "ablation_passed": beats_ablations,
-            "note": "Success = no contact or crash while an obstacle flies at the "
-            "drone; balanced by obstacle side. Pre-launch displacement exposes "
-            "blind dodging.",
+            "note": "Success = survive the obstacle pass AND be within "
+            f"{MAX_DISPLACEMENT_AT_THREAT} m of the start when the obstacle first "
+            f"comes within {THREAT_RANGE} m (no blind fleeing); balanced by side.",
         }
     else:
         hover_runs = collected.get("hover", [[], 0.0, 0.0])[0]

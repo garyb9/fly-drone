@@ -138,3 +138,5 @@ def test_evaluate_looming_smoke(tmp_path):
     assert report["task"] == "looming" and "hover" not in report
     assert "avoidance_passed" in report["acceptance"]
     assert all("min_obstacle_distance" in r for r in report["modes"]["none"]["runs"])
+    assert all("displacement_at_threat" in r for r in report["modes"]["none"]["runs"])
+    assert "survival_rate" in report["modes"]["none"]
