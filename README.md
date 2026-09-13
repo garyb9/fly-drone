@@ -1,72 +1,99 @@
 # Fly / Drone
 
-A full MaleCNS fly connectome inside a simulated quadrotor: camera pixels enter a frozen Rust spiking network, a learned decoder turns neural activity into motion commands, and a stabilizing controller drives four MuJoCo rotors.
+A full MaleCNS fly connectome inside a simulated quadrotor. Camera pixels enter a frozen Rust
+spiking network of 166,700 neurons, a learned decoder turns descending/motor neural activity into
+motion commands, and a stabilising controller drives four MuJoCo rotors.
 
-The browser shows the drone, its two eyes, a live anatomical activity graph, and an illustrative fly receiving the same neural outputs. The drone is the primary body; the fly has an independent trajectory.
+The browser shows the drone, its two eyes, a live anatomical activity graph, and an illustrative
+fly receiving the same neural outputs. The drone is the primary body; the fly has an independent
+trajectory.
 
-## Run locally
+## Requirements
 
-Requires Rust, Python 3.11+, Node 22, and a working OpenGL/EGL implementation. The Rust extension is native; no Python reimplementation of the brain is used. First setup downloads Python/RL dependencies, which can take several GB with GPU-enabled PyTorch wheels.
+Rust (stable, via `rust-toolchain.toml`), Python 3.11+, Node 22 (`.nvmrc`) with Yarn 1, and
+OpenGL/EGL (Mesa is fine). The first setup downloads PyTorch and the RL dependencies, several GB.
 
 ```bash
 git clone --recurse-submodules https://github.com/garyb9/fly-drone.git
 cd fly-drone
-./scripts/setup.sh
-source .venv/bin/activate
-fly-drone serve
+yarn setup          # submodule, .venv, native Rust extension (maturin), yarn install, web build
 ```
 
-Open **http://127.0.0.1:8000**. Without `--policy`, the scene explicitly runs a PID hover baseline while the brain observes the cameras and drives the fly panel. To give the neural decoder authority over drone movement:
+Python tools run through `scripts/venv.sh`, so no `source .venv/bin/activate` is needed for
+`yarn` scripts. Activate the venv only to call `fly-drone` directly.
 
-```bash
-fly-drone serve --policy runs/calibrated/actor.json
-```
+## Scripts
 
-The service binds localhost. For frontend development, keep it running and execute `npm run dev --prefix web`. The Vite server proxies simulation traffic. MuJoCo's native viewer is also available with `MUJOCO_GL=glfw fly-drone baseline --viewer` on a desktop with a display.
+Like fly-playground, one root `package.json` drives every language:
+
+| When                                 | Command                                 | What it does                                                                                                                            |
+| ------------------------------------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| once                                 | `yarn setup`                            | bootstrap everything (`scripts/setup.sh`)                                                                                               |
+| before committing                    | `yarn prep`                             | **auto-fix**: prettier, eslint `--fix`, `cargo fmt`, `ruff format` + `ruff --fix`; then typecheck, clippy, rebuild extension, build web |
+| run the lab                          | `yarn dev`                              | rebuild extension + web, serve on **http://127.0.0.1:8000** (PID hover baseline, brain observing)                                       |
+| run with a trained brain             | `yarn dev:policy runs/<run>/actor.json` | the neural decoder commands the drone                                                                                                   |
+| frontend work                        | `yarn web:dev`                          | Vite with HMR, proxies `/ws` to a running `yarn dev`                                                                                    |
+| CI (identical locally and on GitHub) | `yarn ci`                               | format/lint checks (TS, Rust, Python), typecheck, clippy, Rust tests, extension build, pytest, vitest, web build, 2 s flight smoke test |
+| after `yarn dev` is up               | `yarn browser:check`                    | Playwright: telemetry, pause/resume, reset, reconnect, interventions, mobile layout                                                     |
+
+Individual steps are also scripts: `format`, `lint`, `typecheck`, `test`, `build`, `rs:fmt`,
+`rs:lint`, `rs:test`, `rs:bench`, `py:fmt`, `py:lint`, `py:build`, `py:test`, `smoke`.
+`./scripts/check.sh` is an alias for `yarn ci`.
 
 ## Train and evaluate
 
 ```bash
-# Physics baseline and synthetic + actual-camera causal checks
-fly-drone baseline --seconds 30
-fly-drone assay
-
-# Efficient first decoder: supervised neural-only warm start, then PPO
-fly-drone calibrate --output runs/calibration.npz
-fly-drone train --steps 1024 --calibration runs/calibration.npz --output runs/calibrated
-
-# Pure PPO and continuation are also supported
-fly-drone train --task visual --steps 20000 --output runs/visual
-fly-drone train --task looming --steps 20000 --resume runs/calibrated/ppo.zip --output runs/looming
-
-# Held-out seeds and all three ablation controls
-fly-drone evaluate --policy runs/calibrated/actor.json --episodes 50
+yarn assay                                     # causal gate: vision reaches the policy features
+yarn calibrate --trials 256 --output runs/calibration.npz
+yarn train --task visual --steps 50000 --envs 4 \
+     --calibration runs/calibration.npz --teacher-scale 0.7 --output runs/visual
+yarn evaluate --policy runs/visual/actor.json --episodes 50 --workers 12 \
+     --output runs/visual/evaluation.json
+yarn train --task looming --steps 30000 --resume runs/visual/ppo.zip --output runs/looming
+scripts/venv.sh fly-drone export runs/visual/checkpoints/rl_model_20000_steps.zip \
+     --output runs/visual/actor-20k.json            # any checkpoint → parity-checked Rust actor
 ```
 
-Tasks are `hover`, `visual`, and `looming`. The current visual reward encourages target orientation and approach; the warm-start teacher teaches yaw toward the target while preserving hover. Calibration uses simulator bearing only as an offline label. The actor sees 2,022 descending/motor neural activities, never raw image features, target coordinates, or simulator pose. PPO does not change the connectome or neuron parameters.
-
-Training refuses to start if matched sensory stimulation/silencing fails. Checkpoints, exported Rust actor JSON, export-parity metrics, and evaluation metrics are stored under ignored `runs/`. A saved policy validates the graph hash, encoder version, neuron identities and layer dimensions before loading. Long training and evaluation are separate from CI.
+The actor sees only the activity of 2,022 descending/VNC motor neurons: never pixels, cues,
+pose or target position. Neither PPO nor the warm start changes the connectome or neuron
+parameters. Training refuses to start if the sensory causal gate fails. Evaluation compares the
+trained brain against zeroed features, silenced visual inputs and shuffled features, plus a
+30 s hover check. `runs/` is git-ignored. Accepted results go to `docs/results/`.
 
 ## Interact
 
-- Orbit/zoom the main scene; follow the drone.
+- Orbit/zoom the main scene, or follow the drone.
 - Pause or reset all clocks and bodies together.
-- Move the visual target left/center/right and place an obstacle ahead.
+- Move the visual target left/centre/right, and place an obstacle ahead.
 - Select a displayed neuron and pulse, hold, silence or restore it.
 - Inspect actual/commanded motor RPM, camera currents, neural readouts and motion commands.
 
-The neural inspector displays measured somata and selected real connections, colored by source activity. It does not depict measured electrical transmission along axons. The fly's independent dynamics are adapted from `fly-playground`, with no movement assistance or noise; its wing animation is slowed for visibility. The drone mesh is enlarged 6x in the main view while physics stays at Crazyflie scale.
+The inspector shows measured somata and selected real connections, coloured by source activity.
+It is not a measurement of transmission along axons. The fly's dynamics are illustrative. The
+drone mesh is drawn 6× larger than its physical size.
 
-## Verification and architecture
+## Documentation
 
-```bash
-./scripts/check.sh
-# With the local server running and Chrome installed:
-node scripts/browser-check.mjs
-```
+| Doc                                                          | Contents                                                                                                 |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)               | system overview, process boundaries, contracts                                                           |
+| [`docs/neuron-model.md`](docs/neuron-model.md)               | LIF equations, weights and signs, tonic fixed point, activity trace, CSR format, determinism, Rust actor |
+| [`docs/sensory-model.md`](docs/sensory-model.md)             | camera geometry, encoder equations, looming math, splay dead-zone experiment, causal assay               |
+| [`docs/control-and-physics.md`](docs/control-and-physics.md) | frames, CF2X constants, rotor wrench, drag, motor lag, cascaded PID and mixer, clock identities          |
+| [`docs/training.md`](docs/training.md)                       | MDP, reward shaping, PPO/GAE, warm-start turn gain, export parity, evaluation statistics                 |
+| [`docs/data-pipeline.md`](docs/data-pipeline.md)             | MaleCNS provenance, selection and transforms, dataset hash                                               |
+| [`docs/validation.md`](docs/validation.md)                   | acceptance table with measured results and performance                                                   |
+| [`docs/manual-checklist.md`](docs/manual-checklist.md)       | automated and human verification items                                                                   |
+| [`docs/references.md`](docs/references.md)                   | papers, datasets and upstream code                                                                       |
+| [`docs/superpowers/plans/`](docs/superpowers/plans/)         | milestone plans                                                                                          |
 
-See [architecture](docs/architecture.md), [validation results](docs/validation.md), [source provenance](docs/source-provenance.json), and [attribution](docs/THIRD_PARTY.md). `requirements-tested.txt` records the direct package versions tested in this checkout; Cargo and npm have lockfiles. The drone simulator is pinned as a git submodule.
+## Status and limits
 
-The current plant uses ideal state feedback for stabilization and an engineered visual adapter. It is a research simulator, not validated real-flight software. The onboard goal preserves the full connectome and allows a larger airframe carrying compute. Hardware selection, sensor estimation, identified motors, firmware validation and flight tests remain subsequent milestones. The frontend is suitable for later static hosting; the persistent simulation service remains separate.
+This is a research simulator, not flight software. The stabiliser uses ideal simulated state,
+and the visual adapter is engineered (two image statistics per eye). Onboard operation keeps the
+full connectome and may need a larger airframe to carry compute. Hardware selection, state
+estimation, motor identification, firmware validation and flight tests are later milestones.
+The frontend can be hosted statically; simulation and training need a persistent service.
 
-Project code: MIT. MaleCNS data: CC-BY 4.0. Fly asset: Apache-2.0. See the included notices.
+Project code: MIT. MaleCNS data: CC-BY 4.0. Fly asset: Apache-2.0. See
+[`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md) and the included notices.

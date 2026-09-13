@@ -72,11 +72,11 @@
   "left_right_max_difference": 0.8169962167739868,
   "silencing_max_effect": 0.586841881275177,
   "silenced_dark_max_difference": 0.0,
-  "rendered_left_right_max_difference": 0.8182705640792847,
+  "rendered_left_right_max_difference": 0.7998738884925842,
   "rendered_silenced_difference": 0.0,
   "passed": true,
-  "tick_ms_p50": 3.456776000348327,
-  "tick_ms_p95": 5.343369499769323,
-  "rss_mb": 487.829504,
+  "tick_ms_p50": 2.1049290007795207,
+  "tick_ms_p95": 2.8812635011490784,
+  "rss_mb": 460.566528,
   "meaning": "Software causal assay; not behavioral or biological validation. Synthetic RGB and rendered target stimuli."
 }
