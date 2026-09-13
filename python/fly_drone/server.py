@@ -14,12 +14,10 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
 from .brain import ROOT
-from .env import ConnectomeEnv
+from .env import TASKS, ConnectomeEnv, EpisodeTracker
 from .fly import FlyMirror
 from .plant import LIMITS
-from .training import MAX_DISPLACEMENT_AT_THREAT, THREAT_RANGE
 
-TASKS = ("visual", "looming")
 ABLATION_MODES = ("none", "zero", "sensory", "shuffle")
 POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
 
@@ -83,9 +81,16 @@ def list_reports():
 
 
 class Session:
-    def __init__(self, policy=None, looming_policy=None):
+    def __init__(self, policy=None, looming_policy=None, task_policies=None):
         self.policy = policy
-        self.looming_policy = looming_policy
+        self.task_policies = {task: None for task in TASKS}
+        self.task_policies.update(task_policies or {})
+        self.task_policies["visual"] = policy
+        if looming_policy:
+            self.task_policies["looming"] = looming_policy
+        unknown = set(self.task_policies) - set(TASKS)
+        if unknown:
+            raise ValueError(f"unknown task policies: {sorted(unknown)}")
         self.commands = queue.Queue(maxsize=64)
         self.stop = threading.Event()
         self.lock = threading.Lock()
@@ -105,7 +110,7 @@ class Session:
         try:
             env = ConnectomeEnv()
             fly = FlyMirror()
-            task_policies = {"visual": self.policy, "looming": self.looming_policy}
+            task_policies = self.task_policies
             active_policy = None
 
             def use_policy(path):
@@ -117,8 +122,7 @@ class Session:
             use_policy(self.policy)
             seed = 42
             _, info = env.reset(seed=seed)
-            initial_bearing = abs(info["bearing"])
-            threat_displacement = None
+            tracker = EpisodeTracker(env.task, info)
             result = None
             cells = env.brain.cells
             # Render measured somata only. Keep feature cells and selected visual cells.
@@ -183,8 +187,7 @@ class Session:
                             env.task = task
                             env.ablation = ablation
                             _, info = env.reset(seed=seed)
-                            initial_bearing = abs(info["bearing"])
-                            threat_displacement = None
+                            tracker = EpisodeTracker(env.task, info)
                             result = None
                             fly.reset()
                             episode += 1
@@ -217,31 +220,15 @@ class Session:
                     else:
                         command = np.zeros(4)
                     _, _, done, truncated, info = env.step(command)
+                    tracker.update(info)
                     for r in env.trace:
                         fly.step(r)
-                    if (
-                        info["launched"]
-                        and threat_displacement is None
-                        and info["obstacle_distance"] < THREAT_RANGE
-                    ):
-                        threat_displacement = info["displacement"]
                     if done or truncated:
                         paused = True
-                        if env.task == "looming":
-                            moved = (
-                                info["displacement"]
-                                if threat_displacement is None
-                                else threat_displacement
-                            )
-                            success = not done and moved < MAX_DISPLACEMENT_AT_THREAT
-                        else:
-                            success = not done and abs(info["bearing"]) < (
-                                0.5 * initial_bearing
-                            )
+                        finished = tracker.finish(done)
                         result = {
-                            "success": bool(success),
-                            "terminated": bool(done),
-                            "collision": bool(info["collision"]),
+                            k: finished[k]
+                            for k in ("success", "terminated", "collision")
                         }
                 camera = []
                 for frame in env.plant.images:
@@ -274,6 +261,8 @@ class Session:
                     else None,
                     "outcome": {
                         "bearing": info["bearing"],
+                        "target_distance": info["target_distance"],
+                        "climb": info["climb"],
                         "obstacle_distance": info["obstacle_distance"],
                         "launched": info["launched"],
                         "displacement": info["displacement"],
@@ -303,8 +292,8 @@ class Session:
         self.thread.join(timeout=10)
 
 
-def make_app(policy=None, looming_policy=None):
-    session = Session(policy, looming_policy)
+def make_app(policy=None, looming_policy=None, task_policies=None):
+    session = Session(policy, looming_policy, task_policies)
 
     @asynccontextmanager
     async def lifespan(app):

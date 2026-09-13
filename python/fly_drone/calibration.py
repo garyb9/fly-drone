@@ -54,17 +54,45 @@ def collect(path="runs/calibration.npz", trials=64):
 
 
 DODGE_RANGE = 2.0
+# Action dimensions each task's teacher explores with noise.
+TEACHER_AXES = {
+    "looming": [1],
+    "approach": [0, 3],
+    "track": [3],
+    "steer_dodge": [1, 3],
+    "escape": [2],
+}
+
+
+def threatened(info):
+    """Obstacle launched and within the range where gain-150 loom input fires."""
+    return info["launched"] and info["obstacle_distance"] < DODGE_RANGE
 
 
 def dodge_label(info):
-    """Teacher lateral command: flee the obstacle's side once it is launched and near.
+    """Teacher lateral command: flee the obstacle's side once it is launched and near."""
+    return -float(info["obstacle_side"]) if threatened(info) else 0.0
 
-    2.0 m matches where gain-150 loom input starts driving LC4/LPLC2, so the decoder
-    is not asked to react before the threat is visible.
-    """
-    if info["launched"] and info["obstacle_distance"] < DODGE_RANGE:
-        return -float(info["obstacle_side"])
-    return 0.0
+
+def teacher_action(task, info):
+    """Normalized teacher action; simulator state is used only to make labels."""
+    bearing = info["bearing"]
+    turn = float(np.clip(bearing * 1.5 / 0.8, -1, 1))
+    if task == "visual":
+        return np.array([0.0, 0.0, 0.0, turn])
+    if task == "looming":
+        return np.array([0.0, dodge_label(info), 0.0, 0.0])
+    if task == "approach":
+        facing = max(0.0, 1.0 - abs(bearing) / 0.3)
+        forward = float(np.clip((info["target_distance"] - 0.4) / 1.0, 0, 1)) * facing
+        return np.array([forward, 0.0, 0.0, 0.6 * turn])
+    if task == "track":
+        return np.array([0.0, 0.0, 0.0, float(np.clip(bearing * 2.5 / 0.8, -1, 1))])
+    if task == "steer_dodge":
+        return np.array([0.0, dodge_label(info), 0.0, 0.6 * turn])
+    if task == "escape":
+        return np.array([0.0, 0.0, 1.0 if threatened(info) else 0.0, 0.0])
+    raise ValueError(f"no teacher for task {task!r}")
 
 
 def collect_closed_loop(
@@ -75,11 +103,12 @@ def collect_closed_loop(
     teacher_scale=0.4,
     task="visual",
 ):
-    """Record features while a noisy proportional yaw teacher flies the drone.
+    """Record features while a noisy teacher flies the drone in closed loop.
 
     Static frames never contain rotation-induced loom input; features seen in
     closed-loop flight do, so a decoder fitted only on static frames fails there.
-    Labels still come from simulator bearing, used offline only.
+    Visual labels are unscaled turn commands (warm_start applies teacher_scale);
+    other tasks store the exact teacher action (train them with teacher scale 1).
     """
     from .env import ConnectomeEnv
 
@@ -92,18 +121,20 @@ def collect_closed_loop(
         for trial in range(trials):
             obs, info = env.reset(seed=trial + 200)
             for _ in range(frames):
+                label = teacher_action(task, info)
                 xs.append(obs)
+                ys.append(label)
                 angles.append(info["bearing"])
-                if task == "looming":
-                    label = dodge_label(info)
-                    ys.append([0, label, 0, 0])
-                    vy = np.clip(label + rng.normal(0, noise), -1, 1)
-                    action = np.array([0, vy, 0, 0])
-                else:
-                    label = float(np.clip(info["bearing"] * 1.5 / 0.8, -1, 1))
-                    ys.append([0, 0, 0, label])
-                    yaw = np.clip(teacher_scale * label + rng.normal(0, noise), -1, 1)
+                if task == "visual":
+                    yaw = np.clip(
+                        teacher_scale * label[3] + rng.normal(0, noise), -1, 1
+                    )
                     action = np.array([0, 0, 0, yaw])
+                else:
+                    action = label.copy()
+                    for axis in TEACHER_AXES[task]:
+                        action[axis] += rng.normal(0, noise)
+                    action = np.clip(action, -1, 1)
                 obs, _, done, _, info = env.step(action)
                 if done:
                     break

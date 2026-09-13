@@ -184,16 +184,27 @@ def export_checkpoint(checkpoint, output):
 
 
 ABLATIONS = ("zero", "sensory", "shuffle")
-THREAT_RANGE = 2.0
-MAX_DISPLACEMENT_AT_THREAT = 0.25
+TASK_NOTES = {
+    "visual": "Halve the initial target bearing within 10 s; balanced by target side. "
+    "Hover: trained policy, 30 s, settled RMS after 2 s.",
+    "looming": "Survive an obstacle flown at the drone and be within 0.25 m of the "
+    "start when it first comes within 2 m; balanced by obstacle side.",
+    "approach": "End within 0.6 m (horizontal) of a target 2.2-3.0 m away after 15 s; "
+    "balanced by initial target side.",
+    "track": "Mean |bearing| < 0.3 rad from 5 s to 30 s while the target orbits and "
+    "reverses; balanced by initial orbit direction.",
+    "steer_dodge": "Halve the target bearing AND dodge a mid-episode obstacle "
+    "threat-specifically; balanced by obstacle side.",
+    "escape": "Survive an obstacle aimed just below the drone, threat-specifically, "
+    "with a climb of at least 0.1 m; balanced by obstacle side.",
+}
 FRAME_HZ = 25
-SETTLE_SECONDS = 2.0
 
 
 def _rollout_chunk(job):
     """Roll out one policy over seeds in a single process (own brain + renderer)."""
     from .brain import BrainRuntime
-    from .env import HORIZON_FRAMES, ConnectomeEnv
+    from .env import HORIZON_FRAMES, ConnectomeEnv, EpisodeTracker
 
     policy, mode, seeds, seconds, task = job
     brain = BrainRuntime()
@@ -208,73 +219,18 @@ def _rollout_chunk(job):
     try:
         for seed in seeds:
             obs, info = env.reset(seed=int(seed))
-            if task == "looming":
-                side = info["obstacle_side"]
-            else:
-                side = 1 if info["bearing"] > 0 else -1
-            initial = abs(info["bearing"])
-            zs = []
+            tracker = EpisodeTracker(task, info)
             terminated = False
-            collision = False
-            min_distance = info["obstacle_distance"]
-            pre_launch_displacement = 0.0
-            displacement_at_threat = None
             for _ in range(frames):
                 obs, _, done, truncated, info = env.step(brain.infer(obs) / LIMITS)
-                zs.append(float(env.plant.pos[0, 2]))
-                min_distance = min(min_distance, info["obstacle_distance"])
-                if not info["launched"]:
-                    pre_launch_displacement = max(
-                        pre_launch_displacement, info["displacement"]
-                    )
-                elif (
-                    displacement_at_threat is None
-                    and info["obstacle_distance"] < THREAT_RANGE
-                ):
-                    displacement_at_threat = info["displacement"]
+                tracker.update(info)
                 if done:
                     terminated = True
-                    collision = info["collision"]
                     break
                 if truncated:
                     break
             sim_seconds += env.plant.data.time
-            zs = np.asarray(zs)
-            settled = zs[int(SETTLE_SECONDS * FRAME_HZ) :]
-            final = abs(info["bearing"])
-            if displacement_at_threat is None:
-                displacement_at_threat = info["displacement"]
-            if task == "looming":
-                # Survival alone rewards blind fleeing; require the drone to still be
-                # near its start when the obstacle first comes within threat range.
-                success = (
-                    not terminated
-                    and displacement_at_threat < MAX_DISPLACEMENT_AT_THREAT
-                )
-            else:
-                success = not terminated and final < initial * 0.5
-            runs.append(
-                {
-                    "seed": int(seed),
-                    "side": "left" if side > 0 else "right",
-                    "target_side": "left" if side > 0 else "right",
-                    "success": bool(success),
-                    "terminated": terminated,
-                    "collision": collision,
-                    "initial_bearing": initial,
-                    "final_bearing": final,
-                    "min_obstacle_distance": float(min_distance),
-                    "pre_launch_displacement": float(pre_launch_displacement),
-                    "displacement_at_threat": float(displacement_at_threat),
-                    "survived": not terminated,
-                    "final_displacement": float(info["displacement"]),
-                    "altitude_rms": float(np.sqrt(np.mean((zs - 1) ** 2))),
-                    "settled_altitude_rms": float(np.sqrt(np.mean((settled - 1) ** 2)))
-                    if len(settled)
-                    else None,
-                    "frames": len(zs),
-                }
-            )
+            runs.append({"seed": int(seed), **tracker.finish(terminated)})
     finally:
         env.close()
     return mode, runs, sim_seconds, time.perf_counter() - start
@@ -310,7 +266,7 @@ def evaluate(
     policy,
     episodes=50,
     output="runs/evaluation.json",
-    seconds=10,
+    seconds=None,
     workers=8,
     hover_episodes=5,
     hover_seconds=30,
@@ -320,8 +276,11 @@ def evaluate(
     import multiprocessing
     from concurrent.futures import ProcessPoolExecutor
 
-    if task not in ("visual", "looming"):
-        raise ValueError("evaluate task must be visual or looming")
+    from .env import EVAL_SECONDS, SETTLE_SECONDS
+
+    if task not in EVAL_SECONDS:
+        raise ValueError(f"evaluate task must be one of {sorted(EVAL_SECONDS)}")
+    seconds = EVAL_SECONDS[task] if seconds is None else seconds
     policy = str(Path(policy).resolve())
     workers = max(1, int(workers))
     seeds = np.arange(1000, 1000 + episodes)
@@ -330,7 +289,7 @@ def evaluate(
         for mode in ("none", *ABLATIONS)
         for chunk in np.array_split(seeds, min(workers, episodes))
     ]
-    if task == "looming":
+    if task != "visual":
         hover_episodes = 0
     hover_seeds = np.arange(2000, 2000 + hover_episodes)
     jobs += [
@@ -359,11 +318,6 @@ def evaluate(
         "modes": modes,
     }
     none = modes["none"]
-    beats_ablations = all(
-        none["success_rate"] > modes[m]["success_rate"]
-        and none["balanced_success"] > modes[m]["balanced_success"]
-        for m in ABLATIONS
-    )
     ablations = {
         m: {
             "success_rate": modes[m]["success_rate"],
@@ -371,19 +325,19 @@ def evaluate(
         }
         for m in ABLATIONS
     }
-    if task == "looming":
-        report["acceptance"] = {
-            "avoidance_rate": none["success_rate"],
-            "avoidance_balanced": none["balanced_success"],
-            "avoidance_passed": none["success_rate"] >= 0.8
-            and none["balanced_success"] >= 0.8,
-            "ablations": ablations,
-            "ablation_passed": beats_ablations,
-            "note": "Success = survive the obstacle pass AND be within "
-            f"{MAX_DISPLACEMENT_AT_THREAT} m of the start when the obstacle first "
-            f"comes within {THREAT_RANGE} m (no blind fleeing); balanced by side.",
-        }
-    else:
+    acceptance = {
+        "success_rate": none["success_rate"],
+        "balanced_success": none["balanced_success"],
+        "passed": none["success_rate"] >= 0.8 and none["balanced_success"] >= 0.8,
+        "ablations": ablations,
+        "ablation_passed": all(
+            none["success_rate"] > modes[m]["success_rate"]
+            and none["balanced_success"] > modes[m]["balanced_success"]
+            for m in ABLATIONS
+        ),
+        "note": TASK_NOTES[task],
+    }
+    if task == "visual":
         hover_runs = collected.get("hover", [[], 0.0, 0.0])[0]
         hover_rms = [r["settled_altitude_rms"] for r in hover_runs]
         report["hover"] = {
@@ -394,25 +348,14 @@ def evaluate(
             ),
             "runs": sorted(hover_runs, key=lambda r: r["seed"]),
         }
-        report["acceptance"] = {
-            "steering_success_rate": none["success_rate"],
-            "steering_balanced_success": none["balanced_success"],
-            "steering_passed": none["success_rate"] >= 0.8
-            and none["balanced_success"] >= 0.8,
-            "ablations": ablations,
-            "ablation_passed": beats_ablations,
-            "hover_passed": bool(
-                hover_runs
-                and all(not r["terminated"] for r in hover_runs)
-                and all(
-                    r["frames"] >= int(hover_seconds * FRAME_HZ) for r in hover_runs
-                )
-                and report["hover"]["max_settled_altitude_rms"] is not None
-                and report["hover"]["max_settled_altitude_rms"] < 0.15
-            ),
-            "note": "Hover uses the trained policy with a lateral target for 30 s; "
-            "settled RMS excludes the first 2 s.",
-        }
+        acceptance["hover_passed"] = bool(
+            hover_runs
+            and all(not r["terminated"] for r in hover_runs)
+            and all(r["frames"] >= int(hover_seconds * FRAME_HZ) for r in hover_runs)
+            and report["hover"]["max_settled_altitude_rms"] is not None
+            and report["hover"]["max_settled_altitude_rms"] < 0.15
+        )
+    report["acceptance"] = acceptance
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(report, indent=2))
     return report

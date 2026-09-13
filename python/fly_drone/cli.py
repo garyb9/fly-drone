@@ -3,6 +3,8 @@ import json
 import time
 from pathlib import Path
 
+from .env import TASKS
+
 
 def main():
     parser = argparse.ArgumentParser(description="Fly connectome drone laboratory")
@@ -10,6 +12,13 @@ def main():
     p = sub.add_parser("serve")
     p.add_argument("--policy")
     p.add_argument("--looming-policy")
+    p.add_argument(
+        "--task-policy",
+        action="append",
+        default=[],
+        metavar="TASK=PATH",
+        help="policy for another task, e.g. approach=runs/x/actor.json",
+    )
     p.add_argument("--port", type=int, default=8000)
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
@@ -19,7 +28,7 @@ def main():
     p.add_argument("--output", default="runs/baseline.json")
     p = sub.add_parser("train")
     p.add_argument("--steps", type=int, default=20000)
-    p.add_argument("--task", choices=["hover", "visual", "looming"], default="visual")
+    p.add_argument("--task", choices=["hover", *TASKS], default="visual")
     p.add_argument("--output", default="runs/visual")
     p.add_argument("--resume")
     p.add_argument("--calibration")
@@ -36,16 +45,16 @@ def main():
     p.add_argument("--trials", type=int, default=64)
     p.add_argument("--closed-loop", action="store_true")
     p.add_argument("--frames", type=int, default=100)
-    p.add_argument("--task", choices=["visual", "looming"], default="visual")
+    p.add_argument("--task", choices=list(TASKS), default="visual")
     p = sub.add_parser("evaluate")
     p.add_argument("--policy", required=True)
     p.add_argument("--episodes", type=int, default=50)
-    p.add_argument("--seconds", type=float, default=10)
+    p.add_argument("--seconds", type=float, help="default: per-task evaluation length")
     p.add_argument("--output", default="runs/evaluation.json")
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--hover-episodes", type=int, default=5)
     p.add_argument("--hover-seconds", type=float, default=30)
-    p.add_argument("--task", choices=["visual", "looming"], default="visual")
+    p.add_argument("--task", choices=list(TASKS), default="visual")
     args = parser.parse_args()
     if args.command == "serve":
         import uvicorn
@@ -53,7 +62,13 @@ def main():
         from .server import make_app
 
         uvicorn.run(
-            make_app(args.policy, args.looming_policy), host="127.0.0.1", port=args.port
+            make_app(
+                args.policy,
+                args.looming_policy,
+                dict(item.split("=", 1) for item in args.task_policy),
+            ),
+            host="127.0.0.1",
+            port=args.port,
         )
     elif args.command == "assay":
         from .assay import sensory_assay
