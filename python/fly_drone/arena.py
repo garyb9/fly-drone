@@ -17,14 +17,17 @@ DRONE_RADIUS = 0.15
 class ArenaSpec:
     half_size: float = 8.0
     wall_height: float = 3.0
-    band: tuple = (0.4, 1.6)
+    # A 1.2 m band read as looming in 55% of turning frames near corners; 0.4 m in 17%.
+    band: tuple = (0.8, 1.2)
     wall_luma: float = 0.35
     floor_luma: float = 0.35
     pillar_slots: int = 16
     pillar_radius: float = 0.3
     # None: whole pillar near-black. A height: grey pillar with a dark ring at eye level,
     # so distant pillars sweeping past during turns stay below the loom threshold.
-    pillar_ring: float | None = None
+    # Measured under flat lighting (roam-feasibility): a fully dark pillar fires loom in
+    # 64-70% of turning frames; a 0.3 m ring gives 0-19% and still warns at ~1.1 m.
+    pillar_ring: float | None = 0.3
     pillar_luma: float = 0.35
     pillar_height: float = 3.0
     pillar_spacing: float = 2.5
@@ -33,7 +36,9 @@ class ArenaSpec:
     beacon_range: tuple = (3.0, 12.0)
     collect_radius: float = 0.5
     threat_radius: float = 0.25
-    limits: tuple = (1.0, 0.5, 0.3, 1.2)
+    # 0.7 m/s keeps >= 1.6 s of pillar loom warning; yaw above 0.8 rad/s pushes
+    # rotation-induced false loom past 15% of frames.
+    limits: tuple = (0.7, 0.5, 0.3, 0.8)
     altitude: tuple = (0.4, 2.5)
     wall_margin: float = 0.6
 
