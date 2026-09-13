@@ -222,7 +222,9 @@ def _rollout_chunk(job):
             tracker = EpisodeTracker(task, info)
             terminated = False
             for _ in range(frames):
-                obs, _, done, truncated, info = env.step(brain.infer(obs) / LIMITS)
+                obs, _, done, truncated, info = env.step(
+                    brain.infer(obs) / env.plant.limits
+                )
                 tracker.update(info)
                 if done:
                     terminated = True

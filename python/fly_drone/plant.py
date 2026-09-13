@@ -12,22 +12,63 @@ from multi_drone_mujoco.control.pid_control import PIDControl
 from multi_drone_mujoco.envs.base_aviary import BaseAviary, _generate_aviary_xml
 from multi_drone_mujoco.utils.enums import DroneModel
 
+from .arena import PARK_Z
+
 LIMITS = np.array([0.4, 0.4, 0.2, 0.8])
+LEGACY_HOLD = (np.array([-3.0, -3.0, 0.4]), np.array([3.0, 3.0, 2.5]))
+
+
+def _grey(luma):
+    return f"{luma} {luma} {luma} 1"
 
 
 class DronePlant(BaseAviary):
-    def __init__(self, vision=True, motor_tau=0.025, drag=True, eye_splay=0.75):
+    def __init__(
+        self, vision=True, motor_tau=0.025, drag=True, eye_splay=0.75, arena=None
+    ):
         self.eye_splay = float(eye_splay)
         self.motor_tau = float(motor_tau)
         if self.motor_tau < 0:
             raise ValueError("motor_tau must be nonnegative")
         self.use_drag = drag
+        self.arena = arena
         super().__init__(
             drone_model=DroneModel.CF2X,
             sim_freq=1000,
             ctrl_freq=200,
             initial_xyzs=np.array([[0.0, 0.0, 1.0]]),
         )
+        if arena is None:
+            self.limits = LIMITS.copy()
+            self.hold_low, self.hold_high = (b.copy() for b in LEGACY_HOLD)
+            self.object_range = 4.0
+        else:
+            self.limits = np.array(arena.limits, dtype=float)
+            self.hold_low, self.hold_high = arena.hold_low, arena.hold_high
+            self.object_range = arena.half_size
+        self.model = mujoco.MjModel.from_xml_string(self.build_xml())
+        # Eyes render at 64x48 on CPU GL: a full-size MSAA buffer and floor reflection
+        # cost ~5x more than the image itself. Changing these alters pixels (encoder id).
+        self.model.vis.global_.offwidth = 64
+        self.model.vis.global_.offheight = 48
+        self.model.vis.quality.offsamples = 0
+        self.data = mujoco.MjData(self.model)
+        self.controller = PIDControl(self)
+        self.commanded = np.zeros(4)
+        self.actual = np.zeros(4)
+        self.phase = np.zeros(4)
+        self.target = np.array([2.0, 1.0, 1.0])
+        self.obstacle = np.array([2.0, -1.0, 1.0])
+        self.pillars = np.zeros((0, 2))
+        self.ghost = False
+        self.images = np.zeros((2, 48, 64, 3), dtype=np.uint8)
+        self.vision = vision
+        self.renderer = None
+        self.hold = np.array([0.0, 0.0, 1.0])
+        self.yaw_target = 0.0
+        self.reset()
+
+    def build_xml(self):
         xml = ET.fromstring(
             _generate_aviary_xml(
                 1, DroneModel.CF2X, self.INIT_XYZS, self.INIT_RPYS, timestep=0.001
@@ -45,6 +86,13 @@ class DronePlant(BaseAviary):
                 fovy="75",
                 xyaxes=f"{math.sin(angle)} {-math.cos(angle)} 0 0 0 1",
             )
+        if self.arena is None:
+            self._legacy_room(world)
+        else:
+            self._arena_room(xml, world, self.arena)
+        return ET.tostring(xml, encoding="unicode")
+
+    def _legacy_room(self, world):
         ET.SubElement(
             world,
             "geom",
@@ -84,27 +132,102 @@ class DronePlant(BaseAviary):
                 size=size,
                 rgba="0.22 0.28 0.35 1",
             )
-        self.model = mujoco.MjModel.from_xml_string(
-            ET.tostring(xml, encoding="unicode")
+
+    def _arena_room(self, xml, world, spec):
+        # Uniform floor: the upstream checker has tiles at the dark threshold and bright
+        # edge marks, which would turn forward flight into false looming.
+        texture = xml.find("asset/texture[@name='groundplane']")
+        texture.attrib.update(
+            builtin="flat",
+            rgb1=_grey(spec.floor_luma)[:-2],
+            rgb2=_grey(spec.floor_luma)[:-2],
         )
-        # Eyes render at 64x48 on CPU GL: a full-size MSAA buffer and floor reflection
-        # cost ~5x more than the image itself. Changing these alters pixels (encoder id).
-        self.model.vis.global_.offwidth = 64
-        self.model.vis.global_.offheight = 48
-        self.model.vis.quality.offsamples = 0
-        self.data = mujoco.MjData(self.model)
-        self.controller = PIDControl(self)
-        self.commanded = np.zeros(4)
-        self.actual = np.zeros(4)
-        self.phase = np.zeros(4)
-        self.target = np.array([2.0, 1.0, 1.0])
-        self.obstacle = np.array([2.0, -1.0, 1.0])
-        self.images = np.zeros((2, 48, 64, 3), dtype=np.uint8)
-        self.vision = vision
-        self.renderer = None
-        self.hold = np.array([0.0, 0.0, 1.0])
-        self.yaw_target = 0.0
-        self.reset()
+        texture.attrib.pop("mark", None)
+        texture.attrib.pop("markrgb", None)
+        # Camera near clip is znear * extent. Bodies parked under the floor would inflate
+        # the computed extent and blind the eyes within ~0.5-1.8 m; pin it to the legacy
+        # room's 17 m (near clip 0.17 m).
+        ET.SubElement(xml, "statistic", extent="17", center="0 0 1")
+        xml.find("asset/material[@name='groundplane']").set("reflectance", "0")
+        ET.SubElement(
+            xml.find("asset"),
+            "material",
+            name="beacon",
+            rgba="1 1 0.9 1",
+            emission="1",
+            specular="0",
+        )
+        ET.SubElement(
+            world,
+            "geom",
+            name="target",
+            type="sphere",
+            pos="0 3 1",
+            size=str(spec.beacon_radius),
+            material="beacon",
+            contype="0",
+            conaffinity="0",
+        )
+        obstacle = ET.SubElement(
+            world, "body", name="obstacle_body", mocap="true", pos=f"0 0 {PARK_Z}"
+        )
+        ET.SubElement(
+            obstacle,
+            "geom",
+            name="obstacle",
+            type="sphere",
+            size=str(spec.threat_radius),
+            rgba="0.04 0.06 0.08 1",
+        )
+        h, t = spec.half_size, 0.1
+        lo, hi = spec.band
+        for name, x, y, sx, sy in [
+            ("wall_px", h + t, 0, t, h + 2 * t),
+            ("wall_nx", -h - t, 0, t, h + 2 * t),
+            ("wall_py", 0, h + t, h + 2 * t, t),
+            ("wall_ny", 0, -h - t, h + 2 * t, t),
+        ]:
+            ET.SubElement(
+                world,
+                "geom",
+                name=name,
+                type="box",
+                pos=f"{x} {y} {spec.wall_height / 2}",
+                size=f"{sx} {sy} {spec.wall_height / 2}",
+                rgba=_grey(spec.wall_luma),
+            )
+            # Dark band at eye height: approaching a wall expands a dark region.
+            inset = 0.01
+            bx = x - np.sign(x) * (t + inset) if x else 0
+            by = y - np.sign(y) * (t + inset) if y else 0
+            ET.SubElement(
+                world,
+                "geom",
+                name=name + "_band",
+                type="box",
+                pos=f"{bx} {by} {(lo + hi) / 2}",
+                size=f"{max(sx, inset) if not x else inset} "
+                f"{max(sy, inset) if not y else inset} {(hi - lo) / 2}",
+                rgba="0.03 0.03 0.04 1",
+                contype="0",
+                conaffinity="0",
+            )
+        for i in range(spec.pillar_slots):
+            pillar = ET.SubElement(
+                world,
+                "body",
+                name=f"pillar_{i}",
+                mocap="true",
+                pos=f"0 0 {PARK_Z}",
+            )
+            ET.SubElement(
+                pillar,
+                "geom",
+                name=f"pillar_{i}",
+                type="cylinder",
+                size=f"{spec.pillar_radius} {spec.pillar_height / 2}",
+                rgba="0.03 0.03 0.04 1",
+            )
 
     def reset(self, seed=None, options=None):
         obs = super().reset(seed=seed, options=options)
@@ -118,31 +241,75 @@ class DronePlant(BaseAviary):
             self.set_objects(target=self.target, obstacle=self.obstacle)
         return obs
 
-    def set_objects(self, target=None, obstacle=None):
+    def _body_mocap(self, name):
+        body = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, name)
+        return self.model.body_mocapid[body]
+
+    def set_objects(self, target=None, obstacle=None, park_obstacle=False):
         for name, value in [("target", target), ("obstacle", obstacle)]:
             if value is None:
                 continue
             v = np.asarray(value, dtype=float)
+            parked = name == "obstacle" and park_obstacle
             if (
                 v.shape != (3,)
                 or not np.isfinite(v).all()
-                or np.any(np.abs(v) > 4)
-                or v[2] < 0.3
+                or (
+                    not parked and (np.any(np.abs(v) > self.object_range) or v[2] < 0.3)
+                )
             ):
                 raise ValueError(
                     "object position must be finite, inside room, z >= 0.3"
                 )
             setattr(self, name, v.copy())
             if name == "obstacle":
-                body = mujoco.mj_name2id(
-                    self.model, mujoco.mjtObj.mjOBJ_BODY, "obstacle_body"
-                )
-                self.data.mocap_pos[self.model.body_mocapid[body]] = v
+                self.data.mocap_pos[self._body_mocap("obstacle_body")] = v
             else:
                 self.model.geom_pos[
                     mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)
                 ] = v
         mujoco.mj_forward(self.model, self.data)
+
+    def set_pillars(self, centres):
+        if self.arena is None:
+            raise ValueError("pillars exist only in the free-roam arena")
+        centres = np.asarray(centres, dtype=float).reshape(-1, 2)
+        if len(centres) > self.arena.pillar_slots:
+            raise ValueError("too many pillars")
+        z = self.arena.pillar_height / 2
+        for i in range(self.arena.pillar_slots):
+            slot = self._body_mocap(f"pillar_{i}")
+            if i < len(centres):
+                self.data.mocap_pos[slot] = [centres[i, 0], centres[i, 1], z]
+            else:
+                self.data.mocap_pos[slot] = [50 + 2 * i, 50, PARK_Z]
+        self.pillars = centres.copy()
+        mujoco.mj_forward(self.model, self.data)
+
+    def set_ghost(self, ghost):
+        """Invisible to the eyes but still collidable: a causal control for vision."""
+        if self.arena is None:
+            raise ValueError("ghost objects exist only in the free-roam arena")
+        self.ghost = bool(ghost)
+        names = ["obstacle"] + [f"pillar_{i}" for i in range(self.arena.pillar_slots)]
+        for name in names:
+            geom = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)
+            self.model.geom_rgba[geom, 3] = 0.0 if self.ghost else 1.0
+
+    def teleport(self, position, yaw=None):
+        """Place the body at rest (respawn); controller and motors restart from hover."""
+        position = np.asarray(position, dtype=float)
+        self.data.qpos[0:3] = position
+        if yaw is not None:
+            self.data.qpos[3:7] = [np.cos(yaw / 2), 0, 0, np.sin(yaw / 2)]
+        self.data.qvel[:] = 0
+        mujoco.mj_forward(self.model, self.data)
+        self._updateAndStoreKinematicInformation()
+        self.controller.reset()
+        self.commanded[:] = self.HOVER_RPM
+        self.actual[:] = self.HOVER_RPM
+        self.hold = self.pos[0].copy()
+        self.yaw_target = float(self.rpy[0, 2])
 
     def camera(self):
         if not self.vision:
@@ -159,7 +326,7 @@ class DronePlant(BaseAviary):
         command = np.asarray(command, dtype=float)
         if command.shape != (4,) or not np.isfinite(command).all():
             raise ValueError("four finite motion commands required")
-        command = np.clip(command, -LIMITS, LIMITS)
+        command = np.clip(command, -self.limits, self.limits)
         yaw = self.rpy[0, 2]
         c, s = np.cos(yaw), np.sin(yaw)
         velocity = np.array(
@@ -170,7 +337,7 @@ class DronePlant(BaseAviary):
             ]
         )
         self.hold += velocity * 0.005
-        self.hold = np.clip(self.hold, [-3, -3, 0.4], [3, 3, 2.5])
+        self.hold = np.clip(self.hold, self.hold_low, self.hold_high)
         self.yaw_target += command[3] * 0.005
         rpm, _, _ = self.controller.computeControl(
             0.005,

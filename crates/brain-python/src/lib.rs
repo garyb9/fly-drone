@@ -42,6 +42,9 @@ impl Brain {
         self.inner.reset(seed);
         self.eyes.reset();
     }
+    fn clear_vision_history(&mut self) {
+        self.eyes.reset();
+    }
     fn neuron_count(&self) -> usize {
         self.inner.neuron_count()
     }

@@ -16,7 +16,6 @@ from PIL import Image
 from .brain import ROOT
 from .env import TASKS, ConnectomeEnv, EpisodeTracker
 from .fly import FlyMirror
-from .plant import LIMITS
 
 ABLATION_MODES = ("none", "zero", "sensory", "shuffle")
 POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
@@ -216,7 +215,7 @@ class Session:
                 if not paused:
                     # observe() applies the zero/shuffle ablations exactly as evaluation.
                     if active_policy:
-                        command = env.brain.infer(env.observe()) / LIMITS
+                        command = env.brain.infer(env.observe()) / env.plant.limits
                     else:
                         command = np.zeros(4)
                     _, _, done, truncated, info = env.step(command)

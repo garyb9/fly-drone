@@ -124,3 +124,13 @@ class BrainRuntime:
 
     def silence_sensors(self):
         self.core.silence(sorted(set(sum(self.input_ids.values(), []))), True)
+
+    def silence_inputs(self, roles):
+        """Silence one sensory pathway, e.g. ("looming_l", "looming_r")."""
+        self.core.silence(
+            sorted(set(sum((self.input_ids[r] for r in roles), []))), True
+        )
+
+    def clear_vision_history(self):
+        """Forget the previous frame so a respawn does not read as dark-area growth."""
+        self.core.clear_vision_history()
