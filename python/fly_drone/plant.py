@@ -56,12 +56,16 @@ class DronePlant(BaseAviary):
             contype="0",
             conaffinity="0",
         )
+        # Mocap body: world-body geoms moved via model.geom_pos keep their compile-time
+        # collision bounds, so a relocated static obstacle would never register contact.
+        obstacle = ET.SubElement(
+            world, "body", name="obstacle_body", mocap="true", pos="2 -1 1"
+        )
         ET.SubElement(
-            world,
+            obstacle,
             "geom",
             name="obstacle",
             type="sphere",
-            pos="2 -1 1",
             size="0.25",
             rgba="0.04 0.06 0.08 1",
         )
@@ -111,6 +115,7 @@ class DronePlant(BaseAviary):
             self.phase[:] = 0
             self.hold = self.pos[0].copy()
             self.yaw_target = float(self.rpy[0, 2])
+            self.set_objects(target=self.target, obstacle=self.obstacle)
         return obs
 
     def set_objects(self, target=None, obstacle=None):
@@ -128,9 +133,15 @@ class DronePlant(BaseAviary):
                     "object position must be finite, inside room, z >= 0.3"
                 )
             setattr(self, name, v.copy())
-            self.model.geom_pos[
-                mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)
-            ] = v
+            if name == "obstacle":
+                body = mujoco.mj_name2id(
+                    self.model, mujoco.mjtObj.mjOBJ_BODY, "obstacle_body"
+                )
+                self.data.mocap_pos[self.model.body_mocapid[body]] = v
+            else:
+                self.model.geom_pos[
+                    mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)
+                ] = v
         mujoco.mj_forward(self.model, self.data)
 
     def camera(self):

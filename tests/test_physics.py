@@ -71,3 +71,18 @@ def test_camera_shape_and_visual_response():
         assert np.max(np.abs(a.astype(float) - b)) > 50
     finally:
         p.close()
+
+
+def test_moved_obstacle_registers_contact():
+    p = DronePlant(vision=False)
+    try:
+        p.set_objects(obstacle=[3, -3, 1])
+        assert p.data.ncon == 0
+        p.set_objects(obstacle=list(p.pos[0]))
+        assert p.data.ncon > 0
+        p.set_objects(obstacle=[3, -3, 1])
+        p.reset(seed=0)
+        assert p.data.ncon == 0
+        np.testing.assert_allclose(p.data.mocap_pos[0], [3, -3, 1])
+    finally:
+        p.close()
