@@ -53,15 +53,15 @@ def collect(path="runs/calibration.npz", trials=64):
         p.close()
 
 
-def warm_start(model, path, steps=1500):
+def warm_start(model, path, dataset_hash, steps=1500, yaw_scale=0.4):
     import torch
 
     d = np.load(path)
-    if str(d["dataset_hash"]) != model.get_env().envs[0].unwrapped.brain.dataset_hash:
+    if str(d["dataset_hash"]) != dataset_hash:
         raise ValueError("calibration graph mismatch")
     x = torch.tensor(d["x"])
     y = torch.tensor(d["y"])
-    y[:, 3] *= 0.4
+    y[:, 3] *= yaw_scale
     torch.manual_seed(72)
     opt = torch.optim.Adam(
         list(model.policy.mlp_extractor.policy_net.parameters())
@@ -90,7 +90,7 @@ def warm_start(model, path, steps=1500):
             "training_mse": float((out - y).square().mean()),
             "samples": len(x),
             "steps": steps,
-            "yaw_teacher_scale": 0.4,
+            "yaw_teacher_scale": yaw_scale,
             "note": "Supervised decoder warm start, not held-out flight evaluation.",
         }
     return result

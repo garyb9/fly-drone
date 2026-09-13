@@ -22,6 +22,12 @@ def main():
     p.add_argument("--output", default="runs/visual")
     p.add_argument("--resume")
     p.add_argument("--calibration")
+    p.add_argument("--envs", type=int, default=4)
+    p.add_argument("--teacher-scale", type=float, default=0.4)
+    p.add_argument("--seed", type=int, default=42)
+    p = sub.add_parser("export")
+    p.add_argument("checkpoint")
+    p.add_argument("--output", required=True)
     p = sub.add_parser("calibrate")
     p.add_argument("--output", default="runs/calibration.npz")
     p.add_argument("--trials", type=int, default=64)
@@ -89,7 +95,24 @@ def main():
     elif args.command == "train":
         from .training import train
 
-        train(args.steps, args.output, args.task, args.resume, args.calibration)
+        train(
+            args.steps,
+            args.output,
+            args.task,
+            args.resume,
+            args.calibration,
+            args.envs,
+            args.teacher_scale,
+            args.seed,
+        )
+    elif args.command == "export":
+        from .training import export_checkpoint
+
+        print(
+            json.dumps(
+                {"export_max_error": export_checkpoint(args.checkpoint, args.output)}
+            )
+        )
     else:
         from .training import evaluate
 

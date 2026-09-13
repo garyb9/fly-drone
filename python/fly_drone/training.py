@@ -51,15 +51,36 @@ def export_actor(model, brain, path):
     return error
 
 
+def _env_factory(task, rank, seed):
+    def make():
+        from stable_baselines3.common.monitor import Monitor
+
+        from .env import ConnectomeEnv
+
+        env = Monitor(ConnectomeEnv(task=task))
+        env.reset(seed=seed + rank)
+        return env
+
+    return make
+
+
 def train(
-    steps=20000, output="runs/visual", task="visual", resume=None, calibration=None
+    steps=20000,
+    output="runs/visual",
+    task="visual",
+    resume=None,
+    calibration=None,
+    envs=4,
+    teacher_scale=0.4,
+    seed=42,
 ):
     import torch
     from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
     from .assay import sensory_assay
-    from .env import ConnectomeEnv
+    from .brain import BrainRuntime
     from .normalizer import NeuralNormalizer
 
     torch.set_num_threads(1)
@@ -68,19 +89,29 @@ def train(
     assay = sensory_assay(out / "sensory-assay.json")
     if not assay["passed"]:
         raise RuntimeError(
-            "Sensory causal gate failed; training was not started. Inspect sensory-assay.json."
+            "Sensory causal gate failed; training was not started. "
+            "Inspect sensory-assay.json."
         )
-    env = ConnectomeEnv(task=task)
+    envs = max(1, int(envs))
+    factories = [_env_factory(task, rank, seed) for rank in range(envs)]
+    # Each env owns a full brain and renderer; spawn keeps EGL state per process.
+    vec = (
+        SubprocVecEnv(factories, start_method="spawn")
+        if envs > 1
+        else DummyVecEnv(factories)
+    )
+    # Export parity runs against a separate Rust runtime in this process.
+    brain = BrainRuntime()
     try:
         if resume:
-            model = PPO.load(resume, env=env, device="cpu")
+            model = PPO.load(resume, env=vec, device="cpu")
         else:
             model = PPO(
                 "MlpPolicy",
-                env,
-                seed=42,
+                vec,
+                seed=seed,
                 device="cpu",
-                n_steps=256,
+                n_steps=max(64, 1024 // envs),
                 batch_size=64,
                 n_epochs=5,
                 learning_rate=3e-4,
@@ -94,35 +125,50 @@ def train(
         if calibration and not resume:
             from .calibration import warm_start
 
-            result = warm_start(model, calibration)
+            result = warm_start(
+                model, calibration, brain.dataset_hash, yaw_scale=teacher_scale
+            )
             (out / "warm-start.json").write_text(json.dumps(result, indent=2))
-            export_actor(model, env.brain, out / "warm-actor.json")
+            export_actor(model, brain, out / "warm-actor.json")
             model.save(out / "warm-ppo")
             model.learning_rate = 1e-5
             model.lr_schedule = lambda _: 1e-5
         model.learn(
             total_timesteps=steps,
             callback=CheckpointCallback(
-                save_freq=5000, save_path=str(out / "checkpoints")
+                save_freq=max(1, 5000 // envs), save_path=str(out / "checkpoints")
             ),
             reset_num_timesteps=not bool(resume),
         )
         model.save(out / "ppo")
-        error = export_actor(model, env.brain, out / "actor.json")
+        error = export_actor(model, brain, out / "actor.json")
         (out / "training.json").write_text(
             json.dumps(
                 {
                     "steps_requested": steps,
                     "steps_total": model.num_timesteps,
                     "task": task,
-                    "seed": 42,
+                    "seed": seed,
+                    "envs": envs,
+                    "teacher_scale": teacher_scale if calibration else None,
+                    "resume": resume,
                     "export_max_error": error,
                 },
                 indent=2,
             )
         )
     finally:
-        env.close()
+        vec.close()
+
+
+def export_checkpoint(checkpoint, output):
+    """Export a saved PPO zip to a Rust actor JSON (with parity check)."""
+    from stable_baselines3 import PPO
+
+    from .brain import BrainRuntime
+
+    model = PPO.load(checkpoint, device="cpu")
+    return export_actor(model, BrainRuntime(), output)
 
 
 ABLATIONS = ("zero", "sensory", "shuffle")

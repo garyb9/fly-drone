@@ -31,6 +31,7 @@ class ConnectomeEnv(gym.Env):
         self.command = np.zeros(4)
         self.trace = []
         self.interventions = {}
+        self.previous_bearing = 0.0
 
     def observe(self):
         x = self.brain.features()
@@ -60,7 +61,9 @@ class ConnectomeEnv(gym.Env):
         self.brain.sense(self.plant.camera())
         # Deterministic neural settling, no hidden body time advancement.
         self.brain.step(40)
-        return self.observe(), self.info()
+        info = self.info()
+        self.previous_bearing = abs(info["bearing"])
+        return self.observe(), info
 
     def step(self, action):
         action = np.asarray(action, dtype=float)
@@ -81,7 +84,10 @@ class ConnectomeEnv(gym.Env):
         bearing = target_bearing(pos, self.plant.rpy[0, 2], self.plant.target)
         reward = 1.0 - 4.0 * (pos[2] - 1.0) ** 2 - 0.05 * float(np.dot(action, action))
         if self.task != "hover":
-            reward += 2 * np.cos(bearing) - 0.2 * np.linalg.norm(delta[:2])
+            # Potential-based turning progress: sums to 10 * total bearing reduction.
+            reward += 10 * (self.previous_bearing - abs(bearing))
+            reward += 0.5 * np.cos(bearing) - 0.2 * np.linalg.norm(delta[:2])
+        self.previous_bearing = abs(bearing)
         if self.task == "looming":
             reward -= 2 * np.exp(
                 -(np.linalg.norm(pos - self.plant.obstacle) ** 2) / 0.2
