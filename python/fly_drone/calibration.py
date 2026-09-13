@@ -73,7 +73,7 @@ def warm_start(model, path, steps=1500):
     norm = model.policy.features_extractor
     norm.mean.copy_(x.mean(0))
     norm.scale.copy_(x.std(0).clamp(min=0.003))
-    for i in range(steps):
+    for _ in range(steps):
         ids = torch.randint(len(x), (128,))
         features = norm(x[ids])
         out = model.policy.action_net(

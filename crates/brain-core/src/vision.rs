@@ -23,11 +23,8 @@ impl Eyes {
         }
         let mut current = [[0.0; 2]; 2];
         for (eye, bytes) in [left, right].iter().enumerate() {
-            for pixel in bytes.chunks_exact(3) {
-                let y = (0.2126 * pixel[0] as f32
-                    + 0.7152 * pixel[1] as f32
-                    + 0.0722 * pixel[2] as f32)
-                    / 255.0;
+            for &[r, g, b] in bytes.as_chunks::<3>().0 {
+                let y = (0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32) / 255.0;
                 current[eye][0] += (y - 0.55).max(0.0) * 400.0 / (width * height) as f32;
                 current[eye][1] += if y < 0.18 {
                     1.0 / (width * height) as f32

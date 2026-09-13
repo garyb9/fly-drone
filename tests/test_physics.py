@@ -45,7 +45,7 @@ def test_hover_recovers_vertical_perturbation(plant):
     mujoco.mj_forward(plant.model, plant.data)
     plant._updateAndStoreKinematicInformation()
     z = []
-    for i in range(2000):
+    for _ in range(2000):
         plant.advance(np.zeros(4))
         z.append(plant.pos[0, 2])
     assert np.sqrt(np.mean((np.array(z[400:]) - 1) ** 2)) < 0.15

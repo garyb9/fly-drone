@@ -1,0 +1,10 @@
+web/dist/
+target/
+pipeline/out/
+vendor/
+data/
+runs/
+.venv/
+yarn.lock
+node_modules/
+docs/**/*.json

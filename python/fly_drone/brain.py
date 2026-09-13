@@ -95,7 +95,7 @@ class BrainRuntime:
 
     def step(self, ticks=1):
         for _ in range(ticks):
-            for role, value in zip(self.inputs.values(), self.cues):
+            for role, value in zip(self.inputs.values(), self.cues, strict=True):
                 self.core.inject(role, float(value))
             self.core.step(1)
             self.tick += 1
