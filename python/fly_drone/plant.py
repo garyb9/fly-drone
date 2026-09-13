@@ -83,6 +83,11 @@ class DronePlant(BaseAviary):
         self.model = mujoco.MjModel.from_xml_string(
             ET.tostring(xml, encoding="unicode")
         )
+        # Eyes render at 64x48 on CPU GL: a full-size MSAA buffer and floor reflection
+        # cost ~5x more than the image itself. Changing these alters pixels (encoder id).
+        self.model.vis.global_.offwidth = 64
+        self.model.vis.global_.offheight = 48
+        self.model.vis.quality.offsamples = 0
         self.data = mujoco.MjData(self.model)
         self.controller = PIDControl(self)
         self.commanded = np.zeros(4)
@@ -133,6 +138,7 @@ class DronePlant(BaseAviary):
             return self.images
         if self.renderer is None:
             self.renderer = mujoco.Renderer(self.model, height=48, width=64)
+            self.renderer.scene.flags[mujoco.mjtRndFlag.mjRND_REFLECTION] = 0
         for i, name in enumerate(["eye_l", "eye_r"]):
             self.renderer.update_scene(self.data, camera=name)
             self.images[i] = self.renderer.render()

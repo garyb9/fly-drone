@@ -9,7 +9,7 @@ from ._brain import Brain
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data/malecns"
 # Must match brain-core policy::ENCODER_VERSION (camera geometry + cue encoder).
-ENCODER_VERSION = "bright-contrast-400-splay075-v2"
+ENCODER_VERSION = "bright-contrast-400-splay075-noaa-v3"
 
 
 class BrainRuntime:

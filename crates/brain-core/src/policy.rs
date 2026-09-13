@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Camera geometry + cue encoder identity; decoders trained on another encoder are rejected.
-pub const ENCODER_VERSION: &str = "bright-contrast-400-splay075-v2";
+pub const ENCODER_VERSION: &str = "bright-contrast-400-splay075-noaa-v3";
 
 #[derive(Serialize, Deserialize)]
 pub struct Layer {

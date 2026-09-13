@@ -58,7 +58,19 @@ transient term is zero):
 Bold marks sign errors (a target on the right reading brighter on the left). The wider splay
 removes the dead zone. `tests/test_assay.py::test_light_cue_sign_follows_target_side` guards it.
 Changing camera geometry changes the encoder identity (`ENCODER_VERSION`
-`bright-contrast-400-splay075-v2`), so older calibrations and actors are rejected at load.
+`bright-contrast-400-splay075-noaa-v3`), so older calibrations and actors are rejected at load.
+
+### Rendering settings (part of the encoder identity)
+
+MuJoCo renders each eye with an offscreen buffer sized exactly 64 × 48, **no multisampling**
+(`offsamples = 0`) and **floor reflection disabled**. With the default 640 × 480 buffer at 4× MSAA
+and reflections on, two eyes cost ≈ 28 ms per frame on Mesa llvmpipe, which made the loop run
+below real time. The chosen settings cost ≈ 5–10 ms. Aliased edges change the target's pixel
+count by a few pixels, so these settings are part of `ENCODER_VERSION`.
+
+Rendering uses Mesa's CPU rasteriser by default (`MUJOCO_GL=egl`, llvmpipe), which is portable
+and matches CI. On WSL2, `GALLIUM_DRIVER=d3d12` renders on the GPU but was _slower_ for 64 × 48
+images (readback dominates) and produces different pixels, so it is not used for training.
 
 ### Worked example: how big is the target?
 
