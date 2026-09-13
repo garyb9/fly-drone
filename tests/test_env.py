@@ -82,7 +82,7 @@ def test_evaluate_smoke_with_zero_policy(tmp_path):
     assert 0.0 <= none["balanced_success"] <= 1.0
     assert all(r["target_side"] in ("left", "right") for r in none["runs"])
     # A zero decoder cannot steer, so no ablation can be beaten.
-    assert report["acceptance"]["steering_passed"] is False
+    assert report["acceptance"]["passed"] is False
     assert json.loads((tmp_path / "evaluation.json").read_text())["episodes"] == 2
 
 
@@ -136,7 +136,7 @@ def test_evaluate_looming_smoke(tmp_path):
         task="looming",
     )
     assert report["task"] == "looming" and "hover" not in report
-    assert "avoidance_passed" in report["acceptance"]
+    assert "passed" in report["acceptance"]
     assert all("min_obstacle_distance" in r for r in report["modes"]["none"]["runs"])
     assert all("displacement_at_threat" in r for r in report["modes"]["none"]["runs"])
     assert "survival_rate" in report["modes"]["none"]

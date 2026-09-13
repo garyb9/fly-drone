@@ -54,7 +54,9 @@ def test_replay_reset_task_ablation_and_policy_guard():
             time.sleep(0.05)
         assert isinstance(client.get("/api/reports").json(), list)
         with client.websocket_connect("/ws") as ws:
-            assert ws.receive_json()["tasks"] == ["visual", "looming"]
+            from fly_drone.env import TASKS
+
+            assert ws.receive_json()["tasks"] == list(TASKS)
             ws.send_json(
                 {"op": "reset", "seed": 1003, "task": "looming", "ablation": "sensory"}
             )
