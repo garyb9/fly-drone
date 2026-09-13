@@ -58,7 +58,7 @@ transient term is zero):
 Bold marks sign errors (a target on the right reading brighter on the left). The wider splay
 removes the dead zone. `tests/test_assay.py::test_light_cue_sign_follows_target_side` guards it.
 Changing camera geometry changes the encoder identity (`ENCODER_VERSION`
-`bright-contrast-400-splay075-noaa-v3`), so older calibrations and actors are rejected at load.
+`bright-contrast-400-splay075-noaa-loom150-v4`), so older calibrations and actors are rejected at load.
 
 ### Rendering settings (part of the encoder identity)
 
@@ -98,7 +98,7 @@ Using the previous frame's `B′` and `D′` from the same encoder (which reset 
 
 ```
 light cue  c_L = clamp(1.5 B + 6 · max(0, B − B′), 0, 2)
-loom cue   c_O = clamp(12 · max(0, D − D′),         0, 2)
+loom cue   c_O = clamp(150 · max(0, D − D′),        0, 2)
 ```
 
 The four currents are `[light_l, light_r, loom_l, loom_r]`.
@@ -112,7 +112,8 @@ Interpretation:
   photoreceptor physiology.
 - `6 · max(0, ΔB)` is an **ON-transient**: the cue rises when brightness in that eye increases,
   for example when turning towards the target.
-- `12 · max(0, ΔD)` is a crude **looming** proxy: the dark area growing between frames.
+- `150 · max(0, ΔD)` is a crude **looming** proxy: the dark area growing between frames. The gain
+  was 12 until encoder v4; see "Choosing the loom gain" below.
 
 ### Why dark-area growth approximates looming
 
@@ -127,9 +128,32 @@ So `ΔD` per 40 ms frame rises steeply as the obstacle nears (`∝ 1/d³`), much
 `θ̇`/`τ`-tuned responses attributed to LC4/LPLC2. Confounds: yaw rotation that sweeps a dark
 region into view, lighting changes, and a drone that is the one approaching.
 
+### Choosing the loom gain (encoder v4)
+
+An LIF input cell fires once its held cue exceeds ≈ 0.22 (neuron-model §3), so the gain `g` sets
+the distance at which LC4/LPLC2 start spiking: they fire when `g · ΔD ≳ 0.22`. Measured per-frame
+dark-area growth for a 0.25 m obstacle approaching at 1 m/s (1 px = 1/3072 ≈ 0.00033):
+
+| distance | ΔD per frame (centred / 0.15 m off) | gain for cue 0.25 |
+| -------- | ----------------------------------- | ----------------- |
+| 2.0 m    | 0.0016 / 0.0007                     | 154 / 384         |
+| 1.5 m    | 0.0020 / 0.0026                     | 128 / 96          |
+| 1.0 m    | 0.0055 / 0.0081                     | 45 / 31           |
+| 0.75 m   | 0.0140 / 0.0163                     | 18 / 15           |
+
+With `g = 12`, cells fired only at ≈ 0.5 m. That is ≈ 0.2 s before contact, too late for a
+0.4 m/s lateral command to clear 0.31 m, and the looming PPO run scored 0% avoidance. Feasibility
+check: a scripted dodger that triggers when the cue would cross 0.22 at gain `g` survives
+**75% at g = 100 and 100% at g = 150, 200, 250** (20 seeds). Noise floor: a steady hover produces
+ΔD = 0 exactly (deterministic rendering), and slow yaw produces ≈ 2 px at the 90th percentile
+(cue 0.10 at g = 150, below firing). Edge sweeps during turns reach ΔD ≈ 0.28 and saturate the cue
+at any gain. **g = 150** is the lowest gain that makes dodging fully feasible. This is sensor
+calibration for 64 × 48 px at 25 Hz, not a brain change. Lighting robustness is a known limit
+(see [`validation.md`](validation.md)).
+
 ### Measured looming response
 
-Obstacle approaching the hovering drone at 1 m/s from 3 m (encoder v3, 0.75 rad splay). The
+Obstacle approaching the hovering drone at 1 m/s from 3 m (**encoder v3, loom gain 12**; at gain 150 every cue below saturation is 12.5× larger). The
 `escape` readout is the connectome's own giant-fiber-adjacent readout, not a decoder output:
 
 | distance (m) | centred: `loom_l` / `loom_r` | 0.3 m left: `loom_l` / `loom_r` | escape readout (left case) |

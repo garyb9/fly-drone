@@ -185,9 +185,9 @@ collision bounds and never registers contact (`test_moved_obstacle_registers_con
 
 **Time budget.** The drone can move at most `0.4` m/s laterally and `0.2` m/s vertically.
 Clearing `R_o + r_drone ≈ 0.31` m sideways takes `≈ 0.8` s at full command, plus the PID's
-position-hold lag. The loom cue grows as `1/d³` (sensory-model §2), measured at 0.04 at 1.4 m,
-0.13 at 0.8 m and 0.7 at 0.5 m. Useful warning therefore arrives about 1 s before contact:
-enough, but not generous.
+position-hold lag. The loom cue grows as `1/d³` (sensory-model §2). With loom gain 150 (encoder v4), LC4/LPLC2 input
+cells start firing at ≈ 1.5–2 m, about 1.2–1.7 s before contact at 1 m/s. With the earlier gain of
+12 they fired only at ≈ 0.5 m, which left no time and gave 0% avoidance.
 
 **Reward** (looming only; the visual bearing terms are off):
 
