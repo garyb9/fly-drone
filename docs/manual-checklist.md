@@ -87,6 +87,6 @@ Last full pass: 2026-09-13, commit `f272977` (Playwright 1.63 / Chromium, PID ba
 - [ ] With `yarn dev:policy <actor.json>`, moving the target Left/Right turns the drone towards
       it, and the motion readout's yaw sign matches.
 - [ ] Follow-drone camera and orbit controls feel smooth on a desktop GPU.
-- [ ] Live loop reaches real time. The first pass showed **0.71× real time and 446 missed frame
-      deadlines** on the PID baseline. After native-size eye rendering, the offline loop measures
-      1.24×; the live server re-check is pending. See [`validation.md`](validation.md) → Performance.
+- [x] Live loop reaches real time: final idle-machine check with both accepted policies keeps ≈ 1.0×
+      (server-paced), with 14% of frames over the 40 ms deadline (first pass was 0.71× before the
+      eye-render fix). See [`validation.md`](validation.md) → Performance.

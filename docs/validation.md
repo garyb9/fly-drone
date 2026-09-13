@@ -7,21 +7,21 @@ Raw reports are in [`results/`](results/). Measurements were taken on an x86-64 
 
 ## Acceptance summary
 
-| Criterion                                                  | Target                                                           | Measured                                                               | Status     |
-| ---------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------- |
-| Physics: equal thrust hovers, motor signs, lag, saturation | pass                                                             | `tests/test_physics.py` (7 tests, incl. moved-obstacle contact)        | ✅         |
-| PID hover baseline, 30 s                                   | altitude RMS < 0.15 m                                            | 0.000 m, all motors 14,475.8 RPM (= analytic ω_h)                      | ✅         |
-| Rust golden trace                                          | stable                                                           | `golden_trace.rs` (2 tests)                                            | ✅         |
-| Python binding, reset isolation, seed replay               | pass                                                             | `test_runtime.py`, `test_env.py`                                       | ✅         |
-| Export parity Rust ↔ PyTorch                               | ≤ 1e−4                                                           | ≈ 4e−6                                                                 | ✅         |
-| Sensory causality (synthetic + rendered, with silencing)   | separation, silencing removes it                                 | L/R Δ 0.817, silencing Δ 0.587, rendered L/R Δ 0.800, silenced Δ 0.000 | ✅         |
-| Cue sign follows target side                               | correct sign, \|Δ\| > 0.5 for \|β\| ∈ 0.1…0.6                    | `test_light_cue_sign_follows_target_side`                              | ✅         |
-| Visual steering, 50 held-out seeds                         | ≥ 80%, balanced left/right ≥ 80%                                 | **100%** (50/50), balanced 1.00, final \|β\| 0.013 rad (encoder v4)    | ✅         |
-| Ablations degrade steering                                 | trained > zero, sensory, shuffle (raw and balanced)              | balanced 1.00 vs 0.00 / 0.00 / 0.17 (raw 1.00 vs 0.40 / 0.00 / 0.22)   | ✅         |
-| Policy hover, 30 s, 5 seeds                                | settled RMS < 0.15 m                                             | 0.020 m (encoder v4)                                                   | ✅         |
-| Looming-obstacle response                                  | threat-specific avoidance ≥ 80%, balanced ≥ 80%, above ablations | **96%**, balanced 0.92 vs 0.00 / 0.00 / 0.42 (encoder v4)              | ✅         |
-| Viewer: pause, reset, reconnect, interventions, telemetry  | pass                                                             | `yarn browser:check`: 9/9                                              | ✅         |
-| Real-time loop                                             | ≥ 1× with full graph                                             | 1.24× offline (was 0.72×); live server re-check pending                | ✅ offline |
+| Criterion                                                  | Target                                                           | Measured                                                                                  | Status     |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------- |
+| Physics: equal thrust hovers, motor signs, lag, saturation | pass                                                             | `tests/test_physics.py` (7 tests, incl. moved-obstacle contact)                           | ✅         |
+| PID hover baseline, 30 s                                   | altitude RMS < 0.15 m                                            | 0.000 m, all motors 14,475.8 RPM (= analytic ω_h)                                         | ✅         |
+| Rust golden trace                                          | stable                                                           | `golden_trace.rs` (2 tests)                                                               | ✅         |
+| Python binding, reset isolation, seed replay               | pass                                                             | `test_runtime.py`, `test_env.py`                                                          | ✅         |
+| Export parity Rust ↔ PyTorch                               | ≤ 1e−4                                                           | ≈ 4e−6                                                                                    | ✅         |
+| Sensory causality (synthetic + rendered, with silencing)   | separation, silencing removes it                                 | L/R Δ 0.817, silencing Δ 0.587, rendered L/R Δ 0.800, silenced Δ 0.000                    | ✅         |
+| Cue sign follows target side                               | correct sign, \|Δ\| > 0.5 for \|β\| ∈ 0.1…0.6                    | `test_light_cue_sign_follows_target_side`                                                 | ✅         |
+| Visual steering, 50 held-out seeds                         | ≥ 80%, balanced left/right ≥ 80%                                 | **100%** (50/50), balanced 1.00, final \|β\| 0.013 rad (encoder v4)                       | ✅         |
+| Ablations degrade steering                                 | trained > zero, sensory, shuffle (raw and balanced)              | balanced 1.00 vs 0.00 / 0.00 / 0.17 (raw 1.00 vs 0.40 / 0.00 / 0.22)                      | ✅         |
+| Policy hover, 30 s, 5 seeds                                | settled RMS < 0.15 m                                             | 0.020 m (encoder v4)                                                                      | ✅         |
+| Looming-obstacle response                                  | threat-specific avoidance ≥ 80%, balanced ≥ 80%, above ablations | **96%**, balanced 0.92 vs 0.00 / 0.00 / 0.42 (encoder v4)                                 | ✅         |
+| Viewer: pause, reset, reconnect, interventions, telemetry  | pass                                                             | `yarn browser:check`: 9/9                                                                 | ✅         |
+| Real-time loop                                             | ≥ 1× with full graph                                             | offline 1.24×; live server ≈ 1.0× (paced), 38 of 266 frames (14%) over the 40 ms deadline | ✅ (tight) |
 
 ## Visual steering (encoder v4) — accepted
 
@@ -135,17 +135,18 @@ been wrapped to [−π, π] while the final one was. Both are now wrapped.
 
 ## Performance
 
-| Quantity                                 | Value                                                                         | Source                                                                       |
-| ---------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Full-graph load                          | 100 ms (native)                                                               | [`results/native-benchmark.json`](results/native-benchmark.json)             |
-| Brain RSS                                | 90 MB native; 461 MB with Python metadata                                     | native benchmark; assay                                                      |
-| Neural tick, full graph                  | p50 2.10 ms, p95 2.88 ms (assay, sustained stimulus); 3.9 / 5.1 ms under load | [`results/sensory-assay.json`](results/sensory-assay.json), native benchmark |
-| Frame (8 ticks + 40 physics + eyes)      | 32.3 ms: brain 22.6, eyes 6.2, plant 3.4                                      | offline profile, 60 frames                                                   |
-| Loop real-time factor                    | **1.24×** (was 0.72× before render fix)                                       | offline profile                                                              |
-| Eye rendering, 2 × 64×48                 | 6.2 ms (was 28.2 ms: 640×480 4×MSAA buffer + reflection)                      | render benchmark                                                             |
-| PID-only physics                         | 17.7× real time (no brain, no cameras)                                        | [`results/baseline.json`](results/baseline.json)                             |
-| 50-seed evaluation, 4 conditions + hover | 412 s wall (v1 render) → 246 s (v3 render), 12 workers                        | evaluation reports                                                           |
-| Live server, first pass                  | 0.71× real time, 446 missed frame deadlines (v1 render settings)              | viewer screenshot; re-check pending                                          |
+| Quantity                                      | Value                                                                         | Source                                                                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Full-graph load                               | 100 ms (native)                                                               | [`results/native-benchmark.json`](results/native-benchmark.json)             |
+| Brain RSS                                     | 90 MB native; 461 MB with Python metadata                                     | native benchmark; assay                                                      |
+| Neural tick, full graph                       | p50 2.10 ms, p95 2.88 ms (assay, sustained stimulus); 3.9 / 5.1 ms under load | [`results/sensory-assay.json`](results/sensory-assay.json), native benchmark |
+| Frame (8 ticks + 40 physics + eyes)           | 32.3 ms: brain 22.6, eyes 6.2, plant 3.4                                      | offline profile, 60 frames                                                   |
+| Loop real-time factor                         | **1.24×** (was 0.72× before render fix)                                       | offline profile                                                              |
+| Eye rendering, 2 × 64×48                      | 6.2 ms (was 28.2 ms: 640×480 4×MSAA buffer + reflection)                      | render benchmark                                                             |
+| PID-only physics                              | 17.7× real time (no brain, no cameras)                                        | [`results/baseline.json`](results/baseline.json)                             |
+| 50-seed evaluation, 4 conditions + hover      | 412 s wall (v1 render) → 246 s (v3 render), 12 workers                        | evaluation reports                                                           |
+| Live server, first pass                       | 0.71× real time, 446 missed frame deadlines (v1 render settings)              | viewer screenshot                                                            |
+| Live server, final (idle machine, one client) | ≈ 1.0× real time (server-paced); 38 of 266 frames (14%) exceeded 40 ms        | WebSocket measurement, both accepted policies                                |
 
 The graph was never reduced to meet a deadline. The brain now dominates frame time (≈ 70%). Most of
 each tick is 166,700 Box–Muller Gaussian draws. A faster noise generator would change the
