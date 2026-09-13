@@ -59,7 +59,8 @@ Last full pass: 2026-09-13, commit `f272977` (Playwright 1.63 / Chromium, PID ba
 - [x] Looming episode: an aimed obstacle launches and hits a drone commanded to hold still, and
       evaluation writes looming metrics
       (`test_env.py::test_looming_obstacle_launches_and_hits_a_stationary_drone`, `test_evaluate_looming_smoke`).
-- [ ] Looming-obstacle response. See [`validation.md`](validation.md).
+- [x] Looming-obstacle response: 96% threat-specific avoidance, balanced 0.92 vs 0.00 / 0.00 / 0.42
+      ([`results/evaluation-looming-v4.json`](results/evaluation-looming-v4.json)).
 
 ## Service and viewer (`yarn dev`, then `yarn browser:check`)
 

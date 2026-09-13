@@ -7,21 +7,21 @@ Raw reports are in [`results/`](results/). Measurements were taken on an x86-64 
 
 ## Acceptance summary
 
-| Criterion                                                  | Target                                                    | Measured                                                               | Status     |
-| ---------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------- | ---------- |
-| Physics: equal thrust hovers, motor signs, lag, saturation | pass                                                      | `tests/test_physics.py` (7 tests, incl. moved-obstacle contact)        | ✅         |
-| PID hover baseline, 30 s                                   | altitude RMS < 0.15 m                                     | 0.000 m, all motors 14,475.8 RPM (= analytic ω_h)                      | ✅         |
-| Rust golden trace                                          | stable                                                    | `golden_trace.rs` (2 tests)                                            | ✅         |
-| Python binding, reset isolation, seed replay               | pass                                                      | `test_runtime.py`, `test_env.py`                                       | ✅         |
-| Export parity Rust ↔ PyTorch                               | ≤ 1e−4                                                    | ≈ 4e−6                                                                 | ✅         |
-| Sensory causality (synthetic + rendered, with silencing)   | separation, silencing removes it                          | L/R Δ 0.817, silencing Δ 0.587, rendered L/R Δ 0.800, silenced Δ 0.000 | ✅         |
-| Cue sign follows target side                               | correct sign, \|Δ\| > 0.5 for \|β\| ∈ 0.1…0.6             | `test_light_cue_sign_follows_target_side`                              | ✅         |
-| Visual steering, 50 held-out seeds                         | ≥ 80%, balanced left/right ≥ 80%                          | **100%** (50/50), balanced 1.00, final \|β\| 0.013 rad (encoder v4)    | ✅         |
-| Ablations degrade steering                                 | trained > zero, sensory, shuffle (raw and balanced)       | balanced 1.00 vs 0.00 / 0.00 / 0.17 (raw 1.00 vs 0.40 / 0.00 / 0.22)   | ✅         |
-| Policy hover, 30 s, 5 seeds                                | settled RMS < 0.15 m                                      | 0.020 m (encoder v4)                                                   | ✅         |
-| Looming-obstacle response                                  | threat-specific avoidance ≥ 80% balanced, above ablations | evaluation in progress (dodge-teacher warm start + PPO, encoder v4)    | ⏳         |
-| Viewer: pause, reset, reconnect, interventions, telemetry  | pass                                                      | `yarn browser:check`: 9/9                                              | ✅         |
-| Real-time loop                                             | ≥ 1× with full graph                                      | 1.24× offline (was 0.72×); live server re-check pending                | ✅ offline |
+| Criterion                                                  | Target                                                           | Measured                                                               | Status     |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------- |
+| Physics: equal thrust hovers, motor signs, lag, saturation | pass                                                             | `tests/test_physics.py` (7 tests, incl. moved-obstacle contact)        | ✅         |
+| PID hover baseline, 30 s                                   | altitude RMS < 0.15 m                                            | 0.000 m, all motors 14,475.8 RPM (= analytic ω_h)                      | ✅         |
+| Rust golden trace                                          | stable                                                           | `golden_trace.rs` (2 tests)                                            | ✅         |
+| Python binding, reset isolation, seed replay               | pass                                                             | `test_runtime.py`, `test_env.py`                                       | ✅         |
+| Export parity Rust ↔ PyTorch                               | ≤ 1e−4                                                           | ≈ 4e−6                                                                 | ✅         |
+| Sensory causality (synthetic + rendered, with silencing)   | separation, silencing removes it                                 | L/R Δ 0.817, silencing Δ 0.587, rendered L/R Δ 0.800, silenced Δ 0.000 | ✅         |
+| Cue sign follows target side                               | correct sign, \|Δ\| > 0.5 for \|β\| ∈ 0.1…0.6                    | `test_light_cue_sign_follows_target_side`                              | ✅         |
+| Visual steering, 50 held-out seeds                         | ≥ 80%, balanced left/right ≥ 80%                                 | **100%** (50/50), balanced 1.00, final \|β\| 0.013 rad (encoder v4)    | ✅         |
+| Ablations degrade steering                                 | trained > zero, sensory, shuffle (raw and balanced)              | balanced 1.00 vs 0.00 / 0.00 / 0.17 (raw 1.00 vs 0.40 / 0.00 / 0.22)   | ✅         |
+| Policy hover, 30 s, 5 seeds                                | settled RMS < 0.15 m                                             | 0.020 m (encoder v4)                                                   | ✅         |
+| Looming-obstacle response                                  | threat-specific avoidance ≥ 80%, balanced ≥ 80%, above ablations | **96%**, balanced 0.92 vs 0.00 / 0.00 / 0.42 (encoder v4)              | ✅         |
+| Viewer: pause, reset, reconnect, interventions, telemetry  | pass                                                             | `yarn browser:check`: 9/9                                              | ✅         |
+| Real-time loop                                             | ≥ 1× with full graph                                             | 1.24× offline (was 0.72×); live server re-check pending                | ✅ offline |
 
 ## Visual steering (encoder v4) — accepted
 
@@ -49,6 +49,36 @@ the drone (64 flights × 100 frames). Labels still come from simulator bearing, 
 start alone scored 10/10 seeds, and after 30k PPO steps the policy passes all 50 held-out seeds. The
 zeroed-feature ablation now turns one way (40% raw, 0.00 balanced), the same blind-turner pattern
 that balanced success exists to reject.
+
+## Looming avoidance (encoder v4) — accepted
+
+Policy `runs/v4-loom-ft/actor.json`. Report: [`results/evaluation-looming-v4.json`](results/evaluation-looming-v4.json).
+50 held-out seeds × 4 conditions; an obstacle launches at the drone after a random delay.
+**Success** means surviving the pass _and_ still being within 0.25 m of the start when the
+obstacle first comes within 2 m, so fleeing before any threat does not count
+([`training.md`](training.md) §6b).
+
+| Condition              | Success | Survival | Obstacle left | Obstacle right | Balanced | Drift at threat onset |
+| ---------------------- | ------- | -------- | ------------- | -------------- | -------- | --------------------- |
+| trained                | **96%** | 96%      | 92%           | 100%           | **0.92** | 0.065 m               |
+| zero features          | 0%      | 0%       | 0%            | 0%             | 0.00     | 0.055 m               |
+| silenced visual inputs | 0%      | 0%       | 0%            | 0%             | 0.00     | 0.063 m               |
+| shuffled features      | 46%     | 90%      | 50%           | 42%            | 0.42     | 0.254 m               |
+
+The shuffled-feature condition survives 90% by drifting away continuously, and fails
+threat-specific success. With vision silenced, every episode ends in a collision.
+
+**How it got here.** The table is the model-selection history, all 50 seeds with encoder v4
+unless noted:
+
+| Attempt                                      | Avoidance (balanced) | What it showed                                              |
+| -------------------------------------------- | -------------------- | ----------------------------------------------------------- |
+| steering policy, never trained to dodge (v3) | 0% (0.00)            | no reflex without training                                  |
+| PPO resumed from steering, loom gain 12 (v3) | 0% (0.00)            | looming cells fired only at ≈ 0.5 m; lr 1e-5 froze learning |
+| PPO resumed, loom gain 150                   | 0% (0.00)            | resumed from a collapsed steering policy, no dodge prior    |
+| dodge-teacher warm start (closed-loop)       | 78% (0.75)           | supervised reflex works and needs vision                    |
+| + PPO at lr 1e-5                             | 84% (0.69)           | right-side dodges late; fine-tune effectively frozen        |
+| + PPO at lr 1e-4, log_std −1.5, 60k steps    | **96% (0.92)**       | accepted                                                    |
 
 ## Visual steering (encoder v3) — accepted, superseded by v4
 
@@ -148,6 +178,8 @@ few pixels per frame. It is not a change to the brain. Expected failures outside
 
 ## Open items
 
-- Looming: record the 50-seed evaluation of the dodge-teacher policy (threat-specific success).
-- Live `scripts/venv.sh fly-drone serve --policy runs/v4-closed-s04/actor.json` check with the
-  Trials & Replay panel, plus the deadline count at the current render cost.
+- Robust vision (see above): contrast-adaptive encoder, lighting randomisation, event-camera study.
+- Viewer: replaying failed seeds visibly, and orbit/follow feel, need a human check
+  ([`manual-checklist.md`](manual-checklist.md)).
+- Deadline misses under concurrent training load: the live loop drops below 1× when training shares
+  the CPU. Measure on an idle machine and on candidate onboard compute.
