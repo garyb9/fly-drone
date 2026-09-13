@@ -1,0 +1,82 @@
+{
+  "dataset_hash": "60cb182151d80d910a9f23a1550908fefe2233234fa7f33bb7bc0f3d70311c39",
+  "neurons": 166700,
+  "features": 2022,
+  "conditions": {
+    "dark": {
+      "final_readouts": {
+        "escape": 0.0,
+        "wing_l": 0.20125102996826172,
+        "wing_r": 0.20125102996826172,
+        "thrust": 0.5031275749206543,
+        "power_l": 0.5031275749206543,
+        "steer_l": 0.0,
+        "power_r": 0.5031275749206543,
+        "steer_r": 0.0
+      },
+      "mean_feature_activity": 0.004770209081470966
+    },
+    "left": {
+      "final_readouts": {
+        "escape": 0.0,
+        "wing_l": 0.21589773893356323,
+        "wing_r": 0.21300949156284332,
+        "thrust": 0.5287706851959229,
+        "power_l": 0.5242909789085388,
+        "steer_l": 0.006818096153438091,
+        "power_r": 0.5208362340927124,
+        "steer_r": 5.3608113375958055e-05
+      },
+      "mean_feature_activity": 0.006364735309034586
+    },
+    "right": {
+      "final_readouts": {
+        "escape": 0.0,
+        "wing_l": 0.2549045979976654,
+        "wing_r": 0.2536739110946655,
+        "thrust": 0.5942865610122681,
+        "power_l": 0.5977479815483093,
+        "steer_l": 0.006046378519386053,
+        "power_r": 0.5810626745223999,
+        "steer_r": 0.01731962151825428
+      },
+      "mean_feature_activity": 0.008516613394021988
+    },
+    "left_silenced": {
+      "final_readouts": {
+        "escape": 0.0,
+        "wing_l": 0.20125102996826172,
+        "wing_r": 0.20125102996826172,
+        "thrust": 0.5031275749206543,
+        "power_l": 0.5031275749206543,
+        "steer_l": 0.0,
+        "power_r": 0.5031275749206543,
+        "steer_r": 0.0
+      },
+      "mean_feature_activity": 0.004770209081470966
+    },
+    "right_silenced": {
+      "final_readouts": {
+        "escape": 0.0,
+        "wing_l": 0.20125102996826172,
+        "wing_r": 0.20125102996826172,
+        "thrust": 0.5031275749206543,
+        "power_l": 0.5031275749206543,
+        "steer_l": 0.0,
+        "power_r": 0.5031275749206543,
+        "steer_r": 0.0
+      },
+      "mean_feature_activity": 0.004770209081470966
+    }
+  },
+  "left_right_max_difference": 0.8169962167739868,
+  "silencing_max_effect": 0.586841881275177,
+  "silenced_dark_max_difference": 0.0,
+  "rendered_left_right_max_difference": 0.8182705640792847,
+  "rendered_silenced_difference": 0.0,
+  "passed": true,
+  "tick_ms_p50": 3.456776000348327,
+  "tick_ms_p95": 5.343369499769323,
+  "rss_mb": 487.829504,
+  "meaning": "Software causal assay; not behavioral or biological validation. Synthetic RGB and rendered target stimuli."
+}

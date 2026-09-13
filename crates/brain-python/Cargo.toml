@@ -1,0 +1,12 @@
+[package]
+name = "brain-python"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+[lib]
+name = "_brain"
+crate-type = ["cdylib"]
+[dependencies]
+brain-core = { path = "../brain-core" }
+pyo3 = { version = "0.23", features = ["extension-module", "abi3-py311"] }
+serde_json = "1"

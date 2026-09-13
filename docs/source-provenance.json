@@ -1,0 +1,152 @@
+{
+  "repository": "https://github.com/garyb9/fly-playground",
+  "commit": "7e87b7595bdd89615e9ce3881f8cb19145b9d8a0",
+  "working_tree_status": " M Cargo.lock\n M README.md\n M crates/fly-sim/Cargo.toml\n M crates/fly-sim/src/core/mod.rs\n M crates/fly-sim/src/lib.rs\n M docs/2026-09-09-visual-direction.md\n M docs/2026-09-10-habitat-behaviors.md\n M package.json\n M src/app/config.test.ts\n M src/app/config.ts\n M src/scene.config.ts\n M src/sim/motor-registry.test.ts\n M src/ui/sidebar.ts\n M src/viz/builders.test.ts\n M src/viz/builders.ts\n M src/viz/fly-model.ts\n M src/viz/post.ts\n M src/viz/renderer.ts\n M src/world/habitat.test.ts\n M src/world/habitat.ts\n?? crates/fly-sim/src/core/gpu/\n?? docs/2026-09-13-connectome-articulation-plan.md\n?? docs/gpu-batch-benchmark.json\n?? docs/gpu-browser-validation.md\n?? examples/gpu-batch-benchmark.mjs\n?? examples/gpu-batch-parity.html\n?? examples/gpu-startup-status.mjs\n?? examples/verify-gpu-unavailable.mjs\n?? src/experiments/batch-runner.test.ts\n?? src/experiments/batch-runner.ts\n?? training/\n",
+  "files": [
+    {
+      "source": "fly-playground/crates/fly-sim/src/core/format.rs",
+      "destination": "crates/brain-core/src/core/format.rs",
+      "sha256": "dcb8440ea5692d49f4d88321f099395a17c6c1c0cecbe19c08f5e671cd100bfa"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/src/core/lif.rs",
+      "destination": "crates/brain-core/src/core/lif.rs",
+      "sha256": "8f7923ce004113d3a1d2aecc1419dbfa7c7ef711e4978837a0eec4d441b31be4"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/src/core/rng.rs",
+      "destination": "crates/brain-core/src/core/rng.rs",
+      "sha256": "f37701cb75d63d6ba32d65996f120d4916f52500e5e941bcbbc609fd69b1b405"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/src/core/roles.rs",
+      "destination": "crates/brain-core/src/core/roles.rs",
+      "sha256": "9c14b93e7b50fd0f37b25d70556e49da135d7a8c495268ba776a235c722fb825"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/src/core/sim.rs",
+      "destination": "crates/brain-core/src/core/sim.rs",
+      "sha256": "c9b430bada65ad4568a7d41fbbf548499a8cca15b52f43b6396e8625f71a7ae7"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/tests/fixtures.rs",
+      "destination": "crates/brain-core/tests/fixtures.rs",
+      "sha256": "e9beb76378552e8fe610e12a85314c6ad8c7caf6869b2b1c5470d2ca317b3bfc"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/tests/golden_trace.rs",
+      "destination": "crates/brain-core/tests/golden_trace.rs",
+      "sha256": "4d0051facfdc2c377e1577f0c8b3b618a1a38d1e4b4aafd2ca81ea6dfeaeeac1"
+    },
+    {
+      "source": "fly-playground/crates/fly-sim/tests/golden_trace.expected",
+      "destination": "crates/brain-core/tests/golden_trace.expected",
+      "sha256": "463f6acc4cdcd06bde785dad0e8caa2feecb901bc6eb8c826de5b5dbc4e38169"
+    },
+    {
+      "source": "fly-playground/pipeline/out/fixture/graph.bin",
+      "destination": "pipeline/out/fixture/graph.bin",
+      "sha256": "2b55895f9dbbd17a101c89aa45a2a881fdd8b329fe17720cd611aad6e12ff3b5"
+    },
+    {
+      "source": "fly-playground/pipeline/out/fixture/manifest.json",
+      "destination": "pipeline/out/fixture/manifest.json",
+      "sha256": "e63a3058f99b396ca2c329092ffd69c3365b70cfcbd4002f15a23195d2101446"
+    },
+    {
+      "source": "fly-playground/pipeline/out/fixture/neurons.bin",
+      "destination": "pipeline/out/fixture/neurons.bin",
+      "sha256": "a3fcd0854884ec11f90b695030e981ad4629bd5942d9bc3d8af56f6024dcb03d"
+    },
+    {
+      "source": "fly-playground/pipeline/out/fixture/groups.json",
+      "destination": "pipeline/out/fixture/groups.json",
+      "sha256": "bea53e80b93c3cee17038d851bcb505e3e87ebb7fa1cca72d6b52d9c3e8317fb"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/full/graph.bin",
+      "destination": "data/malecns/graph.bin",
+      "sha256": "60cb182151d80d910a9f23a1550908fefe2233234fa7f33bb7bc0f3d70311c39"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/full/manifest.json",
+      "destination": "data/malecns/manifest.json",
+      "sha256": "e38fa534fadc3ea905a06084c112bcc850f6a9c244db58a4ce4776aab0352dc5"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/full/neurons.bin",
+      "destination": "data/malecns/neurons.bin",
+      "sha256": "488b0de56256a40f1644e04144c8ac904c9b92a57b2a071be8d797d7095c867f"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/full/groups.json",
+      "destination": "data/malecns/groups.json",
+      "sha256": "9c0650410311a541c746405749cfd71c1a6987c1ea8a2c741d6efddd2ade4dc8"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/full/cells.json",
+      "destination": "data/malecns/cells.json",
+      "sha256": "044f5f540b96ed02440c0c020d976bd2af0bad3f99a6615028efe3dc66afa0d2"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/sensory-mappings.json",
+      "destination": "data/malecns/sensory-mappings.json",
+      "sha256": "fce5be80faca913df38de93f61903a04c1a9b11a3172e478a03a2d5813df05e8"
+    },
+    {
+      "source": "fly-playground/public/data/malecns/ATTRIBUTION.md",
+      "destination": "data/malecns/ATTRIBUTION.md",
+      "sha256": "48eba807819749c1da55d739379303c79370610e7133cf26f1fbcd2a00adb275"
+    },
+    {
+      "source": "fly-playground/src/body/types.ts",
+      "destination": "web/src/fly/types.ts",
+      "sha256": "14316be32644b6233d40f73a5c1ebf6b83967ee84c73a1ddad85e90c5fad8209"
+    },
+    {
+      "source": "fly-playground/src/body/quat.ts",
+      "destination": "web/src/fly/quat.ts",
+      "sha256": "6b6f5cd94e70f733a812fceb3be9e08831c13fd7e2137b8bc8457d2d52cde968"
+    },
+    {
+      "source": "fly-playground/src/body/noise.ts",
+      "destination": "web/src/fly/noise.ts",
+      "sha256": "a0ed3d8fe57c59ab4a0c13facc48586b0f45bbc90488ce8999f383aa44786c0c"
+    },
+    {
+      "source": "fly-playground/src/body/wrench.ts",
+      "destination": "web/src/fly/wrench.ts",
+      "sha256": "0cfe5a4ec87f41e972fe054f0828f3e06ea3ac70ba5b4de116b887da622f1b29"
+    },
+    {
+      "source": "fly-playground/src/body/integrate.ts",
+      "destination": "web/src/fly/integrate.ts",
+      "sha256": "665e7115b8262166f3672ec35fdf8881ccfc33a18f82f8f13bb347a44d3783f0"
+    },
+    {
+      "source": "fly-playground/src/body/collision.ts",
+      "destination": "web/src/fly/collision.ts",
+      "sha256": "cdc7b4e79096b97dbbf3e4043656a2479a867b7c93177cb8a87c953de512104a"
+    },
+    {
+      "source": "fly-playground/src/app/config.ts",
+      "destination": "web/src/app/config.ts",
+      "sha256": "4773c64293e4b44800f4272bf136da9249f9281d25a47b1d090ff7024c13d33c"
+    },
+    {
+      "source": "fly-playground/public/models/fly/fly-near.glb",
+      "destination": "web/public/fly.glb",
+      "sha256": "f1169d3c1c1c49b82f89d2a01e4bda1d75835b91307476c9271366ed9b91e24e"
+    },
+    {
+      "source": "fly-playground/LICENSE",
+      "destination": "LICENSE",
+      "sha256": "fc9501be9b1666eeb64925d7af4c5d0b90a6aab0968182eea4b231e154380d8d"
+    },
+    {
+      "source": "fly-playground/src/sim/motor-registry.ts",
+      "destination": "docs/reference-motor-registry.ts",
+      "sha256": "e92c8de06083fe6f0488c437631674621bcd803583432a35d24fdb4bb3e23c2e"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+import time
+
+import pytest
+from fastapi.testclient import TestClient
+from fly_drone.server import make_app
+
+
+def test_service_pause_reset_and_disconnect():
+    with TestClient(make_app()) as client:
+        deadline = time.monotonic() + 30
+        while not client.get("/health").json()["ready"]:
+            assert client.get("/health").json()["error"] is None
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        with client.websocket_connect("/ws") as ws:
+            metadata = ws.receive_json()
+            assert metadata["type"] == "metadata" and metadata["neurons"] == 166700
+            frame = ws.receive_json()
+            assert frame["type"] == "frame"
+            ws.send_json({"op": "pause", "value": True})
+            while not (frame := ws.receive_json())["paused"]:
+                pass
+            tick = frame["tick"]
+            fly = frame["fly"]
+            next_frame = ws.receive_json()
+            assert next_frame["tick"] == tick and next_frame["fly"] == fly
+            ws.send_json({"op": "reset", "seed": 99})
+            while (frame := ws.receive_json())["episode"] == 0:
+                pass
+            assert frame["episode"] == 1 and frame["fly"]["ticks"] <= 16
+            last = frame["physics_tick"]
+        time.sleep(0.2)
+        with client.websocket_connect("/ws") as ws:
+            ws.receive_json()
+            assert ws.receive_json()["physics_tick"] > last
+
+
+def test_service_rejects_unrelated_origin():
+    from starlette.websockets import WebSocketDisconnect
+
+    with TestClient(make_app()) as client:
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(
+                "/ws", headers={"origin": "https://unrelated.example"}
+            ):
+                pass

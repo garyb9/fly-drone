@@ -1,0 +1,9 @@
+{
+  "core_count": 48,
+  "dataset": "fixture",
+  "n_edges": 7578,
+  "n_neurons": 500,
+  "scale_factor": 1.0,
+  "version": 1,
+  "w_norm": 0.01
+}

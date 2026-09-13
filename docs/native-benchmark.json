@@ -1,0 +1,10 @@
+{
+  "architecture": "x86_64",
+  "load_ms": 100.004228,
+  "neurons": 166700,
+  "note": "Native Rust only; desktop measurement, not onboard power or payload validation. Full graph, sustained left visual current, default seeded noise.",
+  "rss": "VmRSS:\t   90200 kB",
+  "tick_ms_p50": 3.893918,
+  "tick_ms_p95": 5.138796,
+  "ticks": 400
+}

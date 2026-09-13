@@ -1,0 +1,49 @@
+{
+  "version": "malecns-v1-full-1",
+  "dataset": "MaleCNS v1.0",
+  "license": "CC-BY-4.0",
+  "credit": "FlyEM / University of Cambridge / MRC LMB / Google Research \u2014 MaleCNS v1.0",
+  "n_neurons": 166700,
+  "core_count": 1585,
+  "n_edges": 10520431,
+  "w_norm": 0.003,
+  "sources": [
+    {
+      "url": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-annotations-male-cns-v1.0-minconf-0.5.feather",
+      "sha256": "2177e246113e4cfbf1e7772ec37c6da1955ff22e8063d0b1f833101f99a9a3b2"
+    },
+    {
+      "url": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/connectome-weights-male-cns-v1.0-minconf-0.5.feather",
+      "sha256": "e35da783d1c686b2b58b3b87cd6a403ae43bfcfba8bff28e08ef752c1a56afc1"
+    },
+    {
+      "url": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-neurotransmitters-male-cns-v1.0.feather",
+      "sha256": "95c9289220663abeb3409f3ad9e5a7f8a53f8093f5139d15502cd08da8879621"
+    }
+  ],
+  "coordinateTransform": {
+    "voxelCenter": [
+      48000.0,
+      26000.0,
+      28000.0
+    ],
+    "voxelScale": 2.5e-05,
+    "axes": [
+      1,
+      -1,
+      -1
+    ]
+  },
+  "directLoomingToEscape": 308,
+  "directLoomingSynapses": 11220,
+  "omittedInputs": [
+    "proximity",
+    "light_l",
+    "light_r",
+    "wind_l",
+    "wind_r"
+  ],
+  "model": "LIF; ACh excitatory, GABA/Glu inhibitory hypothesis; unresolved/modulatory source current zero; escape is a modeled body impulse. Wing motor activity is an engineered readout, not validated flight physiology.",
+  "selection": "All 166700 neurons with non-null superclass; edges >=3 contacts; compact circuit first, remainder by weighted degree. Missing somata retained in simulation and hidden in geometry (flag 16).",
+  "measuredSomata": 139662
+}

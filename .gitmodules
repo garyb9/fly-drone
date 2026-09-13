@@ -1,0 +1,3 @@
+[submodule "vendor/mujoco-drones"]
+	path = vendor/mujoco-drones
+	url = https://github.com/tau-intelligence/MuJoCo-drones-gym.git
