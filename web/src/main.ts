@@ -12,6 +12,24 @@ type Metadata = {
   features: number;
   policy: string;
   dataset_hash: string;
+  tasks: string[];
+  ablations: string[];
+};
+type Outcome = {
+  bearing: number;
+  obstacle_distance: number;
+  launched: boolean;
+  displacement: number;
+  result: { success: boolean; terminated: boolean; collision: boolean } | null;
+};
+type ReportRun = { seed: number; success: boolean; side: string };
+type Report = {
+  path: string;
+  policy: string;
+  task: string;
+  seconds: number | null;
+  acceptance: Record<string, boolean | number>;
+  modes: Record<string, ReportRun[]>;
 };
 type Frame = {
   seq: number;
@@ -38,6 +56,11 @@ type Frame = {
   real_time_factor: number;
   missed_deadlines: number;
   error?: string;
+  task: string;
+  ablation: string;
+  seed: number;
+  active_policy: string | null;
+  outcome: Outcome;
 };
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
@@ -46,7 +69,8 @@ app.innerHTML = `
 <aside><section class="card brain-card"><div class="panel-head"><span><b class="index">02</b> LIVING GRAPH</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>selected anatomical connections</span></div><div class="inspect"><select id="neuron" aria-label="Neuron to inspect"><option>Loading neurons…</option></select><div class="button-row"><button data-op="pulse">Pulse</button><button data-op="hold">Hold</button><button data-op="silence">Silence</button><button data-op="restore">Restore</button></div></div></section>
 <section class="card fly-card"><div class="panel-head"><span><b class="index">03</b> PARALLEL BODY</span><span>FLY</span></div><div id="fly" class="viewport"></div><p class="caption">Same neural readouts. Independent trajectory.<br>Illustrative fly dynamics; not calibrated biomechanics.</p></section></aside>
 <section class="card signals"><div class="panel-head"><span><b class="index">04</b> SENSORY → NEURAL → MOTION</span><span id="episode">EPISODE 0</span></div><div class="signal-grid"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div><div><h3>SENSORY CURRENT</h3><div id="cues" class="meters"></div></div><div><h3>NEURAL READOUT</h3><div id="readouts" class="meters"></div></div><div><h3>ACTUAL / COMMANDED RPM</h3><div id="motors" class="meters"></div></div></div></section>
-<section class="card controls"><div><h3>EXPERIMENT CONTROLS</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section></main><footer><span>ANATOMICAL WIRING · MODELED NEURONS · LEARNED DECODING</span><span>MaleCNS v1.0 · FlyEM / Cambridge / MRC LMB / Google Research · CC-BY 4.0</span></footer>`;
+<section class="card controls"><div><h3>EXPERIMENT CONTROLS</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section>
+<section class="card replay"><div class="panel-head"><span><b class="index">05</b> TRIALS &amp; REPLAY</span><span id="trial">SEED 42 · VISUAL · INTACT</span></div><div class="replay-grid"><div><h3>RUN A TRIAL</h3><div class="replay-form"><label>Task<select id="task"><option value="visual">Steer to target</option><option value="looming">Dodge obstacle</option></select></label><label>Brain<select id="ablation"><option value="none">Intact</option><option value="zero">Zeroed features</option><option value="sensory">Vision silenced</option><option value="shuffle">Shuffled features</option></select></label><label>Seed<input id="seed" type="number" value="1000" min="0" step="1"></label><button id="run" class="primary">Run trial</button></div><p id="outcome" class="outcome">Outcome: —</p></div><div><h3>REPLAY AN EVALUATION</h3><div class="replay-form"><label>Report<select id="report"><option value="">No reports loaded</option></select></label></div><p id="report-summary" class="outcome"></p><div id="seeds" class="seed-grid" aria-label="Evaluation seeds"></div></div></div></section></main><footer><span>ANATOMICAL WIRING · MODELED NEURONS · LEARNED DECODING</span><span>MaleCNS v1.0 · FlyEM / Cambridge / MRC LMB / Google Research · CC-BY 4.0</span></footer>`;
 const el = (id: string) => document.getElementById(id)!;
 const color = { cyan: 0x8be6d5, orange: 0xffa16c, bg: 0x101c23 };
 function view(id: string, position: number[], target: number[]) {
@@ -177,7 +201,9 @@ let metadata: Metadata | undefined,
   points: THREE.Points | undefined,
   lines: THREE.LineSegments | undefined;
 let socket: WebSocket,
-  following = false;
+  following = false,
+  reports: Report[] = [],
+  replayPolicy: string | undefined;
 const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
 const vector = (v: number[]) => new THREE.Vector3(v[0], v[2], -v[1]);
 const quaternion = (v: number[]) => new THREE.Quaternion(v[1], v[2], v[3], v[0]);
@@ -238,6 +264,66 @@ function setupBrain(m: Metadata) {
   });
   el("mode").textContent =
     m.policy === "trained" ? "CONNECTOME POLICY" : "PID BASELINE · BRAIN OBSERVING";
+  void loadReports();
+}
+const select = (id: string) => el(id) as HTMLSelectElement;
+async function loadReports() {
+  try {
+    reports = await (await fetch("/api/reports")).json();
+  } catch {
+    reports = [];
+  }
+  const picker = select("report");
+  picker.replaceChildren();
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = reports.length ? "Choose an evaluation report" : "No reports under runs/";
+  picker.append(none);
+  reports.forEach((r, i) => {
+    const option = document.createElement("option");
+    option.value = String(i);
+    option.textContent = `${r.task} · ${r.path}`;
+    picker.append(option);
+  });
+  renderSeeds();
+}
+function renderSeeds() {
+  const grid = el("seeds");
+  grid.replaceChildren();
+  const report = reports[Number(select("report").value)];
+  if (!select("report").value || !report) {
+    el("report-summary").textContent = "";
+    replayPolicy = undefined;
+    return;
+  }
+  replayPolicy = report.policy;
+  select("task").value = report.task;
+  const mode = select("ablation").value;
+  const runs = report.modes[mode] ?? [];
+  const passed = runs.filter((r) => r.success).length;
+  el("report-summary").textContent =
+    `${report.policy} · ${mode}: ${passed}/${runs.length} passed. Click a seed to replay it.`;
+  for (const run of runs) {
+    const button = document.createElement("button");
+    button.className = run.success ? "seed pass" : "seed fail";
+    button.textContent = String(run.seed);
+    button.title = `${run.success ? "passed" : "failed"} · ${run.side ?? ""}`;
+    button.onclick = () => {
+      (el("seed") as HTMLInputElement).value = String(run.seed);
+      runTrial();
+    };
+    grid.append(button);
+  }
+}
+function runTrial() {
+  const message: Record<string, unknown> = {
+    op: "reset",
+    seed: Number((el("seed") as HTMLInputElement).value) || 0,
+    task: select("task").value,
+    ablation: select("ablation").value,
+  };
+  if (replayPolicy) message.policy = replayPolicy;
+  send(message);
 }
 function update(f: Frame) {
   latest = f;
@@ -313,6 +399,28 @@ function update(f: Frame) {
   el("error").textContent =
     f.error ??
     `${f.missed_deadlines} missed frame deadlines · Full graph running · Fly panel uses modeled dynamics`;
+  if (f.task) {
+    el("trial").textContent =
+      `SEED ${f.seed} · ${f.task.toUpperCase()} · ${f.ablation.toUpperCase()}${f.active_policy ? ` · ${f.active_policy}` : " · NO POLICY"}`;
+    const o = f.outcome;
+    const live =
+      f.task === "looming"
+        ? `obstacle ${o.obstacle_distance.toFixed(2)} m${o.launched ? " (launched)" : ""} · drift ${o.displacement.toFixed(2)} m`
+        : `target bearing ${o.bearing.toFixed(2)} rad`;
+    const verdict = o.result
+      ? o.result.success
+        ? " · PASSED"
+        : o.result.collision
+          ? " · FAILED (collision)"
+          : " · FAILED"
+      : "";
+    el("outcome").textContent = `Outcome: ${live}${verdict}`;
+    el("outcome").className = o.result
+      ? o.result.success
+        ? "outcome pass"
+        : "outcome fail"
+      : "outcome";
+  }
 }
 function connect() {
   socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
@@ -335,7 +443,10 @@ function send(message: object) {
   if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
 }
 el("pause").onclick = () => send({ op: "pause", value: !latest?.paused });
-el("reset").onclick = () => send({ op: "reset", seed: 42 });
+el("reset").onclick = () => runTrial();
+el("run").onclick = () => runTrial();
+select("report").onchange = () => renderSeeds();
+select("ablation").onchange = () => renderSeeds();
 el("follow").onclick = () => {
   following = !following;
   el("follow").textContent = following ? "Free camera" : "Follow drone";

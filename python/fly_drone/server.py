@@ -1,10 +1,12 @@
 import asyncio
 import base64
 import io
+import json
 import queue
 import threading
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -15,11 +17,75 @@ from .brain import ROOT
 from .env import ConnectomeEnv
 from .fly import FlyMirror
 from .plant import LIMITS
+from .training import MAX_DISPLACEMENT_AT_THREAT, THREAT_RANGE
+
+TASKS = ("visual", "looming")
+ABLATION_MODES = ("none", "zero", "sensory", "shuffle")
+POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
+
+
+def safe_policy_path(path):
+    """Only JSON actors inside runs/ or docs/results/ may be loaded over the socket."""
+    resolved = (
+        Path(path).resolve() if Path(path).is_absolute() else (ROOT / path).resolve()
+    )
+    if resolved.suffix != ".json" or not any(
+        resolved.is_relative_to(root.resolve()) for root in POLICY_ROOTS
+    ):
+        raise ValueError("policy must be a .json file under runs/ or docs/results/")
+    if not resolved.is_file():
+        raise ValueError("policy file not found")
+    return resolved
+
+
+def list_reports():
+    """Evaluation reports with per-seed outcomes, for the viewer's replay panel."""
+    reports = []
+    for root in POLICY_ROOTS:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("evaluation*.json")):
+            try:
+                data = json.loads(path.read_text())
+                modes = data["modes"]
+            except (ValueError, KeyError, OSError):
+                continue
+            policy = Path(data.get("policy", ""))
+            try:
+                policy = policy.resolve().relative_to(ROOT)
+            except ValueError:
+                pass
+            reports.append(
+                {
+                    "path": str(path.relative_to(ROOT)),
+                    "policy": str(policy),
+                    "task": data.get("task", "visual"),
+                    "seconds": data.get("seconds"),
+                    "acceptance": {
+                        k: v
+                        for k, v in data.get("acceptance", {}).items()
+                        if isinstance(v, bool | int | float)
+                    },
+                    "modes": {
+                        mode: [
+                            {
+                                "seed": r["seed"],
+                                "success": r["success"],
+                                "side": r.get("side", r.get("target_side")),
+                            }
+                            for r in summary["runs"]
+                        ]
+                        for mode, summary in modes.items()
+                    },
+                }
+            )
+    return reports
 
 
 class Session:
-    def __init__(self, policy=None):
+    def __init__(self, policy=None, looming_policy=None):
         self.policy = policy
+        self.looming_policy = looming_policy
         self.commands = queue.Queue(maxsize=64)
         self.stop = threading.Event()
         self.lock = threading.Lock()
@@ -38,10 +104,22 @@ class Session:
         env = None
         try:
             env = ConnectomeEnv()
-            env.reset(seed=42)
             fly = FlyMirror()
-            if self.policy:
-                env.brain.load_policy(self.policy)
+            task_policies = {"visual": self.policy, "looming": self.looming_policy}
+            active_policy = None
+
+            def use_policy(path):
+                nonlocal active_policy
+                if path and path != active_policy:
+                    env.brain.load_policy(path)
+                active_policy = path
+
+            use_policy(self.policy)
+            seed = 42
+            _, info = env.reset(seed=seed)
+            initial_bearing = abs(info["bearing"])
+            threat_displacement = None
+            result = None
             cells = env.brain.cells
             # Render measured somata only. Keep feature cells and selected visual cells.
             ids = sorted(set(env.brain.feature_ids + list(range(0, len(cells), 100))))
@@ -70,6 +148,8 @@ class Session:
                 "neurons": len(cells),
                 "features": len(env.brain.feature_ids),
                 "policy": "trained" if self.policy else "PID baseline",
+                "tasks": list(TASKS),
+                "ablations": list(ABLATION_MODES),
                 "dataset_hash": env.brain.dataset_hash,
             }
             episode = 0
@@ -90,7 +170,22 @@ class Session:
                         if op == "pause":
                             paused = bool(c["value"])
                         elif op == "reset":
-                            env.reset(seed=int(c.get("seed", 42)))
+                            task = c.get("task", env.task)
+                            ablation = c.get("ablation", "none")
+                            if task not in TASKS or ablation not in ABLATION_MODES:
+                                raise ValueError("unknown task or ablation")
+                            policy = c.get("policy")
+                            if policy:
+                                use_policy(str(safe_policy_path(policy)))
+                            else:
+                                use_policy(task_policies[task] or active_policy)
+                            seed = int(c.get("seed", 42))
+                            env.task = task
+                            env.ablation = ablation
+                            _, info = env.reset(seed=seed)
+                            initial_bearing = abs(info["bearing"])
+                            threat_displacement = None
+                            result = None
                             fly.reset()
                             episode += 1
                             paused = False
@@ -116,12 +211,38 @@ class Session:
                     except (ValueError, KeyError, TypeError) as exc:
                         last_error = str(exc)
                 if not paused:
-                    command = env.brain.infer() / LIMITS if self.policy else np.zeros(4)
-                    _, _, done, truncated, _ = env.step(command)
+                    # observe() applies the zero/shuffle ablations exactly as evaluation.
+                    if active_policy:
+                        command = env.brain.infer(env.observe()) / LIMITS
+                    else:
+                        command = np.zeros(4)
+                    _, _, done, truncated, info = env.step(command)
                     for r in env.trace:
                         fly.step(r)
+                    if (
+                        info["launched"]
+                        and threat_displacement is None
+                        and info["obstacle_distance"] < THREAT_RANGE
+                    ):
+                        threat_displacement = info["displacement"]
                     if done or truncated:
                         paused = True
+                        if env.task == "looming":
+                            moved = (
+                                info["displacement"]
+                                if threat_displacement is None
+                                else threat_displacement
+                            )
+                            success = not done and moved < MAX_DISPLACEMENT_AT_THREAT
+                        else:
+                            success = not done and abs(info["bearing"]) < (
+                                0.5 * initial_bearing
+                            )
+                        result = {
+                            "success": bool(success),
+                            "terminated": bool(done),
+                            "collision": bool(info["collision"]),
+                        }
                 camera = []
                 for frame in env.plant.images:
                     b = io.BytesIO()
@@ -145,6 +266,19 @@ class Session:
                     "command": env.command.tolist(),
                     "cameras": camera,
                     "error": last_error,
+                    "task": env.task,
+                    "ablation": env.ablation,
+                    "seed": seed,
+                    "active_policy": str(Path(active_policy).name)
+                    if active_policy
+                    else None,
+                    "outcome": {
+                        "bearing": info["bearing"],
+                        "obstacle_distance": info["obstacle_distance"],
+                        "launched": info["launched"],
+                        "displacement": info["displacement"],
+                        "result": result,
+                    },
                     "real_time_factor": env.plant.data.time / max(0.001, now - start),
                     "missed_deadlines": missed,
                 }
@@ -169,8 +303,8 @@ class Session:
         self.thread.join(timeout=10)
 
 
-def make_app(policy=None):
-    session = Session(policy)
+def make_app(policy=None, looming_policy=None):
+    session = Session(policy, looming_policy)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -183,6 +317,10 @@ def make_app(policy=None):
     @app.get("/health")
     def health():
         return {"ready": session.latest is not None, "error": session.error}
+
+    @app.get("/api/reports")
+    def reports():
+        return list_reports()
 
     @app.websocket("/ws")
     async def socket(ws: WebSocket):

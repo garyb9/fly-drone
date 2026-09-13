@@ -140,3 +140,12 @@ def test_evaluate_looming_smoke(tmp_path):
     assert all("min_obstacle_distance" in r for r in report["modes"]["none"]["runs"])
     assert all("displacement_at_threat" in r for r in report["modes"]["none"]["runs"])
     assert "survival_rate" in report["modes"]["none"]
+
+
+def test_fly_stays_in_view_under_tonic_power():
+    fly = FlyMirror()
+    readouts = {"power_l": 0.5, "power_r": 0.5, "steer_l": 0.0, "steer_r": 0.0}
+    for _ in range(20 * 200):
+        fly.step(readouts)
+    assert np.linalg.norm(fly.position - [0, 1, 0]) < 2.0
+    assert 0.25 < fly.position[1] < 3.0

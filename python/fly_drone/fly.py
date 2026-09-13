@@ -5,13 +5,15 @@ Noise and movement assistance omitted; neural power/steering and escape retained
 import mujoco
 import numpy as np
 
+HOME = np.array([0.0, 1.0, 0.0])
+
 
 class FlyMirror:
     def __init__(self):
         self.reset()
 
     def reset(self):
-        self.position = np.array([0.0, 1.0, 0.0])
+        self.position = HOME.copy()
         self.quaternion = np.array([1.0, 0.0, 0.0, 0.0])
         self.velocity = np.zeros(3)
         self.angular = np.zeros(3)
@@ -42,6 +44,9 @@ class FlyMirror:
             axis = up + 0.12 * forward
             force = axis / np.linalg.norm(axis) * 9.81 * max(0, s) / 0.5
             torque = forward * 2.2 * a + up * 1.4 * a
+        # Illustrative tether: tonic flight power alone otherwise drifts the fly into a
+        # wall and pins it there, out of view. Not a biological force.
+        force = force - 2.0 * (self.position - HOME)
         self.velocity = (
             self.velocity + (force + np.array([0.0, -9.81, 0.0])) * dt
         ) * np.exp(-1.4 * dt)

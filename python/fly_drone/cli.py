@@ -9,6 +9,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("serve")
     p.add_argument("--policy")
+    p.add_argument("--looming-policy")
     p.add_argument("--port", type=int, default=8000)
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
@@ -51,7 +52,9 @@ def main():
 
         from .server import make_app
 
-        uvicorn.run(make_app(args.policy), host="127.0.0.1", port=args.port)
+        uvicorn.run(
+            make_app(args.policy, args.looming_policy), host="127.0.0.1", port=args.port
+        )
     elif args.command == "assay":
         from .assay import sensory_assay
 

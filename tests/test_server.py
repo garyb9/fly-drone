@@ -44,3 +44,25 @@ def test_service_rejects_unrelated_origin():
                 "/ws", headers={"origin": "https://unrelated.example"}
             ):
                 pass
+
+
+def test_replay_reset_task_ablation_and_policy_guard():
+    with TestClient(make_app()) as client:
+        deadline = time.monotonic() + 30
+        while not client.get("/health").json()["ready"]:
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        assert isinstance(client.get("/api/reports").json(), list)
+        with client.websocket_connect("/ws") as ws:
+            assert ws.receive_json()["tasks"] == ["visual", "looming"]
+            ws.send_json(
+                {"op": "reset", "seed": 1003, "task": "looming", "ablation": "sensory"}
+            )
+            while (frame := ws.receive_json())["episode"] == 0:
+                pass
+            assert frame["task"] == "looming" and frame["ablation"] == "sensory"
+            assert frame["seed"] == 1003 and "obstacle_distance" in frame["outcome"]
+            ws.send_json({"op": "reset", "policy": "/etc/passwd.json"})
+            while not (frame := ws.receive_json())["error"]:
+                pass
+            assert "runs/" in frame["error"]
