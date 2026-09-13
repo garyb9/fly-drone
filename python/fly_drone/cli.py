@@ -30,6 +30,9 @@ def main():
     p.add_argument("--episodes", type=int, default=50)
     p.add_argument("--seconds", type=float, default=10)
     p.add_argument("--output", default="runs/evaluation.json")
+    p.add_argument("--workers", type=int, default=8)
+    p.add_argument("--hover-episodes", type=int, default=5)
+    p.add_argument("--hover-seconds", type=float, default=30)
     args = parser.parse_args()
     if args.command == "serve":
         import uvicorn
@@ -92,9 +95,15 @@ def main():
 
         print(
             json.dumps(
-                evaluate(args.policy, args.episodes, args.output, args.seconds)[
-                    "acceptance"
-                ],
+                evaluate(
+                    args.policy,
+                    args.episodes,
+                    args.output,
+                    args.seconds,
+                    args.workers,
+                    args.hover_episodes,
+                    args.hover_seconds,
+                )["acceptance"],
                 indent=2,
             )
         )

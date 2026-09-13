@@ -6,6 +6,13 @@ from .brain import BrainRuntime
 from .plant import LIMITS, DronePlant
 
 
+def target_bearing(pos, yaw, target):
+    """Signed target angle relative to heading, wrapped to [-pi, pi]."""
+    delta = np.asarray(target, dtype=float) - np.asarray(pos, dtype=float)
+    angle = np.arctan2(delta[1], delta[0]) - yaw
+    return float(np.arctan2(np.sin(angle), np.cos(angle)))
+
+
 class ConnectomeEnv(gym.Env):
     """PPO observes frozen neural activity; action is normalized motion intent."""
 
@@ -71,8 +78,7 @@ class ConnectomeEnv(gym.Env):
         self.frames += 1
         pos = self.plant.pos[0]
         delta = self.plant.target - pos
-        bearing = np.arctan2(delta[1], delta[0]) - self.plant.rpy[0, 2]
-        bearing = np.arctan2(np.sin(bearing), np.cos(bearing))
+        bearing = target_bearing(pos, self.plant.rpy[0, 2], self.plant.target)
         reward = 1.0 - 4.0 * (pos[2] - 1.0) ** 2 - 0.05 * float(np.dot(action, action))
         if self.task != "hover":
             reward += 2 * np.cos(bearing) - 0.2 * np.linalg.norm(delta[:2])
@@ -104,9 +110,8 @@ class ConnectomeEnv(gym.Env):
             "physics_tick": self.plant.step_counter,
             "time": self.plant.data.time,
             "state": self.plant.state(),
-            "bearing": float(
-                np.arctan2(*(self.plant.target - self.plant.pos[0])[1::-1])
-                - self.plant.rpy[0, 2]
+            "bearing": target_bearing(
+                self.plant.pos[0], self.plant.rpy[0, 2], self.plant.target
             ),
         }
 

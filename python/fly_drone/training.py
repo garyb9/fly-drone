@@ -1,4 +1,5 @@
 import json
+import time
 from pathlib import Path
 
 import numpy as np
@@ -124,59 +125,143 @@ def train(
         env.close()
 
 
-def evaluate(policy, episodes=50, output="runs/evaluation.json", seconds=10):
+ABLATIONS = ("zero", "sensory", "shuffle")
+FRAME_HZ = 25
+SETTLE_SECONDS = 2.0
+
+
+def _rollout_chunk(job):
+    """Roll out one policy over seeds in a single process (own brain + renderer)."""
     from .brain import BrainRuntime
     from .env import ConnectomeEnv
 
+    policy, mode, seeds, seconds = job
     brain = BrainRuntime()
     brain.load_policy(policy)
-    report = {}
-    for mode in ("none", "zero", "sensory", "shuffle"):
-        env = ConnectomeEnv(brain=brain, ablation=mode)
-        runs = []
-        try:
-            for seed in range(1000, 1000 + episodes):
-                obs, _ = env.reset(seed=seed)
-                initial = env.info()["bearing"]
-                zs = []
-                collision = False
-                for _ in range(int(seconds * 25)):
-                    obs, _, done, truncated, info = env.step(brain.infer(obs) / LIMITS)
-                    zs.append(env.plant.pos[0, 2])
-                    if done:
-                        collision = True
-                        break
-                    if truncated:
-                        break
-                final = abs(
-                    np.arctan2(np.sin(info["bearing"]), np.cos(info["bearing"]))
-                )
-                success = not collision and final < abs(initial) * 0.5
-                runs.append(
-                    {
-                        "seed": seed,
-                        "success": success,
-                        "collision": collision,
-                        "initial_bearing": initial,
-                        "final_bearing": final,
-                        "altitude_rms": float(
-                            np.sqrt(np.mean((np.asarray(zs) - 1) ** 2))
-                        ),
-                    }
-                )
-            report[mode] = {
-                "success_rate": float(np.mean([r["success"] for r in runs])),
-                "runs": runs,
-            }
-        finally:
-            env.close()
-    report["acceptance"] = {
-        "steering_passed": report["none"]["success_rate"] >= 0.8,
-        "ablation_passed": all(
-            report["none"]["success_rate"] > report[m]["success_rate"]
-            for m in ("zero", "sensory", "shuffle")
+    env = ConnectomeEnv(brain=brain, ablation=mode)
+    runs = []
+    sim_seconds = 0.0
+    start = time.perf_counter()
+    try:
+        for seed in seeds:
+            obs, info = env.reset(seed=int(seed))
+            initial = abs(info["bearing"])
+            zs = []
+            collision = False
+            for _ in range(int(seconds * FRAME_HZ)):
+                obs, _, done, truncated, info = env.step(brain.infer(obs) / LIMITS)
+                zs.append(float(env.plant.pos[0, 2]))
+                if done:
+                    collision = True
+                    break
+                if truncated:
+                    break
+            sim_seconds += env.plant.data.time
+            zs = np.asarray(zs)
+            settled = zs[int(SETTLE_SECONDS * FRAME_HZ) :]
+            final = abs(info["bearing"])
+            runs.append(
+                {
+                    "seed": int(seed),
+                    "success": bool(not collision and final < initial * 0.5),
+                    "collision": collision,
+                    "initial_bearing": initial,
+                    "final_bearing": final,
+                    "altitude_rms": float(np.sqrt(np.mean((zs - 1) ** 2))),
+                    "settled_altitude_rms": float(np.sqrt(np.mean((settled - 1) ** 2)))
+                    if len(settled)
+                    else None,
+                    "frames": len(zs),
+                }
+            )
+    finally:
+        env.close()
+    return mode, runs, sim_seconds, time.perf_counter() - start
+
+
+def _summary(runs, sim_seconds, wall_seconds):
+    return {
+        "success_rate": float(np.mean([r["success"] for r in runs])),
+        "collision_rate": float(np.mean([r["collision"] for r in runs])),
+        "mean_final_bearing": float(np.mean([r["final_bearing"] for r in runs])),
+        "real_time_factor": sim_seconds / wall_seconds if wall_seconds else None,
+        "runs": sorted(runs, key=lambda r: r["seed"]),
+    }
+
+
+def evaluate(
+    policy,
+    episodes=50,
+    output="runs/evaluation.json",
+    seconds=10,
+    workers=8,
+    hover_episodes=5,
+    hover_seconds=30,
+):
+    """Held-out steering trials, ablation controls and policy hover, in parallel."""
+    import multiprocessing
+    from concurrent.futures import ProcessPoolExecutor
+
+    policy = str(Path(policy).resolve())
+    workers = max(1, int(workers))
+    seeds = np.arange(1000, 1000 + episodes)
+    jobs = [
+        (policy, mode, chunk.tolist(), seconds)
+        for mode in ("none", *ABLATIONS)
+        for chunk in np.array_split(seeds, min(workers, episodes))
+    ]
+    hover_seeds = np.arange(2000, 2000 + hover_episodes)
+    jobs += [
+        (policy, "hover", chunk.tolist(), hover_seconds)
+        for chunk in np.array_split(hover_seeds, min(workers, max(1, hover_episodes)))
+        if len(chunk)
+    ]
+    collected = {}
+    start = time.perf_counter()
+    # Spawn: MuJoCo/EGL renderer state must not be inherited through fork.
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
+        for mode, runs, sim, wall in pool.map(_rollout_chunk, jobs):
+            entry = collected.setdefault(mode, [[], 0.0, 0.0])
+            entry[0] += runs
+            entry[1] += sim
+            entry[2] += wall
+    modes = {m: _summary(*collected[m]) for m in ("none", *ABLATIONS)}
+    hover_runs = collected.get("hover", [[], 0.0, 0.0])[0]
+    hover_rms = [r["settled_altitude_rms"] for r in hover_runs]
+    hover = {
+        "seconds": hover_seconds,
+        "settle_seconds": SETTLE_SECONDS,
+        "max_settled_altitude_rms": max(
+            (v for v in hover_rms if v is not None), default=None
         ),
-        "note": "This evaluation does not replace the separate 30-second hover test.",
+        "runs": sorted(hover_runs, key=lambda r: r["seed"]),
+    }
+    report = {
+        "policy": policy,
+        "episodes": episodes,
+        "seconds": seconds,
+        "workers": workers,
+        "wall_seconds": time.perf_counter() - start,
+        "modes": modes,
+        "hover": hover,
+    }
+    report["acceptance"] = {
+        "steering_success_rate": modes["none"]["success_rate"],
+        "steering_passed": modes["none"]["success_rate"] >= 0.8,
+        "ablation_success_rates": {m: modes[m]["success_rate"] for m in ABLATIONS},
+        "ablation_passed": all(
+            modes["none"]["success_rate"] > modes[m]["success_rate"] for m in ABLATIONS
+        ),
+        "hover_passed": bool(
+            hover_runs
+            and all(not r["collision"] for r in hover_runs)
+            and all(r["frames"] >= int(hover_seconds * FRAME_HZ) for r in hover_runs)
+            and hover["max_settled_altitude_rms"] is not None
+            and hover["max_settled_altitude_rms"] < 0.15
+        ),
+        "note": "Hover uses the trained policy with a lateral target for 30 s; "
+        "settled RMS excludes the first 2 s.",
     }
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(report, indent=2))
