@@ -127,6 +127,24 @@ So `ΔD` per 40 ms frame rises steeply as the obstacle nears (`∝ 1/d³`), much
 `θ̇`/`τ`-tuned responses attributed to LC4/LPLC2. Confounds: yaw rotation that sweeps a dark
 region into view, lighting changes, and a drone that is the one approaching.
 
+### Measured looming response
+
+Obstacle approaching the hovering drone at 1 m/s from 3 m (encoder v3, 0.75 rad splay). The
+`escape` readout is the connectome's own giant-fiber-adjacent readout, not a decoder output:
+
+| distance (m) | centred: `loom_l` / `loom_r` | 0.3 m left: `loom_l` / `loom_r` | escape readout (left case) |
+| ------------ | ---------------------------- | ------------------------------- | -------------------------- |
+| 2.64         | 0.008 / 0.008                | 0.008 / 0.000                   | 0.00                       |
+| 1.68         | 0.016 / 0.016                | 0.012 / 0.000                   | 0.00                       |
+| 1.04         | 0.066 / 0.066                | 0.074 / 0.000                   | 0.00                       |
+| 0.72         | 0.164 / 0.168                | 0.133 / 0.000                   | 0.00                       |
+| 0.40–0.50    | 0.000 / 0.000 (fills view)   | 0.691 / 0.000                   | **0.55**                   |
+
+The cues are lateralised: an off-centre obstacle drives only its own side. They grow steeply as
+the obstacle nears. They drop to zero once the obstacle fills the image, because `D` saturates
+and `ΔD → 0`. The escape readout rises from 0 to ≈ 0.3–0.55 through the anatomical
+LC4/LPLC2 → descending pathway, before any learned decoding.
+
 ## 3. Injection into the connectome
 
 | Cue                  | Target cells                                                  | Source                                          |

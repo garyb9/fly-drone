@@ -28,6 +28,8 @@ Last full pass: 2026-09-13, commit `f272977` (Playwright 1.63 / Chromium, PID ba
 - [x] Each single-motor perturbation produces the expected roll/pitch/yaw sign
       (`test_each_motor_torque_sign`).
 - [x] Motor lag, saturation and invalid-input rejection (`test_motor_lag_saturation_and_bad_inputs`).
+- [x] A relocated obstacle registers contact, including after reset (mocap body)
+      (`test_physics.py::test_moved_obstacle_registers_contact`).
 - [x] Hover recovers from a vertical perturbation (`test_hover_recovers_vertical_perturbation`).
 - [x] Velocity/yaw commands move the body in the expected direction
       (`test_commands_move_in_expected_direction`).
@@ -49,8 +51,14 @@ Last full pass: 2026-09-13, commit `f272977` (Playwright 1.63 / Chromium, PID ba
 - [x] Evaluation runs every ablation plus the hover check and writes a report
       (`test_env.py::test_evaluate_smoke_with_zero_policy`).
 - [x] Bearing is wrapped to `[−π, π]` everywhere (`test_env.py::test_target_bearing_wraps_to_pi`).
-- [ ] ≥ 80% steering on 50 held-out seeds with degradation under zero/sensory/shuffle ablations.
-      Results are in [`validation.md`](validation.md).
+- [x] ≥ 80% steering on 50 held-out seeds, balanced left/right, degrading under zero/sensory/shuffle
+      ablations: 100% / balanced 1.00 vs 0.00 / 0.00 / 0.12
+      ([`results/evaluation-visual-v3.json`](results/evaluation-visual-v3.json)).
+- [x] A blind fixed-direction turner cannot pass: balanced success is required (silenced vision scores
+      48% raw, 0.00 balanced).
+- [x] Looming episode: an aimed obstacle launches and hits a drone commanded to hold still, and
+      evaluation writes looming metrics
+      (`test_env.py::test_looming_obstacle_launches_and_hits_a_stationary_drone`, `test_evaluate_looming_smoke`).
 - [ ] Looming-obstacle response. See [`validation.md`](validation.md).
 
 ## Service and viewer (`yarn dev`, then `yarn browser:check`)

@@ -158,6 +158,60 @@ truly be 0.70. When comparing against an ablation, prefer a clear gap (for examp
 over a one-trial difference. The seeds are fixed, so conditions are paired trial-by-trial, and
 per-seed outcomes are in the report for McNemar-style comparison.
 
+## 6b. Looming task: an obstacle flies at the drone
+
+`ConnectomeEnv(task="looming")` tests the second visual pathway (dark-area expansion → LC4/LPLC2)
+instead of target steering.
+
+**Episode.** The target is parked behind the drone at `[−3.8, 0, 1]`, so it is out of view. The
+obstacle (radius `R_o = 0.25` m, near-black) waits at
+
+```
+o₀ = [2.5, s·U(0.05, 0.3), 1 + U(−0.1, 0.1)],   s = ±1 (obstacle side, balanced)
+```
+
+After a delay `t_d ~ U(0.4, 2.0)` s it moves in a straight line at `v ~ U(0.8, 1.2)` m/s towards the
+drone's **start** position `p₀`:
+
+```
+o(t) = o₀ + v (t − t_d) · (p₀ − o₀)/‖p₀ − o₀‖,     t ≥ t_d   (updated once per 40 ms frame)
+```
+
+If the drone stays still, contact happens when `‖p − o‖ ≤ R_o + r_drone ≈ 0.31` m. That is after
+`(‖p₀ − o₀‖ − 0.31)/v ≈ 2.2/v ≈ 1.8–2.7` s of flight. Per-frame steps are `v·0.04 ≤ 4.8` cm,
+much smaller than 0.31 m, so the obstacle cannot tunnel through the drone. The obstacle is a MuJoCo
+**mocap body**. A static world geom moved through `model.geom_pos` keeps its compile-time
+collision bounds and never registers contact (`test_moved_obstacle_registers_contact`).
+
+**Time budget.** The drone can move at most `0.4` m/s laterally and `0.2` m/s vertically.
+Clearing `R_o + r_drone ≈ 0.31` m sideways takes `≈ 0.8` s at full command, plus the PID's
+position-hold lag. The loom cue grows as `1/d³` (sensory-model §2), measured at 0.04 at 1.4 m,
+0.13 at 0.8 m and 0.7 at 0.5 m. Useful warning therefore arrives about 1 s before contact:
+enough, but not generous.
+
+**Reward** (looming only; the visual bearing terms are off):
+
+```
+r_t = 1 − 4 (z − 1)² − 0.05 ‖a‖² − 0.5 ‖p_xy − p₀,xy‖² − 2 exp(−‖p − o‖² / 0.2) − 20 · 1[terminated]
+```
+
+The drift term makes an unnecessary dodge cost a little. The near-miss term and the contact
+penalty make a real threat worth dodging. Episodes truncate at 150 frames (6 s).
+
+**Evaluation** (`fly-drone evaluate --task looming`):
+
+```
+success          = no contact and no crash within the 6 s episode
+balanced success = min(success | obstacle left, success | obstacle right)
+avoidance_passed = success ≥ 0.8 ∧ balanced ≥ 0.8
+ablation_passed  = trained > zero, sensory, shuffle   (raw and balanced)
+```
+
+Each run also records the minimum obstacle distance and the **pre-launch displacement**, the
+largest horizontal drift before the obstacle starts moving. A policy that simply always flies
+away scores well on survival and would also survive with vision silenced. The ablation
+comparison catches that, and a large pre-launch displacement explains it.
+
 ## 7. Workflow and run layout
 
 ```bash
