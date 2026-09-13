@@ -84,3 +84,57 @@ def test_evaluate_smoke_with_zero_policy(tmp_path):
     # A zero decoder cannot steer, so no ablation can be beaten.
     assert report["acceptance"]["steering_passed"] is False
     assert json.loads((tmp_path / "evaluation.json").read_text())["episodes"] == 2
+
+
+def test_looming_obstacle_launches_and_hits_a_stationary_drone():
+    e = ConnectomeEnv(task="looming", vision=False)
+    try:
+        _, info = e.reset(seed=5)
+        assert info["obstacle_side"] in (-1.0, 1.0) and not info["launched"]
+        start_distance = info["obstacle_distance"]
+        hit = False
+        for frame in range(150):
+            _, _, done, truncated, info = e.step(np.zeros(4))
+            if done:
+                hit = info["collision"]
+                break
+            assert not truncated or frame == 149
+        assert info["launched"] and hit, (start_distance, info["obstacle_distance"])
+    finally:
+        e.close()
+
+
+def test_evaluate_looming_smoke(tmp_path):
+    import json
+
+    from fly_drone.brain import ENCODER_VERSION, BrainRuntime
+    from fly_drone.training import evaluate
+
+    brain = BrainRuntime()
+    n = len(brain.feature_ids)
+    policy = tmp_path / "zero-actor.json"
+    policy.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "encoder_version": ENCODER_VERSION,
+                "dataset_hash": brain.dataset_hash,
+                "feature_ids": brain.feature_ids,
+                "mean": [0.0] * n,
+                "scale": [1.0] * n,
+                "layers": [{"weights": [[0.0] * n] * 4, "bias": [0.0] * 4}],
+                "action_limits": [0.4, 0.4, 0.2, 0.8],
+            }
+        )
+    )
+    report = evaluate(
+        policy,
+        episodes=2,
+        output=tmp_path / "loom.json",
+        seconds=0.2,
+        workers=2,
+        task="looming",
+    )
+    assert report["task"] == "looming" and "hover" not in report
+    assert "avoidance_passed" in report["acceptance"]
+    assert all("min_obstacle_distance" in r for r in report["modes"]["none"]["runs"])

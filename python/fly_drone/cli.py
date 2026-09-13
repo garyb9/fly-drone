@@ -39,6 +39,7 @@ def main():
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--hover-episodes", type=int, default=5)
     p.add_argument("--hover-seconds", type=float, default=30)
+    p.add_argument("--task", choices=["visual", "looming"], default="visual")
     args = parser.parse_args()
     if args.command == "serve":
         import uvicorn
@@ -126,6 +127,7 @@ def main():
                     args.workers,
                     args.hover_episodes,
                     args.hover_seconds,
+                    args.task,
                 )["acceptance"],
                 indent=2,
             )
