@@ -35,6 +35,7 @@ def main():
     p.add_argument("--trials", type=int, default=64)
     p.add_argument("--closed-loop", action="store_true")
     p.add_argument("--frames", type=int, default=100)
+    p.add_argument("--task", choices=["visual", "looming"], default="visual")
     p = sub.add_parser("evaluate")
     p.add_argument("--policy", required=True)
     p.add_argument("--episodes", type=int, default=50)
@@ -97,7 +98,7 @@ def main():
         from .calibration import collect, collect_closed_loop
 
         if args.closed_loop:
-            collect_closed_loop(args.output, args.trials, args.frames)
+            collect_closed_loop(args.output, args.trials, args.frames, task=args.task)
         else:
             collect(args.output, args.trials)
     elif args.command == "train":

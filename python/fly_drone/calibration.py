@@ -53,8 +53,27 @@ def collect(path="runs/calibration.npz", trials=64):
         p.close()
 
 
+DODGE_RANGE = 2.0
+
+
+def dodge_label(info):
+    """Teacher lateral command: flee the obstacle's side once it is launched and near.
+
+    2.0 m matches where gain-150 loom input starts driving LC4/LPLC2, so the decoder
+    is not asked to react before the threat is visible.
+    """
+    if info["launched"] and info["obstacle_distance"] < DODGE_RANGE:
+        return -float(info["obstacle_side"])
+    return 0.0
+
+
 def collect_closed_loop(
-    path="runs/calibration.npz", trials=64, frames=100, noise=0.3, teacher_scale=0.4
+    path="runs/calibration.npz",
+    trials=64,
+    frames=100,
+    noise=0.3,
+    teacher_scale=0.4,
+    task="visual",
 ):
     """Record features while a noisy proportional yaw teacher flies the drone.
 
@@ -64,7 +83,7 @@ def collect_closed_loop(
     """
     from .env import ConnectomeEnv
 
-    env = ConnectomeEnv(task="visual")
+    env = ConnectomeEnv(task=task)
     rng = np.random.default_rng(72)
     xs = []
     ys = []
@@ -73,12 +92,19 @@ def collect_closed_loop(
         for trial in range(trials):
             obs, info = env.reset(seed=trial + 200)
             for _ in range(frames):
-                label = float(np.clip(info["bearing"] * 1.5 / 0.8, -1, 1))
                 xs.append(obs)
-                ys.append([0, 0, 0, label])
                 angles.append(info["bearing"])
-                yaw = np.clip(teacher_scale * label + rng.normal(0, noise), -1, 1)
-                obs, _, done, _, info = env.step(np.array([0, 0, 0, yaw]))
+                if task == "looming":
+                    label = dodge_label(info)
+                    ys.append([0, label, 0, 0])
+                    vy = np.clip(label + rng.normal(0, noise), -1, 1)
+                    action = np.array([0, vy, 0, 0])
+                else:
+                    label = float(np.clip(info["bearing"] * 1.5 / 0.8, -1, 1))
+                    ys.append([0, 0, 0, label])
+                    yaw = np.clip(teacher_scale * label + rng.normal(0, noise), -1, 1)
+                    action = np.array([0, 0, 0, yaw])
+                obs, _, done, _, info = env.step(action)
                 if done:
                     break
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -89,10 +115,10 @@ def collect_closed_loop(
             angles=np.array(angles),
             dataset_hash=env.brain.dataset_hash,
             encoder_version=ENCODER_VERSION,
-            mode="closed-loop",
+            mode=f"closed-loop-{task}",
         )
         print(
-            f"Collected {len(xs)} closed-loop neural observations from {trials} flights",
+            f"Collected {len(xs)} closed-loop {task} observations from {trials} flights",
             flush=True,
         )
     finally:
