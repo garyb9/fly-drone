@@ -107,7 +107,11 @@ try {
   await page.getByRole("button", { name: "Run trial" }).click();
   await page.waitForFunction(() => {
     const trial = document.querySelector("#trial")?.textContent ?? "";
-    return trial.includes("SEED 1003") && trial.includes("LOOMING") && trial.includes("SENSORY");
+    return (
+      trial.includes("SEED 1003") &&
+      trial.includes("DODGE OBSTACLE") &&
+      trial.includes("VISION SILENCED")
+    );
   });
   await page.waitForFunction(() =>
     (document.querySelector("#outcome")?.textContent ?? "").includes("obstacle"),

@@ -267,6 +267,12 @@ function setupBrain(m: Metadata) {
   void loadReports();
 }
 const select = (id: string) => el(id) as HTMLSelectElement;
+const CONDITIONS: Record<string, string> = {
+  none: "INTACT",
+  zero: "ZEROED FEATURES",
+  sensory: "VISION SILENCED",
+  shuffle: "SHUFFLED FEATURES",
+};
 async function loadReports() {
   try {
     reports = await (await fetch("/api/reports")).json();
@@ -401,7 +407,7 @@ function update(f: Frame) {
     `${f.missed_deadlines} missed frame deadlines · Full graph running · Fly panel uses modeled dynamics`;
   if (f.task) {
     el("trial").textContent =
-      `SEED ${f.seed} · ${f.task.toUpperCase()} · ${f.ablation.toUpperCase()}${f.active_policy ? ` · ${f.active_policy}` : " · NO POLICY"}`;
+      `SEED ${f.seed} · ${f.task === "looming" ? "DODGE OBSTACLE" : "STEER TO TARGET"} · ${CONDITIONS[f.ablation] ?? f.ablation.toUpperCase()}${f.active_policy ? ` · ${f.active_policy}` : " · NO POLICY"}`;
     const o = f.outcome;
     const live =
       f.task === "looming"
