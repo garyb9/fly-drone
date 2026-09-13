@@ -94,6 +94,31 @@ The graph was never reduced to meet a deadline. The brain now dominates frame ti
 each tick is 166,700 Box–Muller Gaussian draws. A faster noise generator would change the
 reproducible noise stream and the golden traces, so it is deferred.
 
+## Known limits of the visual adapter
+
+The encoder works on **absolute** brightness: "bright" means `Y > 0.55` and "dark" means
+`Y < 0.18`. Gains are calibrated for this indoor scene at 64 × 48 px and 25 Hz. Raising the loom
+gain from 12 to 150 is sensor calibration: at this resolution an obstacle 2 m away changes only a
+few pixels per frame. It is not a change to the brain. Expected failures outside the simulator:
+
+- **Sunlight or high exposure:** most pixels exceed 0.55, so light cues saturate on both eyes and
+  the steering signal is lost. Lit obstacles may never count as dark, so there is no looming cue.
+- **Moving shadows, clouds, auto-exposure steps:** dark-area growth without any approaching
+  object, i.e. false looming.
+- **Rotation:** sweeping an edge into view already saturates the loom cue (measured
+  ΔD = 0.28/frame), with or without the gain change.
+
+## Next milestone: robust vision
+
+- A contrast-adaptive encoder: luminance normalised by a running local mean (Weber contrast
+  ΔI/I), separate ON/OFF channels, and looming from edge expansion (angular size rate θ̇) instead
+  of dark area.
+- Domain randomisation during training: lighting, exposure, sky brightness, moving shadows. Add
+  a "sun" and an "overcast" evaluation scene.
+- A sensor study for hardware: frame rate, resolution and field of view against warning distance.
+  Event cameras (DVS) report log-intensity changes, which is illumination-invariant and fast, a
+  natural front end for LC4/LPLC2-style looming.
+
 ## Open items
 
 - Train and evaluate the looming task (obstacle launched at the drone; see [`training.md`](training.md)).

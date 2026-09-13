@@ -1,4 +1,8 @@
 //! Engineered eye adapter, not a reconstructed retina. RGB bytes only.
+/// Dark-area growth gain. 150 makes LC4/LPLC2 input cells fire (cue ≥ 0.22) at ΔD ≈ 0.0015,
+/// about 5 px/frame, ≈ 1.5–2 m from an approaching 0.25 m obstacle; 12 fired only at ~0.5 m.
+const LOOM_GAIN: f32 = 150.0;
+
 #[derive(Default)]
 pub struct Eyes {
     previous: Option<[[f32; 2]; 2]>,
@@ -43,7 +47,9 @@ impl Eyes {
                 (current[i][0] * 1.5 + (current[i][0] - prev[i][0]).max(0.0) * 6.0).clamp(0.0, 2.0)
             })
             .into_iter()
-            .chain([0, 1].map(|i| ((current[i][1] - prev[i][1]).max(0.0) * 12.0).clamp(0.0, 2.0)))
+            .chain(
+                [0, 1].map(|i| ((current[i][1] - prev[i][1]).max(0.0) * LOOM_GAIN).clamp(0.0, 2.0)),
+            )
             .collect::<Vec<_>>()
             .try_into()
             .unwrap())
