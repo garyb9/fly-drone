@@ -179,6 +179,8 @@ def _probe_setup(env, probe, rng):
         position = [spec.half_size - 3.0, 0.0, 1.0]
     env.plant.teleport(position, yaw)
     env.brain.clear_vision_history()
+    if env.brain.learned:
+        env.brain.push_frame(env.plant.camera())
 
     def at(distance, bearing):
         angle = yaw + bearing

@@ -11,6 +11,8 @@ from fly_drone.brain import (
     FrameStack,
     luma_u8,
 )
+from fly_drone.encoder import LearnedEncoder
+from fly_drone.env import ConnectomeEnv
 
 
 @pytest.fixture(scope="module")
@@ -116,3 +118,46 @@ def test_set_currents_clips_and_checks_shape_and_sense_is_v4_only(v5):
 def test_pathway_silencing_names_work_on_v5(v5):
     v5.silence_inputs(("light_l", "looming_r"))
     v5.core.restore()
+
+
+def test_learned_env_settles_on_zero_and_encodes_the_previous_end_of_step_frame(
+    tmp_path,
+):
+    enc = LearnedEncoder.fresh(seed=4)
+    enc.save(tmp_path / "e.pt")
+    brain = BrainRuntime(encoder=tmp_path / "e.pt")
+    env = ConnectomeEnv(task="free_roam", level=3, respawn=True, brain=brain)
+    try:
+        env.reset(seed=21)
+        assert not brain.cues.any()
+        for _ in range(3):
+            expected = enc.currents(brain.stack.array())
+            env.step(np.array([0.5, 0.0, 0.0, 0.2]))
+            np.testing.assert_allclose(brain.cues, expected)
+            newest = brain.stack.array()[[2, 5]]
+            np.testing.assert_array_equal(newest, luma_u8(env.plant.images))
+    finally:
+        env.close()
+
+
+def test_external_env_applies_the_learners_currents_unchanged(v5):
+    env = ConnectomeEnv(task="free_roam", level=3, respawn=True, brain=v5)
+    try:
+        env.reset(seed=22)
+        currents = np.linspace(0, 2, 8).astype(np.float32)
+        v5.set_currents(currents)
+        env.step(np.zeros(4))
+        np.testing.assert_array_equal(v5.cues, currents)
+    finally:
+        env.close()
+
+
+def test_v5_env_supports_pathway_ablations(v5):
+    for ablation in ("light", "loom", "ghost"):
+        env = ConnectomeEnv(task="free_roam", level=3, brain=v5, ablation=ablation)
+        try:
+            env.reset(seed=23)
+            env.step(np.zeros(4))
+        finally:
+            env.brain.core.restore()
+            env.close()

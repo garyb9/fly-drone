@@ -149,13 +149,25 @@ class ConnectomeEnv(gym.Env):
             self.brain.silence_inputs(PATHWAYS[self.ablation])
         if self.plant.arena is not None:
             self.plant.set_ghost(self.ablation == "ghost")
-        self.brain.sense(self.plant.camera())
+        if self.brain.learned:
+            self.brain.push_frame(self.plant.camera())
+            # Settle on zero input: identical for a deployed and a learning encoder.
+            self.brain.set_currents(np.zeros_like(self.brain.cues))
+        else:
+            self.brain.sense(self.plant.camera())
         # Deterministic neural settling, no hidden body time advancement.
         self.brain.step(40)
         info = self.info()
         self.previous_bearing = abs(info["bearing"])
         self.previous_distance = info["target_distance"]
         return self.observe(), info
+
+    def _sense(self):
+        """v4 renders now; v5 encodes the stack rendered at the end of the previous step."""
+        if self.brain.learned:
+            self.brain.encode_stack()
+        else:
+            self.brain.sense(self.plant.camera())
 
     def _reset_trial(self, rng, side):
         target, obstacle = TARGET_BEHIND, OBSTACLE_PARK
@@ -346,7 +358,7 @@ class ConnectomeEnv(gym.Env):
             raise ValueError("action must contain four finite values")
         self.command = np.clip(action, -1, 1) * self.plant.limits
         self._move_objects()
-        self.brain.sense(self.plant.camera())
+        self._sense()
         self.trace = []
         for _ in range(8):
             for idx, value in self.interventions.items():
@@ -356,7 +368,15 @@ class ConnectomeEnv(gym.Env):
             self.trace.append(self.brain.read())
         self.frames += 1
         if self.roam is not None:
-            return self._step_roam(action)
+            result = self._step_roam(action)
+        else:
+            result = self._step_room(action)
+        if self.brain.learned:
+            # The next step's currents come from what the eyes see now, after any respawn.
+            self.brain.push_frame(self.plant.camera())
+        return result
+
+    def _step_room(self, action):
         pos = self.plant.pos[0]
         delta = self.plant.target - pos
         distance = float(np.linalg.norm(delta[:2]))
