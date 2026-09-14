@@ -23,11 +23,15 @@ class CueController:
         self.history = deque(maxlen=5)
         self.escape = 0
         self.escape_dir = 1.0
+        self.escape_kind = "obstacle"
         self.search_dir = 1.0
 
     def _escape_action(self):
-        # Brake and sidestep; only a little yaw, because turning itself reads as loom.
-        return np.array([-0.4, self.escape_dir, 0.0, 0.3 * self.escape_dir])
+        if self.escape_kind == "threat":
+            # Brake and sidestep; little yaw, because turning itself reads as loom.
+            return np.array([-0.4, self.escape_dir, 0.0, 0.3 * self.escape_dir])
+        # Static obstacle: slow down and turn away so the path clears.
+        return np.array([0.1, 0.0, 0.0, self.escape_dir])
 
     def act(self, cues):
         light_l, light_r, loom_l, loom_r = (float(c) for c in cues)
@@ -35,12 +39,17 @@ class CueController:
         if self.escape > 0:
             self.escape -= 1
             return self._escape_action()
-        recent = [max(a, b) > FIRE for a, b in list(self.history)[-3:]]
-        if sum(recent) >= 2 and max(loom_l, loom_r) > 0.3:
+        levels = [max(a, b) for a, b in self.history]
+        recent = [v > FIRE for v in levels[-3:]]
+        if sum(recent) >= 2 and levels[-1] > 0.3:
             if abs(loom_l - loom_r) > 0.1:
                 # +yaw and +lateral are left: move away from the louder eye.
                 self.escape_dir = 1.0 if loom_r > loom_l else -1.0
-            self.escape = 15
+            # A thrown object's image grows as 1/d^3 and saturates within frames; a
+            # pillar or wall approached at cruise speed rises slowly (sensor scan).
+            rising = len(levels) >= 3 and levels[-1] > 1.0 and levels[-1] > levels[-3]
+            self.escape_kind = "threat" if rising else "obstacle"
+            self.escape = 15 if rising else 10
             return self._escape_action()
         light = light_l + light_r
         if light > 0.3:
