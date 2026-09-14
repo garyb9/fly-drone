@@ -18,16 +18,16 @@ Plan: [`superpowers/plans`](superpowers/plans/) (free-roam plan, 2026-09-13).
 
 `DronePlant(arena=ArenaSpec())` builds a separate model; `arena=None` builds the legacy room.
 
-| Element   | Value                                                                                      | Why                                                      |
-| --------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| Room      | 16 × 16 m interior, walls at ±8 m, 3 m tall, grey (0.35)                                   | Larger than the 8 m trial room                           |
-| Wall band | near-black, z 0.8–1.2 m on every wall                                                      | Approaching a wall expands a dark region: a loom cue     |
-| Pillars   | up to 16 mocap cylinders, r 0.3 m, grey with a 0.3 m near-black ring centred at z 1 m      | Moved mocap bodies register contact; see §3 for the ring |
-| Beacon    | emissive sphere, r 0.3 m, one at a time, collected within 0.5 m                            | Light cue readable to 12 m                               |
-| Threat    | dark sphere, r 0.25 m, thrown every 8–20 s from 3–4 m ahead at 0.8–1.4 m/s                 | The looming pathway in flight                            |
-| Floor     | uniform grey                                                                               | The upstream checker sits at the dark threshold          |
-| Lighting  | headlight ambient 0.6, diffuse 0.3                                                         | §3                                                       |
-| Limits    | `[0.7, 0.5, 0.3, 0.8]` m/s, m/s, m/s, rad/s (stored in each actor; mismatches are refused) | §3                                                       |
+| Element   | Value                                                                                                                          | Why                                                                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Room      | 16 × 16 m interior, walls at ±8 m, 3 m tall, grey (0.35)                                                                       | Larger than the 8 m trial room                                                                                                                                                      |
+| Wall band | near-black, z 0.8–1.2 m on every wall                                                                                          | Approaching a wall expands a dark region: a loom cue                                                                                                                                |
+| Pillars   | up to 16 mocap cylinders, r 0.3 m, grey with a 0.3 m near-black ring centred at z 1 m                                          | Moved mocap bodies register contact; see §3 for the ring                                                                                                                            |
+| Beacon    | emissive sphere, r 0.3 m, one at a time, collected within 0.5 m                                                                | Light cue readable to 12 m                                                                                                                                                          |
+| Threat    | dark sphere, r 0.25 m, thrown every 8–20 s from 5–6 m ahead at 0.6–1.0 m/s on an intercept course (leads the drone's velocity) | The looming pathway in flight. Shots from 3–4 m at 0.8–1.4 m/s aimed at the launch position were dodged only 71% by the privileged teacher, and a blind drone escaped 46% by chance |
+| Floor     | uniform grey                                                                                                                   | The upstream checker sits at the dark threshold                                                                                                                                     |
+| Lighting  | headlight ambient 0.6, diffuse 0.3                                                                                             | §3                                                                                                                                                                                  |
+| Limits    | `[0.7, 0.5, 0.3, 0.8]` m/s, m/s, m/s, rad/s (stored in each actor; mismatches are refused)                                     | §3                                                                                                                                                                                  |
 
 Layouts are seeded: pillars keep ≥ 2.5 m of gap, stay ≥ 1 m from walls and ≥ 2 m from the spawn,
 and a 0.25 m occupancy grid must stay connected. Half of all beacons spawn outside the field of
