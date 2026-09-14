@@ -1,3 +1,5 @@
+import hashlib
+
 import numpy as np
 from fly_drone.env import ConnectomeEnv
 from fly_drone.fly import FlyMirror
@@ -149,3 +151,29 @@ def test_fly_stays_in_view_under_tonic_power():
         fly.step(readouts)
     assert np.linalg.norm(fly.position - [0, 1, 0]) < 2.0
     assert 0.25 < fly.position[1] < 3.0
+
+
+V4_LOOMING_REPLAY = "ecec814583cac8bae37ab6e9879fcd68c5f1e85514d3e6a4fbffe8155f48ccd7"
+V4_ROAM_REPLAY = "37b6d176c81bfc1d720347b09d15ed6cd9b58eb47a53b2f8c544816087693e92"
+
+
+def _replay_digest(task, seed, frames, **kwargs):
+    env = ConnectomeEnv(task=task, **kwargs)
+    try:
+        obs, _ = env.reset(seed=seed)
+        digest = hashlib.sha256(np.round(obs, 6).tobytes())
+        for _ in range(frames):
+            obs, *_ = env.step(np.array([0.3, -0.2, 0.1, 0.4]))
+            digest.update(np.round(obs, 6).tobytes())
+            digest.update(np.round(env.brain.cues, 6).tobytes())
+        return digest.hexdigest()
+    finally:
+        env.close()
+
+
+def test_v4_looming_replay_is_bit_identical():
+    assert _replay_digest("looming", 7, 20) == V4_LOOMING_REPLAY
+
+
+def test_v4_free_roam_replay_is_bit_identical():
+    assert _replay_digest("free_roam", 7, 20, level=3, respawn=True) == V4_ROAM_REPLAY
