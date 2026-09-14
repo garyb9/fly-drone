@@ -53,13 +53,29 @@ def export_actor(model, brain, path, limits=None):
     return error
 
 
+def _env_kwargs(task):
+    """Free roam trains in the full L3 arena and respawns after a crash, as evaluated."""
+    if task == "free_roam":
+        return {"task": task, "level": 3, "respawn": True}
+    return {"task": task}
+
+
+def action_limits(task):
+    """Physical scale of a normalised action; free roam flies faster than the room."""
+    if task == "free_roam":
+        from .arena import ArenaSpec
+
+        return np.asarray(ArenaSpec().limits, dtype=float)
+    return LIMITS
+
+
 def _env_factory(task, rank, seed):
     def make():
         from stable_baselines3.common.monitor import Monitor
 
         from .env import ConnectomeEnv
 
-        env = Monitor(ConnectomeEnv(task=task))
+        env = Monitor(ConnectomeEnv(**_env_kwargs(task)))
         env.reset(seed=seed + rank)
         return env
 
@@ -140,7 +156,9 @@ def train(
                 model, calibration, brain.dataset_hash, yaw_scale=teacher_scale
             )
             (out / "warm-start.json").write_text(json.dumps(result, indent=2))
-            export_actor(model, brain, out / "warm-actor.json")
+            export_actor(
+                model, brain, out / "warm-actor.json", limits=action_limits(task)
+            )
             model.save(out / "warm-ppo")
             model.learning_rate = 1e-5
             model.lr_schedule = lambda _: 1e-5
@@ -152,7 +170,9 @@ def train(
             reset_num_timesteps=not bool(resume),
         )
         model.save(out / "ppo")
-        error = export_actor(model, brain, out / "actor.json")
+        error = export_actor(
+            model, brain, out / "actor.json", limits=action_limits(task)
+        )
         (out / "training.json").write_text(
             json.dumps(
                 {
