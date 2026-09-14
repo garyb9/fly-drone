@@ -155,8 +155,8 @@ with the user rather than silently changing the gate.
 
 - A viewer server started by this session may still be running: `fly-drone serve --accepted` on
   :8000 (the user is using it). Leave it unless the user asks.
-- Runs (git-ignored): `runs/roam/` holds feasibility/screen reports, the aborted
-  `dagger-0-L012.npz` attempt (incomplete — delete or re-collect), `verify-*.png` screenshots,
+- Runs (git-ignored): `runs/roam/` holds feasibility/screen reports (a level 0–2 teacher
+  collection was started and stopped before writing any data), `verify-*.png` screenshots,
   and the diagnostic scripts `verify-accepted.mjs`, `diagnose-live.mjs`.
 - Machine: 28 threads; each brain + renderer process ≈ 0.5 GB; 16 workers is a safe default.
 
