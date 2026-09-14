@@ -357,6 +357,8 @@ def evaluate_free_roam(
 
 # Encoder v5 checks, pre-registered 2026-09-14 before any v5 result (spec §5). Additive:
 # they never change ACCEPTANCE.
+# Both ranges measure the gap to the threat's centre. E1/E2 score the loom group (LC4,
+# LPLC2) by max over its four channels and the light group (Mi1, Tm3) by mean over its four.
 THREAT_POSITIVE_RANGE = 3.0
 THREAT_NEGATIVE_RANGE = 6.0
 ENCODER_CHECKS = {
@@ -422,6 +424,26 @@ def encoder_scores(currents, threat, beacon):
     }
 
 
+def _threat_label(flying, gap, previous_gap, visible):
+    """Pure E1 labelling rule, factored out of `_checks_job` for direct testing.
+
+    Positive (1): an active threat closing inside THREAT_POSITIVE_RANGE and visible.
+    Negative (0): no active threat, or the threat is beyond THREAT_NEGATIVE_RANGE.
+    Excluded (-1): everything else (the band between the two ranges, not closing, or
+    closing-but-unseen inside THREAT_POSITIVE_RANGE).
+    """
+    if not flying or gap > THREAT_NEGATIVE_RANGE:
+        return 0
+    if (
+        gap < THREAT_POSITIVE_RANGE
+        and previous_gap is not None
+        and gap < previous_gap
+        and visible
+    ):
+        return 1
+    return -1
+
+
 def _checks_job(job):
     """Fly a policy intact; per frame, the currents applied and labels of the state they saw."""
     from .brain import V4_TO_V5, BrainRuntime
@@ -440,17 +462,12 @@ def _checks_job(job):
             for _ in range(int(seconds / 0.04)):
                 flying = env.roam["threat"] is not None
                 gap = float(np.linalg.norm(env.plant.obstacle - env.plant.pos[0]))
-                if not flying or gap > THREAT_NEGATIVE_RANGE:
-                    label = 0
-                elif (
-                    gap < THREAT_POSITIVE_RANGE
-                    and previous_gap is not None
-                    and gap < previous_gap
-                    and visible(env, env.plant.obstacle, "obstacle")
-                ):
-                    label = 1
-                else:
-                    label = -1
+                label = _threat_label(
+                    flying,
+                    gap,
+                    previous_gap,
+                    visible(env, env.plant.obstacle, "obstacle"),
+                )
                 previous_gap = gap if flying else None
                 seen = env.beacon_visible()
                 obs, *_ = env.step(brain.infer(obs) / env.plant.limits)

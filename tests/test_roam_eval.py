@@ -9,14 +9,18 @@ from fly_drone.roam_eval import (
     BASELINES,
     CONDITIONS,
     PROBES,
+    THREAT_NEGATIVE_RANGE,
+    THREAT_POSITIVE_RANGE,
     _checks_job,
     _probe_job,
+    _threat_label,
     acceptance,
     bypass_comparison,
     encoder_scores,
     paired_bootstrap,
     roc_auc,
 )
+from fly_drone.sac import SpacesOnlyEnv, build_sac
 from test_sac import zero_actor
 
 POLICY = "policy:/x/actor.json"
@@ -179,3 +183,46 @@ def test_bypass_comparison_flags_only_a_bypass_better_on_all_three():
     better = {"beacons_per_min": 1.2, "collisions_per_min": 0.3, "near_dodge_rate": 0.9}
     assert not bypass_comparison(full, worse)["bypass_better"]
     assert bypass_comparison(full, better)["bypass_better"]
+
+
+def test_threat_label_covers_e1_positive_negative_and_excluded_cases():
+    # ~2 m ahead, inside the field of view, closing.
+    assert _threat_label(True, 2.0, 2.5, visible=True) == 1
+    # Same position but not closing (gap growing, not shrinking).
+    assert _threat_label(True, 2.0, 1.5, visible=True) != 1
+    # Behind the drone (not visible) at < 3 m: excluded, not a negative.
+    assert _threat_label(True, 2.0, 2.5, visible=False) == -1
+    # Between the positive and negative ranges: excluded.
+    assert _threat_label(True, 4.0, 4.5, visible=True) == -1
+    assert THREAT_POSITIVE_RANGE < 4.0 < THREAT_NEGATIVE_RANGE
+    # Inactive threat, or beyond the negative range: negative.
+    assert _threat_label(False, 2.0, None, visible=False) == 0
+    assert _threat_label(True, 7.0, 7.5, visible=True) == 0
+    assert THREAT_NEGATIVE_RANGE < 7.0
+
+
+def test_screen_job_runs_a_bypass_controller_reading_encoder_currents(tmp_path):
+    enc = LearnedEncoder.fresh(seed=6)
+    enc.save(tmp_path / "e.pt")
+    model = build_sac("bypass", SpacesOnlyEnv("bypass"), buffer_size=1, device="cpu")
+    model.save(tmp_path / "bypass.zip")
+    job = (
+        f"bypass:{tmp_path / 'bypass.zip'}",
+        [3],
+        0.4,
+        3,
+        "none",
+        str(tmp_path / "e.pt"),
+    )
+    controller, ablation, runs = distill._screen_job(job)
+    assert controller.startswith("bypass:") and ablation == "none"
+    assert len(runs) == 1
+    assert {"seed", "beacons_per_min", "collisions_per_min"} <= runs[0].keys()
+
+
+def test_bypass_controller_without_a_learned_encoder_raises(tmp_path):
+    model = build_sac("bypass", SpacesOnlyEnv("bypass"), buffer_size=1, device="cpu")
+    model.save(tmp_path / "bypass.zip")
+    job = (f"bypass:{tmp_path / 'bypass.zip'}", [3], 0.4, 3, "none", None)
+    with pytest.raises(ValueError):
+        distill._screen_job(job)

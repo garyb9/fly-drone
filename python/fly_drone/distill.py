@@ -280,6 +280,13 @@ def _screen_job(job):
     elif controller.startswith("bypass:"):
         from stable_baselines3 import SAC
 
+        from .encoder import LearnedEncoder
+
+        if not isinstance(brain.encoder, LearnedEncoder):
+            raise ValueError(
+                "bypass: controller requires a LearnedEncoder "
+                f"(got encoder={encoder!r}); pass a saved encoder path"
+            )
         bypass = SAC.load(controller.split(":", 1)[1], device="cpu")
     env = _roam_env(level, brain)
     env.ablation = ablation
