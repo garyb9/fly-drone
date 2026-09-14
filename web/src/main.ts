@@ -3,7 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import "./style.css";
 import { THEME } from "./scene/theme";
-import { applyRoom, createGlowDecal, type Room } from "./scene/world";
+import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
 
 type Cell = { id: string; type: string; side: string; position: number[]; measured: boolean };
 type Metadata = {
@@ -127,6 +127,23 @@ world.scene.add(floor);
 // Empty until the first metadata/room message arrives.
 const roomGroup = new THREE.Group();
 world.scene.add(roomGroup);
+// World-axis reference, placed just outside the arena's walls (repositioned in updateRoom() to
+// track the current room's size) — a fixed frame to read the heading/velocity/commanded vectors
+// against, since those vectors alone don't disambiguate "turning" from "actually moving".
+const axisGizmo = createAxisGizmo(0.6);
+world.scene.add(axisGizmo);
+// Debug vectors from the drone's own position: nose heading (where it's pointed), measured
+// velocity (finite difference of position, i.e. where it's actually going), and the raw command
+// the decoder just issued (where it's trying to go). Divergence between these three is exactly
+// the "life of its own" / "direction looks off" symptom this is meant to make visible.
+const HEADING_COLOR = 0xffb15c;
+const VELOCITY_COLOR = 0x6fe2ff;
+const COMMAND_COLOR = 0xff6fd8;
+const headingArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.3, HEADING_COLOR, 0.08, 0.05);
+const velocityArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.001, VELOCITY_COLOR, 0.08, 0.05);
+const commandArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.001, COMMAND_COLOR, 0.08, 0.05);
+world.scene.add(headingArrow, velocityArrow, commandArrow);
+let prevDronePos: THREE.Vector3 | undefined, prevFrameTime: number | undefined;
 const glowDecal = createGlowDecal(THEME.amber);
 glowDecal.position.y = 0.002;
 world.scene.add(glowDecal);
@@ -267,6 +284,8 @@ function updateRoom(room: Room) {
   obstacle.scale.setScalar(room.threat_radius / OBSTACLE_BASE_RADIUS);
   const span = (room.half_size ?? 4) * 2;
   el("dims").textContent = `${span.toFixed(1)} × ${span.toFixed(1)} M · ${room.kind.toUpperCase()}`;
+  const half = room.half_size ?? 4;
+  axisGizmo.position.set(-(half + 1), 0.3, -(half + 1));
 }
 function setupBrain(m: Metadata) {
   metadata = m;
@@ -413,6 +432,55 @@ function runTrial() {
   if (replayPolicy) message.policy = replayPolicy;
   send(message);
 }
+// Exaggerates one second of travel so low speeds (a few tenths of a m/s) are still visible as
+// short arrows rather than points, while clamping so a fast dodge doesn't dwarf the arena.
+const VECTOR_SCALE = 1.2;
+const MIN_ARROW_LEN = 0.12;
+const MAX_ARROW_LEN = 1.0;
+function scaledArrowLength(magnitude: number): number {
+  return Math.min(MAX_ARROW_LEN, Math.max(MIN_ARROW_LEN, magnitude * VECTOR_SCALE));
+}
+function setArrow(arrow: THREE.ArrowHelper, position: THREE.Vector3, direction: THREE.Vector3, magnitude: number) {
+  if (magnitude < 1e-4) {
+    arrow.visible = false;
+    return;
+  }
+  arrow.visible = true;
+  arrow.position.copy(position);
+  arrow.setDirection(direction.normalize());
+  const len = scaledArrowLength(magnitude);
+  arrow.setLength(len, Math.min(0.08, len * 0.3), Math.min(0.05, len * 0.2));
+}
+// Draws where the nose points (heading), where the drone is actually going (measured velocity,
+// via finite difference — the state frame carries no velocity field), and what the decoder just
+// commanded (rotated into world frame the same way plant.advance() does). The three should mostly
+// agree for a well-behaved brain; persistent divergence is exactly the "life of its own" symptom.
+function updateDebugVectors(f: Frame) {
+  const pos = drone.position;
+  headingArrow.position.copy(pos);
+  headingArrow.visible = true;
+  headingArrow.setDirection(new THREE.Vector3(1, 0, 0).applyQuaternion(drone.quaternion));
+  headingArrow.setLength(0.3, 0.08, 0.05);
+
+  if (prevDronePos && prevFrameTime !== undefined && f.time > prevFrameTime) {
+    const dt = f.time - prevFrameTime;
+    const delta = new THREE.Vector3().subVectors(pos, prevDronePos);
+    setArrow(velocityArrow, pos, delta.clone(), delta.length() / dt);
+  }
+  prevDronePos = pos.clone();
+  prevFrameTime = f.time;
+
+  const [w, x, y, z] = f.state.quaternion;
+  const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+  const cosY = Math.cos(yaw),
+    sinY = Math.sin(yaw);
+  const worldCmd = [
+    cosY * f.command[0] - sinY * f.command[1],
+    sinY * f.command[0] + cosY * f.command[1],
+    f.command[2],
+  ];
+  setArrow(commandArrow, pos, vector(worldCmd), Math.hypot(...worldCmd));
+}
 function update(f: Frame) {
   latest = f;
   el("status").textContent = f.paused ? "Simulation paused" : "Local simulation connected";
@@ -422,6 +490,7 @@ function update(f: Frame) {
   glowDecal.position.set(drone.position.x, 0.002, drone.position.z);
   drone.quaternion.copy(rotation).multiply(quaternion(f.state.quaternion));
   rotors.forEach((r, i) => (r.rotation.z = f.state.rotor_phase[i]));
+  updateDebugVectors(f);
   target.position.copy(vector(f.state.target));
   obstacle.position.copy(vector(f.state.obstacle));
   const flyDelta = new THREE.Vector3().fromArray(f.fly.position).sub(fly.position);

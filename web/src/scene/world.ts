@@ -140,6 +140,48 @@ export function applyRoom(group: THREE.Group, room: Room, toScene: ToScene) {
   for (const pillar of room.pillars) addPillar(group, pillar, toScene);
 }
 
+function createAxisLabel(text: string, color: number): THREE.Sprite {
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
+  ctx.font = "bold 40px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 64, 32);
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(canvas),
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+  sprite.scale.set(0.4, 0.2, 1);
+  return sprite;
+}
+
+// A fixed reference gizmo placed beside the arena (not attached to the drone) so heading and
+// velocity vectors can be read off against true world axes instead of eyeballed. Under the
+// scene's [x, z, -y] axis mapping (see `vector` below / main.ts), scene X is world X, scene Y
+// is world Z (up), and scene Z is world -Y — the gizmo's arrows point along scene axes; labels
+// use short world-frame codes (kept to a few characters so they render legibly at scene scale).
+export function createAxisGizmo(size = 0.6): THREE.Group {
+  const group = new THREE.Group();
+  const axes: [THREE.Vector3, number, string][] = [
+    [new THREE.Vector3(1, 0, 0), 0xff5c5c, "X"],
+    [new THREE.Vector3(0, 1, 0), 0x5cff7a, "Z↑"],
+    [new THREE.Vector3(0, 0, 1), 0x5cb0ff, "-Y"],
+  ];
+  for (const [dir, color, label] of axes) {
+    group.add(new THREE.ArrowHelper(dir, new THREE.Vector3(), size, color, size * 0.25, size * 0.15));
+    const sprite = createAxisLabel(label, color);
+    sprite.position.copy(dir).multiplyScalar(size * 1.3);
+    group.add(sprite);
+  }
+  return group;
+}
+
 // A soft radial glow that tracks the drone across the floor grid — the "reactive
 // grid" decision. A canvas-texture decal is simpler and just as convincing as a
 // custom shader for a single soft blob, and avoids a shader-compile failure mode.
