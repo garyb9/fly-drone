@@ -216,6 +216,17 @@ def main():
                 {"export_max_error": export_checkpoint(args.checkpoint, args.output)}
             )
         )
+    elif args.task == "free_roam":
+        from .roam_eval import evaluate_free_roam
+
+        report = evaluate_free_roam(
+            args.policy,
+            args.output,
+            args.episodes,
+            args.seconds or 120,
+            args.workers,
+        )
+        print(json.dumps(report["acceptance"], indent=2))
     else:
         from .training import evaluate
 

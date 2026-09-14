@@ -306,6 +306,7 @@ def _screen_job(job):
                     "threats": len(threats),
                     "threats_dodged": int(sum(t["dodged"] for t in threats)),
                     "threats_hit": int(sum(t["hit"] for t in threats)),
+                    "threat_log": threats,
                     "visited_cells": info["visited_cells"],
                     "mean_yaw_command": float(np.mean(yaw_commands)),
                     "slow_fraction": stuck / frames,
@@ -342,13 +343,14 @@ def screen(
     workers=16,
     seed_base=5000,
     ablations=("none",),
+    combos=None,
 ):
-    """Quick closed-loop screen on seeds disjoint from calibration and evaluation."""
+    """Closed-loop screen; combos lists explicit (controller, ablation) pairs."""
     import multiprocessing
     from concurrent.futures import ProcessPoolExecutor
 
     all_seeds = np.arange(seed_base, seed_base + seeds)
-    combos = [(c, a) for c in controllers for a in ablations]
+    combos = combos or [(c, a) for c in controllers for a in ablations]
     per = max(1, workers // len(combos))
     jobs = [
         (c, chunk.tolist(), seconds, level, a)
