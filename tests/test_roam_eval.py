@@ -1,12 +1,23 @@
+import json
+
 import numpy as np
+import pytest
+from fly_drone import distill
+from fly_drone.brain import BrainRuntime
+from fly_drone.encoder import LearnedEncoder
 from fly_drone.roam_eval import (
     BASELINES,
     CONDITIONS,
     PROBES,
+    _checks_job,
     _probe_job,
     acceptance,
+    bypass_comparison,
+    encoder_scores,
     paired_bootstrap,
+    roc_auc,
 )
+from test_sac import zero_actor
 
 POLICY = "policy:/x/actor.json"
 
@@ -107,3 +118,64 @@ def test_one_sided_dodging_fails_balance_and_spinning_fails_a6():
     assert not acceptance(results(none=one_sided), POLICY)["A3"]["passed"]
     spinner = summary(4.0, 0.2, [(1.0, True), (-1.0, True)], yaw=0.9)
     assert not acceptance(results(none=spinner), POLICY)["A6"]["passed"]
+
+
+def test_roc_auc_counts_ties_as_half_and_needs_both_classes():
+    assert roc_auc([0.1, 0.4, 0.35, 0.8], [0, 0, 1, 1]) == pytest.approx(0.75)
+    assert roc_auc([0, 0, 1, 1], [0, 0, 1, 1]) == 1.0
+    assert roc_auc([0.5] * 4, [0, 1, 0, 1]) == 0.5
+    assert roc_auc([0.1, 0.2], [1, 1]) is None
+
+
+def _synthetic(loom_selective):
+    rng = np.random.default_rng(0)
+    n = 2000
+    threat = rng.choice([-1, 0, 1], n, p=[0.1, 0.8, 0.1])
+    beacon = rng.random(n) < 0.4
+    currents = rng.uniform(0, 0.2, (n, 8)).astype(np.float32)
+    currents[:, :4] += np.where(beacon, 1.0, 0.0)[:, None]
+    if loom_selective:
+        currents[:, 4:] += np.where(threat == 1, 1.5, 0.0)[:, None]
+    else:
+        currents[:, 4:] += rng.uniform(0, 1.5, (n, 1))
+    return currents, threat, beacon
+
+
+def test_a_selective_encoder_passes_e1_and_e2():
+    report = encoder_scores(*_synthetic(True))
+    assert report["E1"]["passed"] and report["E2"]["passed"]
+    assert report["E1"]["positives"] > 0 and report["E1"]["negatives"] > 0
+
+
+def test_loom_that_ignores_threats_fails_e1_and_e2():
+    report = encoder_scores(*_synthetic(False))
+    assert not report["E1"]["passed"] and not report["E2"]["passed"]
+
+
+def test_checks_job_labels_frames_and_maps_v4_cues_to_eight_channels(tmp_path):
+    actor = zero_actor(tmp_path / "a.json", BrainRuntime())
+    currents, threat, beacon = _checks_job((str(actor), None, [3], 0.4, 3))
+    assert len(currents) == len(threat) == len(beacon) == 10
+    assert currents[0].shape == (8,) and set(threat) <= {-1, 0, 1}
+
+
+def test_screen_job_flies_a_v5_policy_with_its_encoder_and_baselines_on_v4(tmp_path):
+    enc = LearnedEncoder.fresh(seed=6)
+    enc.save(tmp_path / "e.pt")
+    path = zero_actor(tmp_path / "a.json", BrainRuntime())
+    actor = json.loads(path.read_text())
+    actor["encoder_version"] = enc.version
+    path.write_text(json.dumps(actor))
+    job = (f"policy:{path}", [3], 0.4, 3, "loom", str(tmp_path / "e.pt"))
+    _, _, runs = distill._screen_job(job)
+    assert len(runs) == 1
+    _, _, runs = distill._screen_job(("cue_script", [3], 0.4, 3, "none", None))
+    assert len(runs) == 1
+
+
+def test_bypass_comparison_flags_only_a_bypass_better_on_all_three():
+    full = {"beacons_per_min": 1.0, "collisions_per_min": 0.4, "near_dodge_rate": 0.8}
+    worse = {"beacons_per_min": 1.2, "collisions_per_min": 0.6, "near_dodge_rate": 0.9}
+    better = {"beacons_per_min": 1.2, "collisions_per_min": 0.3, "near_dodge_rate": 0.9}
+    assert not bypass_comparison(full, worse)["bypass_better"]
+    assert bypass_comparison(full, better)["bypass_better"]

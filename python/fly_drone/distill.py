@@ -271,10 +271,16 @@ def _screen_job(job):
     from .feasibility import CueController, RandomController
     from .teacher import teacher_action
 
-    controller, seeds, seconds, level, ablation = job
-    brain = BrainRuntime()
+    controller, seeds, seconds, level, ablation, *rest = job
+    encoder = rest[0] if rest else None
+    brain = BrainRuntime(encoder=encoder)
+    bypass = None
     if controller.startswith("policy:"):
         brain.load_policy(controller.split(":", 1)[1])
+    elif controller.startswith("bypass:"):
+        from stable_baselines3 import SAC
+
+        bypass = SAC.load(controller.split(":", 1)[1], device="cpu")
     env = _roam_env(level, brain)
     env.ablation = ablation
     runs = []
@@ -297,6 +303,13 @@ def _screen_job(job):
                     action = teacher_action(env)[0]
                 elif script is not None:
                     action = script.act(env.brain.cues)
+                elif bypass is not None:
+                    # E3 control: a decoder that reads the encoder's currents, not the brain.
+                    bypass_obs = {
+                        "currents": brain.encoder.currents(brain.stack.array()),
+                        "geometry": np.zeros(8, np.float32),
+                    }
+                    action = bypass.predict(bypass_obs, deterministic=True)[0]
                 else:
                     action = brain.infer(obs) / env.plant.limits
                 yaw_commands.append(float(action[3]))
@@ -377,16 +390,28 @@ def screen(
     seed_base=5000,
     ablations=("none",),
     combos=None,
+    encoder=None,
 ):
-    """Closed-loop screen; combos lists explicit (controller, ablation) pairs."""
+    """Closed-loop screen; combos lists explicit (controller, ablation) pairs.
+
+    `encoder` is only used for `policy:`/`bypass:` controllers; every baseline flies v4.
+    """
     import multiprocessing
     from concurrent.futures import ProcessPoolExecutor
 
     all_seeds = np.arange(seed_base, seed_base + seeds)
     combos = combos or [(c, a) for c in controllers for a in ablations]
     per = max(1, workers // len(combos))
+    learned = ("policy:", "bypass:")
     jobs = [
-        (c, chunk.tolist(), seconds, level, a)
+        (
+            c,
+            chunk.tolist(),
+            seconds,
+            level,
+            a,
+            encoder if c.startswith(learned) else None,
+        )
         for c, a in combos
         for chunk in np.array_split(all_seeds, min(per, seeds))
         if len(chunk)
@@ -403,6 +428,7 @@ def screen(
         "level": level,
         "wall_seconds": time.perf_counter() - start,
         "results": {k: summarise(v) for k, v in collected.items()},
+        "encoder": str(encoder) if encoder else None,
     }
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(report, indent=2))

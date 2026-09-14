@@ -207,8 +207,9 @@ def _probe_job(job):
     from .env import FRAME_SECONDS, ConnectomeEnv
     from .teacher import teacher_action
 
-    controller, probe, seeds, vision, seconds = job
-    brain = BrainRuntime()
+    controller, probe, seeds, vision, seconds, *rest = job
+    encoder = rest[0] if rest and controller.startswith("policy:") else None
+    brain = BrainRuntime(encoder=encoder)
     if controller.startswith("policy:"):
         brain.load_policy(controller.split(":", 1)[1])
     env = ConnectomeEnv(
@@ -273,7 +274,13 @@ def _probe_job(job):
 
 
 def skill_probes(
-    controller, episodes=50, workers=16, vision=True, seconds=None, seed_base=1000
+    controller,
+    episodes=50,
+    workers=16,
+    vision=True,
+    seconds=None,
+    seed_base=1000,
+    encoder=None,
 ):
     """A5: steer, approach, dodge and wall probes, balanced by side."""
     import multiprocessing
@@ -282,7 +289,7 @@ def skill_probes(
     seeds = np.arange(seed_base, seed_base + episodes)
     per = max(1, workers // len(PROBES))
     jobs = [
-        (controller, probe, chunk.tolist(), vision, seconds)
+        (controller, probe, chunk.tolist(), vision, seconds, encoder)
         for probe in PROBES
         for chunk in np.array_split(seeds, min(per, episodes))
         if len(chunk)
@@ -318,6 +325,7 @@ def evaluate_free_roam(
     level=3,
     seed_base=1000,
     probes=True,
+    encoder=None,
 ):
     from .distill import screen
 
@@ -332,12 +340,187 @@ def evaluate_free_roam(
         workers=workers,
         seed_base=seed_base,
         combos=combos,
+        encoder=encoder,
     )
     report["policy"] = str(Path(policy).resolve())
     report["task"] = "free_roam"
+    report["encoder"] = str(encoder) if encoder else None
     report["probes"] = (
-        skill_probes(key, episodes, workers, seed_base=seed_base) if probes else None
+        skill_probes(key, episodes, workers, seed_base=seed_base, encoder=encoder)
+        if probes
+        else None
     )
     report["acceptance"] = acceptance(report["results"], key, report["probes"])
     Path(output).write_text(json.dumps(report, indent=2))
     return report
+
+
+# Encoder v5 checks, pre-registered 2026-09-14 before any v5 result (spec §5). Additive:
+# they never change ACCEPTANCE.
+THREAT_POSITIVE_RANGE = 3.0
+THREAT_NEGATIVE_RANGE = 6.0
+ENCODER_CHECKS = {
+    "E1_min_loom_auc": 0.8,
+    "E2_min_light_margin": 0.05,
+    "E2_min_loom_margin": 0.1,
+}
+
+
+def roc_auc(scores, labels):
+    """Mann-Whitney AUC with tied scores ranked at their average; None without both classes."""
+    scores = np.asarray(scores, dtype=float)
+    labels = np.asarray(labels, dtype=bool)
+    pos, neg = int(labels.sum()), int((~labels).sum())
+    if not pos or not neg:
+        return None
+    _, inverse, counts = np.unique(scores, return_inverse=True, return_counts=True)
+    ranks = (np.cumsum(counts) - (counts - 1) / 2.0)[inverse]
+    return float((ranks[labels].sum() - pos * (pos + 1) / 2.0) / (pos * neg))
+
+
+def encoder_scores(currents, threat, beacon):
+    from .sac import LIGHT, LOOM
+
+    currents = np.asarray(currents, dtype=float)
+    threat = np.asarray(threat)
+    keep = threat >= 0
+    light = currents[keep][:, LIGHT].mean(1)
+    loom = currents[keep][:, LOOM].max(1)
+    is_threat = threat[keep] == 1
+    seen = np.asarray(beacon, dtype=bool)[keep]
+    auc = {
+        "loom_threat": roc_auc(loom, is_threat),
+        "loom_beacon": roc_auc(loom, seen),
+        "light_beacon": roc_auc(light, seen),
+        "light_threat": roc_auc(light, is_threat),
+    }
+    t = ENCODER_CHECKS
+    complete = None not in auc.values()
+    light_margin = auc["light_beacon"] - auc["light_threat"] if complete else None
+    loom_margin = auc["loom_threat"] - auc["loom_beacon"] if complete else None
+    return {
+        "E1": {
+            "loom_auc": auc["loom_threat"],
+            "positives": int(is_threat.sum()),
+            "negatives": int((~is_threat).sum()),
+            "passed": bool(
+                auc["loom_threat"] is not None
+                and auc["loom_threat"] >= t["E1_min_loom_auc"]
+            ),
+        },
+        "E2": {
+            "auc": auc,
+            "light_margin": light_margin,
+            "loom_margin": loom_margin,
+            "passed": bool(
+                complete
+                and light_margin >= t["E2_min_light_margin"]
+                and loom_margin >= t["E2_min_loom_margin"]
+            ),
+        },
+        "thresholds": ENCODER_CHECKS,
+    }
+
+
+def _checks_job(job):
+    """Fly a policy intact; per frame, the currents applied and labels of the state they saw."""
+    from .brain import V4_TO_V5, BrainRuntime
+    from .distill import _roam_env
+    from .teacher import visible
+
+    policy, encoder, seeds, seconds, level = job
+    brain = BrainRuntime(encoder=encoder)
+    brain.load_policy(policy)
+    env = _roam_env(level, brain)
+    currents, threat, beacon = [], [], []
+    try:
+        for seed in seeds:
+            obs, _ = env.reset(seed=int(seed))
+            previous_gap = None
+            for _ in range(int(seconds / 0.04)):
+                flying = env.roam["threat"] is not None
+                gap = float(np.linalg.norm(env.plant.obstacle - env.plant.pos[0]))
+                if not flying or gap > THREAT_NEGATIVE_RANGE:
+                    label = 0
+                elif (
+                    gap < THREAT_POSITIVE_RANGE
+                    and previous_gap is not None
+                    and gap < previous_gap
+                    and visible(env, env.plant.obstacle, "obstacle")
+                ):
+                    label = 1
+                else:
+                    label = -1
+                previous_gap = gap if flying else None
+                seen = env.beacon_visible()
+                obs, *_ = env.step(brain.infer(obs) / env.plant.limits)
+                applied = brain.cues if brain.learned else brain.cues[list(V4_TO_V5)]
+                currents.append(np.asarray(applied, dtype=np.float32).copy())
+                threat.append(label)
+                beacon.append(bool(seen))
+    finally:
+        env.close()
+    return currents, threat, beacon
+
+
+def encoder_checks(
+    policy,
+    output,
+    encoder=None,
+    episodes=50,
+    seconds=120,
+    workers=6,
+    seed_base=1000,
+    level=3,
+):
+    """E1-E2 on held-out seeds, intact brain. encoder=None measures the v4 baseline."""
+    import multiprocessing
+    from concurrent.futures import ProcessPoolExecutor
+
+    seeds = np.arange(seed_base, seed_base + episodes)
+    policy = str(Path(policy).resolve())
+    encoder = str(Path(encoder).resolve()) if encoder else None
+    jobs = [
+        (policy, encoder, c.tolist(), seconds, level)
+        for c in np.array_split(seeds, min(workers, episodes))
+        if len(c)
+    ]
+    currents, threat, beacon = [], [], []
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
+        for c, t, b in pool.map(_checks_job, jobs):
+            currents += c
+            threat += t
+            beacon += b
+    report = {
+        "policy": policy,
+        "encoder": encoder,
+        "seeds": [int(seeds[0]), int(seeds[-1])],
+        "seconds": seconds,
+        "frames": len(currents),
+        **encoder_scores(currents, threat, beacon),
+    }
+    Path(output).parent.mkdir(parents=True, exist_ok=True)
+    Path(output).write_text(json.dumps(report, indent=2))
+    return report
+
+
+def bypass_comparison(full, bypass):
+    """E3, reported without a bar: can a decoder reading the 8 currents do better than the brain?"""
+    keys = ("beacons_per_min", "collisions_per_min", "near_dodge_rate")
+    pick = {
+        name: {k: s.get(k) for k in keys}
+        for name, s in (("full", full), ("bypass", bypass))
+    }
+    f, b = pick["full"], pick["bypass"]
+    better = (
+        None not in (*f.values(), *b.values())
+        and b["beacons_per_min"] >= f["beacons_per_min"]
+        and b["collisions_per_min"] <= f["collisions_per_min"]
+        and b["near_dodge_rate"] >= f["near_dodge_rate"]
+    )
+    return {
+        **pick,
+        "bypass_better": bool(better),
+        "note": "If bypass_better, stop and report to the user before any stage 4 conclusions.",
+    }
