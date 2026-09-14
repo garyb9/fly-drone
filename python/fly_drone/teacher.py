@@ -112,8 +112,13 @@ def teacher_action(env):
         gap = float(np.linalg.norm(plant.obstacle - pos))
         if gap < THREAT_LOOM_RANGE + 0.5 and visible(env, plant.obstacle, "obstacle"):
             weight = _sigmoid((THREAT_LOOM_RANGE - gap) / 0.15)
-            side = arena.bearing_to(pos, yaw, plant.obstacle)
-            evade = np.array([0.0, -1.0 if side > 0 else 1.0, 0.0, 0.0])
+            if "evade_dir" not in threat:
+                # Commit once per threat: re-deciding from the bearing sign every frame
+                # dithers on head-on shots (55% dodged) and never clears the path.
+                side = arena.bearing_to(pos, yaw, plant.obstacle)
+                threat["evade_dir"] = -1.0 if side > 0 else 1.0
+            # Brake while sidestepping to buy time before contact.
+            evade = np.array([-0.5, threat["evade_dir"], 0.0, 0.0])
             action = weight * evade + (1 - weight) * action
             if weight > 0.5:
                 drive = "threat"

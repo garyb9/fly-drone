@@ -101,8 +101,8 @@ def test_threats_lead_a_moving_drone_and_hit_a_still_one():
     velocity = np.array([0.5, 0.2, 0.0])
     for _ in range(20):
         plan = arena.plan_threat(rng, spec, pos, 0.0, velocity)
-        assert 0.6 <= plan["speed"] <= 1.0
-        assert 4.5 <= np.linalg.norm(plan["origin"][:2] - pos[:2]) <= 6.1
+        assert 0.9 <= plan["speed"] <= 1.3
+        assert 2.9 <= np.linalg.norm(plan["origin"][:2] - pos[:2]) <= 4.1
         time = plan["range"] / plan["speed"]
         shot = plan["origin"] + plan["direction"] * plan["speed"] * time
         np.testing.assert_allclose(shot, pos + velocity * time, atol=1e-6)

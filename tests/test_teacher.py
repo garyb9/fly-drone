@@ -85,6 +85,16 @@ def test_far_pillar_is_ignored_until_loom_could_fire(env):
     assert drive == "explore"
 
 
+def test_threat_dodge_side_is_committed_once_per_threat(env):
+    place(env, beacon=(-4.0, 3.0, 1.0), threat=(1.2, 0.02, 1.0))
+    first, drive = teacher_action(env)
+    assert drive == "threat" and abs(first[1]) > 0.5 and first[0] < 0
+    # Head-on shot drifts across the heading: the label must not flip sides.
+    env.plant.set_objects(obstacle=[1.1, -0.02, 1.0])
+    second, _ = teacher_action(env)
+    assert np.sign(second[1]) == np.sign(first[1])
+
+
 def test_visible_threat_dodges_away_but_ghost_threat_does_not(env):
     place(env, beacon=(-4.0, 3.0, 1.0), threat=(1.2, 0.4, 1.0))
     action, drive = teacher_action(env)

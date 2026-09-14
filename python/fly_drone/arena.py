@@ -181,15 +181,15 @@ def intercept(origin, speed, pos, velocity):
 
 
 def plan_threat(rng, spec, pos, yaw, velocity=(0.0, 0.0, 0.0)):
-    """Launch from 5-6 m ahead (within +-30 deg of heading) on an intercept course.
+    """Launch from 3-4 m ahead (within +-30 deg of heading) on an intercept course.
 
-    Measured with the privileged teacher: shots from 3-4 m at 0.8-1.4 m/s aimed at the
-    drone's launch position were dodged only 71% even with perfect knowledge, and 46%
-    of shots missed a blind drone by chance because it had moved on.
+    Aimed at the launch position, 46% of shots missed a blind, moving drone by chance.
+    Slow shots from 5-6 m (5-10 s flights) let even random drift escape 76% of them,
+    so flights stay short (about 2-4 s) and lead the drone's velocity.
     """
     angle = yaw + rng.uniform(-0.52, 0.52)
-    distance = rng.uniform(5.0, 6.0)
-    speed = float(rng.uniform(0.6, 1.0))
+    distance = rng.uniform(3.0, 4.0)
+    speed = float(rng.uniform(0.9, 1.3))
     limit = spec.inner
     origin = np.array(
         [
