@@ -66,7 +66,7 @@ loom near 5%. Forward flight over the floor produced no false loom. Beacon light
 | Drive           | Gate                                                             | Label (normalised)                              |
 | --------------- | ---------------------------------------------------------------- | ------------------------------------------------ |
 | Evade threat    | threat in view, unoccluded (`mj_ray`), within 2 m                | full lateral **and** vertical away from its side |
-| Avoid           | pillar within 1.2 m or wall within 2.0 m, inside ±35° of heading | full yaw away, forward ∝ clearance                |
+| Avoid           | pillar within 1.2 m or wall within 2.0 m, inside ±35° of heading | full yaw away (turn committed until clear), forward ∝ clearance |
 | Approach beacon | beacon in view, unoccluded, within 12 m                          | yaw 1.5 β, forward when facing                   |
 | Explore         | none of the above                                                | forward 0.8, randomized yaw cast (resampled every 1.5-3.5 s) |
 
