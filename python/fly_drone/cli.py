@@ -83,6 +83,8 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--steps", type=int, default=4000)
     p.add_argument("--net-arch", type=int, nargs="+", default=[64, 64])
+    p = sub.add_parser("roam-step-response")
+    p.add_argument("--output", default="runs/roam/step-response.json")
     p = sub.add_parser("roam-screen")
     p.add_argument(
         "controllers", nargs="+", help="teacher, cue_script, random, or a path"
@@ -139,6 +141,16 @@ def main():
         print(
             json.dumps({"sensors": report["sensors"], "gate": report["gate"]}, indent=2)
         )
+    elif args.command == "roam-step-response":
+        from .stabiliser import run
+
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        report = run(args.output)
+        summary = {
+            axis: {k: v for k, v in report[axis].items() if k != "trace_mps"}
+            for axis in ("lateral", "vertical")
+        }
+        print(json.dumps(summary, indent=2))
     elif args.command == "serve":
         import uvicorn
 

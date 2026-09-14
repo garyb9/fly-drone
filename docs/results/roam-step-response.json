@@ -1,0 +1,23 @@
+{
+  "cruise_forward_mps": 0.56,
+  "lateral": {
+    "axis": "lateral",
+    "target_mps": 0.5,
+    "pre_step_mps": 2.796380730119634e-16,
+    "peak_mps": 0.4715312392544683,
+    "final_mps": 0.4715312392544683,
+    "time_to_80pct_s": 1.48,
+    "reached_80pct": true,
+    "dt_s": 0.005
+  },
+  "vertical": {
+    "axis": "vertical",
+    "target_mps": 0.3,
+    "pre_step_mps": -0.00031289777853180377,
+    "peak_mps": 0.31554025549036374,
+    "final_mps": 0.31554025549036374,
+    "time_to_80pct_s": 0.685,
+    "reached_80pct": true,
+    "dt_s": 0.005
+  }
+}
