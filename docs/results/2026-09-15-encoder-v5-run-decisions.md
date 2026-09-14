@@ -66,6 +66,35 @@ Screen on validation seeds 9000–9009, 60 s, level 2, intact:
 
   The loom channels (lc4, lplc2) are the hardest to clone. That fits their sparse, event-driven signal.
 
+- **Round-0 decoder:** export max error 8.3e-7 (limit 1e-4). The encoder version matches the clone.
+
+### Sanity gate FAILED: stopped before SAC
+
+Screen: level 2, seeds 9000–9009, 60 s. Values per minute.
+
+| system                                            | beacons | collisions | visited cells |
+| ------------------------------------------------- | ------- | ---------- | ------------- |
+| it0 warm actor (v4, linear head), reference       | 2.2     | 1.0        | 35.0          |
+| **round 0: clone encoder + tanh decoder, all DAgger data** | **0.9** | 2.0        | 24.1          |
+| diag A: clone encoder + tanh decoder, it0 data only        | 1.1     | 2.8        | 25.6          |
+| diag B: v4 encoder + tanh decoder, it0 data only           | 1.8     | 1.8        | 32.1          |
+
+Gate: 0.8 × 2.2 = 1.76. Almost all the extra collisions are wall hits. As instructed, I stopped and report.
+
+Diagnostics (a few minutes of compute each, no training runs):
+
+- **Not the fit quality.** Diag A's held-out drive errors match the v4 fit (avoid 0.113 vs 0.106).
+- **Not the wiring.** v4 and v5 drive exactly the same cells (light 1903/1924, loom 165/146). With identical
+  currents, the v5 runtime reproduces v4 bit for bit (open-loop replay of held-out flight 625, 500 frames).
+- **Mostly the clone, amplified by the brain.** The clone's currents are close to v4's: r 0.95–0.99, and loom
+  peaks reach 91–94% of v4's. In the replay, though, the 2,022 descending/motor features the decoder reads have a
+  median correlation of only 0.90 with the v4 run, and half the active features fall below 0.9. The round-0 decoder
+  was fitted on activity recorded under v4, which it never sees under the clone. This costs 1.8 → 1.1 beacons/min.
+- **Partly the tanh head.** It costs 2.2 → 1.8 with more collisions. A third of the avoid labels have |yaw| ≥ 0.97,
+  where tanh saturates.
+
+The fix is the user's call (see the report). The Tasks 13–15 pipeline was never launched.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
