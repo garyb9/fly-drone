@@ -55,7 +55,11 @@ def measure_step_response(
         axis_vel = trace[:, axis]
         delta = target - pre_step_axis_vel
         threshold = pre_step_axis_vel + 0.8 * delta
-        reached = np.where(axis_vel >= threshold) if delta > 0 else np.where(axis_vel <= threshold)
+        reached = (
+            np.where(axis_vel >= threshold)
+            if delta > 0
+            else np.where(axis_vel <= threshold)
+        )
         time_to_80pct = float(reached[0][0] * DT) if reached[0].size else None
         return {
             "axis": "lateral" if axis == 1 else "vertical",

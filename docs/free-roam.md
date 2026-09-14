@@ -63,16 +63,29 @@ loom near 5%. Forward flight over the floor produced no false loom. Beacon light
 
 `teacher.teacher_action(env)` blends four drives with sigmoid weights:
 
-| Drive           | Gate                                                             | Label (normalised)                 |
-| --------------- | ---------------------------------------------------------------- | ---------------------------------- |
-| Evade threat    | threat in view, unoccluded (`mj_ray`), within 2 m                | full lateral away from its side    |
-| Avoid           | pillar within 1.2 m or wall within 2.0 m, inside ±35° of heading | full yaw away, forward ∝ clearance |
-| Approach beacon | beacon in view, unoccluded, within 12 m                          | yaw 1.5 β, forward when facing     |
-| Explore         | none of the above                                                | forward 0.8, constant gentle yaw   |
+| Drive           | Gate                                                             | Label (normalised)                              |
+| --------------- | ---------------------------------------------------------------- | ------------------------------------------------ |
+| Evade threat    | threat in view, unoccluded (`mj_ray`), within 2 m                | full lateral **and** vertical away from its side |
+| Avoid           | pillar within 1.2 m or wall within 2.0 m, inside ±35° of heading | full yaw away, forward ∝ clearance                |
+| Approach beacon | beacon in view, unoccluded, within 12 m                          | yaw 1.5 β, forward when facing                   |
+| Explore         | none of the above                                                | forward 0.8, randomized yaw cast (resampled every 1.5-3.5 s) |
 
-It never commands altitude: none of the four cues carries height. Tests check that the explore
-label is identical for a hidden beacon on either side, and that an occluding pillar or a ghosted
-threat removes its drive (`tests/test_teacher.py`).
+Evade commands vertical because `roam-step-response` (`docs/results/roam-step-response.json`)
+measured it reaching 80% of a commanded step in ~0.69 s vs ~1.48 s for lateral — vertical
+acceleration is direct-thrust, lateral needs the airframe to tilt first. It climbs by default
+and dives only when already within 0.5 m of the arena's altitude ceiling (`ArenaSpec.altitude`).
+No cue carries height, so the *choice* to evade still comes only from the threat-in-view gate,
+not from altitude itself — vertical is a response, not a sensed condition.
+
+The explore drive used to be a fixed constant (`[0.8, 0, 0, 0.25]`), cloned onto every decoder
+as a scripted forward-drift-plus-turn regardless of what was sensed — the source of "the drone
+flies like it has a life of its own." It's now a randomized cast: the yaw bias is resampled from
+`env.np_random` on an irregular interval, so idle flight looks like undirected search and no two
+flights trace the same arc.
+
+Tests check that the explore label is identical for a hidden beacon on either side at a fixed
+point in time, that the yaw cast varies over an episode, that evade climbs/dives correctly, and
+that an occluding pillar or a ghosted threat removes its drive (`tests/test_teacher.py`).
 
 ## 5. Distillation into one decoder
 

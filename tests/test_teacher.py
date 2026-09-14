@@ -95,6 +95,31 @@ def test_threat_dodge_side_is_committed_once_per_threat(env):
     assert np.sign(second[1]) == np.sign(first[1])
 
 
+def test_threat_dodge_climbs_when_not_near_ceiling(env):
+    place(env, beacon=(-4.0, 3.0, 1.0), threat=(1.2, 0.02, 1.0))
+    action, drive = teacher_action(env)
+    assert drive == "threat" and action[2] > 0.5
+
+
+def test_threat_dodge_dives_near_ceiling(env):
+    env.plant.teleport([0.0, 0.0, env.spec.altitude[1] - 0.1], 0.0)
+    place(env, beacon=(-4.0, 3.0, 1.0), threat=(1.2, 0.02, 1.0))
+    env.plant.teleport([0.0, 0.0, env.spec.altitude[1] - 0.1], 0.0)
+    action, drive = teacher_action(env)
+    assert drive == "threat" and action[2] < -0.5
+
+
+def test_explore_yaw_cast_varies_over_time(env):
+    place(env, beacon=(-4.0, 3.0, 1.0))
+    seen = set()
+    for frames in range(0, 400, 40):
+        env.frames = frames
+        action, drive = teacher_action(env)
+        assert drive == "explore"
+        seen.add(round(float(action[3]), 6))
+    assert len(seen) > 1, "explore yaw should vary over an episode, not stay constant"
+
+
 def test_visible_threat_dodges_away_but_ghost_threat_does_not(env):
     place(env, beacon=(-4.0, 3.0, 1.0), threat=(1.2, 0.4, 1.0))
     action, drive = teacher_action(env)

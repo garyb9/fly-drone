@@ -9,7 +9,7 @@ import mujoco
 import numpy as np
 
 from . import arena
-from .env import FIELD_HALF_ANGLE
+from .env import FIELD_HALF_ANGLE, FRAME_SECONDS
 
 # Measured with roam-feasibility (encoder v4, ringed pillars, flat lighting).
 PILLAR_LOOM_RANGE = 1.2
@@ -17,8 +17,28 @@ WALL_LOOM_RANGE = 2.0
 THREAT_LOOM_RANGE = 2.0
 BEACON_RANGE = 12.0
 AVOID_CONE = 0.61  # +-35 deg
-EXPLORE = np.array([0.8, 0.0, 0.0, 0.25])
+EXPLORE_FORWARD = 0.8
+# Bounds and pacing for the explore drive's yaw cast (see `_explore_action`): a fixed
+# constant here was cloned onto every decoder as a scripted forward-drift-plus-turn,
+# reading as "flying on its own" rather than reacting to anything (raised 2026-09-14).
+EXPLORE_YAW_RANGE = 0.35
+EXPLORE_CHANGE_SECONDS = (1.5, 3.5)
 DRIVES = ("threat", "avoid", "beacon", "explore")
+
+
+def _explore_action(env):
+    """Forward cruise with a slowly-varying, randomized yaw — a cast pattern rather than
+    a fixed constant, so idle flight looks like undirected search and no two flights
+    trace the same arc. Still fully privileged/scripted (this is a label, not sensing);
+    the point is only to stop baking one specific scripted turn into every rollout."""
+    state = env.roam["explore"]
+    t = env.frames * FRAME_SECONDS
+    if t >= state["next_change"]:
+        state["yaw_bias"] = float(
+            env.np_random.uniform(-EXPLORE_YAW_RANGE, EXPLORE_YAW_RANGE)
+        )
+        state["next_change"] = t + float(env.np_random.uniform(*EXPLORE_CHANGE_SECONDS))
+    return np.array([EXPLORE_FORWARD, 0.0, 0.0, state["yaw_bias"]])
 
 
 def _sigmoid(x):
@@ -77,8 +97,9 @@ def teacher_action(env):
     plant = env.plant
     pos, yaw = plant.pos[0], plant.rpy[0, 2]
     roam = env.roam
-    # Explore: identical wherever an unseen beacon is.
-    action = EXPLORE.copy()
+    # Explore: identical wherever an unseen beacon is (the cast's yaw bias only depends
+    # on elapsed time, not on anything positional).
+    action = _explore_action(env)
     drive = "explore"
 
     if (
@@ -117,8 +138,18 @@ def teacher_action(env):
                 # dithers on head-on shots (55% dodged) and never clears the path.
                 side = arena.bearing_to(pos, yaw, plant.obstacle)
                 threat["evade_dir"] = -1.0 if side > 0 else 1.0
-            # Brake while sidestepping to buy time before contact.
-            evade = np.array([-0.5, threat["evade_dir"], 0.0, 0.0])
+                # Vertical is the primary escape axis: roam-step-response measured it
+                # reaching 80% of a commanded step in ~0.69s vs ~1.48s for lateral (direct
+                # thrust vs. tilt-dependent), and the threat is typically only ~1.9m away
+                # when first evaded — lateral alone was too slow to matter (docs/results/
+                # roam-step-response.json). Climb by default; dive only near the ceiling.
+                threat["evade_vertical"] = (
+                    -1.0 if pos[2] > env.spec.altitude[1] - 0.5 else 1.0
+                )
+            # Brake while climbing/diving; lateral and vertical are independent axes, so
+            # commanding both at full authority costs nothing (each is clipped to its own
+            # arena limit downstream, not a shared budget).
+            evade = np.array([-0.5, threat["evade_dir"], threat["evade_vertical"], 0.0])
             action = weight * evade + (1 - weight) * action
             if weight > 0.5:
                 drive = "threat"

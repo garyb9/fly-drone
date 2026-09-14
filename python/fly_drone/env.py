@@ -235,6 +235,9 @@ class ConnectomeEnv(gym.Env):
             "threats": [],
             "visited": {self._cell(self.start)},
             "events": [],
+            # Teacher-only state for the explore drive's yaw cast (teacher.py); resampled
+            # lazily on first use so a resumed/short episode still starts unbiased.
+            "explore": {"yaw_bias": 0.0, "next_change": 0.0},
         }
 
     @staticmethod
