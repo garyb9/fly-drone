@@ -20,6 +20,11 @@ def main():
         help="policy for another task, e.g. approach=runs/x/actor.json",
     )
     p.add_argument("--port", type=int, default=8000)
+    p.add_argument(
+        "--accepted",
+        action="store_true",
+        help="load accepted policies from docs/results/accepted-policies.json",
+    )
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
     p = sub.add_parser("baseline")
@@ -133,14 +138,21 @@ def main():
     elif args.command == "serve":
         import uvicorn
 
-        from .server import make_app
+        from .server import accepted_policies, make_app
 
+        task_policies = dict(item.split("=", 1) for item in args.task_policy)
+        policy, looming_policy = args.policy, args.looming_policy
+        if args.accepted:
+            # Without a decoder every command is zero and the drone holds still.
+            present, missing = accepted_policies()
+            for task, path in missing.items():
+                print(f"accepted {task} policy not found locally: {path}", flush=True)
+            policy = policy or present.pop("visual", None)
+            looming_policy = looming_policy or present.pop("looming", None)
+            for task, path in present.items():
+                task_policies.setdefault(task, path)
         uvicorn.run(
-            make_app(
-                args.policy,
-                args.looming_policy,
-                dict(item.split("=", 1) for item in args.task_policy),
-            ),
+            make_app(policy, looming_policy, task_policies),
             host="127.0.0.1",
             port=args.port,
         )

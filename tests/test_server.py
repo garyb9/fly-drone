@@ -41,6 +41,31 @@ def test_service_pause_reset_and_disconnect():
             assert next_frame(ws)["physics_tick"] > last
 
 
+def test_accepted_policy_manifest_splits_present_and_missing(tmp_path):
+    import json
+
+    from fly_drone.env import TASKS
+    from fly_drone.server import accepted_policies
+
+    (tmp_path / "runs" / "a").mkdir(parents=True)
+    (tmp_path / "runs" / "a" / "actor.json").write_text("{}")
+    manifest = tmp_path / "accepted.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "policies": {
+                    "visual": {"actor": "runs/a/actor.json"},
+                    "looming": {"actor": "runs/b/actor.json"},
+                }
+            }
+        )
+    )
+    present, missing = accepted_policies(manifest, tmp_path)
+    assert list(present) == ["visual"] and list(missing) == ["looming"]
+    committed = accepted_policies()
+    assert set(committed[0]) | set(committed[1]) <= set(TASKS)
+
+
 def test_service_rejects_unrelated_origin():
     from starlette.websockets import WebSocketDisconnect
 

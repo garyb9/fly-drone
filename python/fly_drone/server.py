@@ -38,6 +38,16 @@ def safe_policy_path(path):
     return resolved
 
 
+def accepted_policies(manifest=None, root=ROOT):
+    """Accepted actor per task from the committed manifest: (present, missing) paths."""
+    manifest = Path(manifest or root / "docs" / "results" / "accepted-policies.json")
+    present, missing = {}, {}
+    for task, entry in json.loads(manifest.read_text())["policies"].items():
+        path = Path(root) / entry["actor"]
+        (present if path.is_file() else missing)[task] = str(path)
+    return present, missing
+
+
 def list_reports():
     """Evaluation reports with per-seed outcomes, for the viewer's replay panel."""
     reports = []
