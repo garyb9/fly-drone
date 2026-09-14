@@ -18,16 +18,16 @@ Plan: [`superpowers/plans`](superpowers/plans/) (free-roam plan, 2026-09-13).
 
 `DronePlant(arena=ArenaSpec())` builds a separate model; `arena=None` builds the legacy room.
 
-| Element   | Value                                                                                                                          | Why                                                                                                                                                                                 |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Room      | 16 × 16 m interior, walls at ±8 m, 3 m tall, grey (0.35)                                                                       | Larger than the 8 m trial room                                                                                                                                                      |
-| Wall band | near-black, z 0.8–1.2 m on every wall                                                                                          | Approaching a wall expands a dark region: a loom cue                                                                                                                                |
-| Pillars   | up to 16 mocap cylinders, r 0.3 m, grey with a 0.3 m near-black ring centred at z 1 m                                          | Moved mocap bodies register contact; see §3 for the ring                                                                                                                            |
-| Beacon    | emissive sphere, r 0.3 m, one at a time, collected within 0.5 m                                                                | Light cue readable to 12 m                                                                                                                                                          |
+| Element   | Value                                                                                                                                                               | Why                                                                                                                                                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Room      | 16 × 16 m interior, walls at ±8 m, 3 m tall, grey (0.35)                                                                                                            | Larger than the 8 m trial room                                                                                                                                                                                                         |
+| Wall band | near-black, z 0.8–1.2 m on every wall                                                                                                                               | Approaching a wall expands a dark region: a loom cue                                                                                                                                                                                   |
+| Pillars   | up to 16 mocap cylinders, r 0.3 m, grey with a 0.3 m near-black ring centred at z 1 m                                                                               | Moved mocap bodies register contact; see §3 for the ring                                                                                                                                                                               |
+| Beacon    | emissive sphere, r 0.3 m, one at a time, collected within 0.5 m                                                                                                     | Light cue readable to 12 m                                                                                                                                                                                                             |
 | Threat    | dark sphere, r 0.25 m, thrown from 3–4 m ahead (±30°) at 0.9–1.3 m/s on an intercept course that leads the drone's velocity; launches closer than 2.5 m are refused | The looming pathway in flight. Aimed at the launch position instead, a blind drifting drone escaped 57% of near throws, so dodging could not prove sight; with lead aim the blind teacher escapes 12% and the sighted teacher 90% (§6) |
-| Floor     | uniform grey                                                                                                                   | The upstream checker sits at the dark threshold                                                                                                                                     |
-| Lighting  | headlight ambient 0.6, diffuse 0.3                                                                                             | §3                                                                                                                                                                                  |
-| Limits    | `[0.7, 0.5, 0.3, 0.8]` m/s, m/s, m/s, rad/s (stored in each actor; mismatches are refused)                                     | §3                                                                                                                                                                                  |
+| Floor     | uniform grey                                                                                                                                                        | The upstream checker sits at the dark threshold                                                                                                                                                                                        |
+| Lighting  | headlight ambient 0.6, diffuse 0.3                                                                                                                                  | §3                                                                                                                                                                                                                                     |
+| Limits    | `[0.7, 0.5, 0.3, 0.8]` m/s, m/s, m/s, rad/s (stored in each actor; mismatches are refused)                                                                          | §3                                                                                                                                                                                                                                     |
 
 Layouts are seeded: pillars keep ≥ 2.5 m of gap, stay ≥ 1 m from walls and ≥ 2 m from the spawn,
 and a 0.25 m occupancy grid must stay connected. Half of all beacons spawn outside the field of
@@ -63,18 +63,18 @@ loom near 5%. Forward flight over the floor produced no false loom. Beacon light
 
 `teacher.teacher_action(env)` blends four drives with sigmoid weights:
 
-| Drive           | Gate                                                             | Label (normalised)                              |
-| --------------- | ---------------------------------------------------------------- | ------------------------------------------------ |
-| Evade threat    | threat in view, unoccluded (`mj_ray`), within 2 m                | full lateral **and** vertical away from its side |
+| Drive           | Gate                                                             | Label (normalised)                                              |
+| --------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| Evade threat    | threat in view, unoccluded (`mj_ray`), within 2 m                | full lateral **and** vertical away from its side                |
 | Avoid           | pillar within 1.2 m or wall within 2.0 m, inside ±35° of heading | full yaw away (turn committed until clear), forward ∝ clearance |
-| Approach beacon | beacon in view, unoccluded, within 12 m                          | yaw 1.5 β, forward when facing                   |
-| Explore         | none of the above                                                | forward 0.8, randomized yaw cast (resampled every 1.5-3.5 s) |
+| Approach beacon | beacon in view, unoccluded, within 12 m                          | yaw 1.5 β, forward when facing                                  |
+| Explore         | none of the above                                                | forward 0.8, randomized yaw cast (resampled every 1.5-3.5 s)    |
 
 Evade commands vertical because `roam-step-response` (`docs/results/roam-step-response.json`)
 measured it reaching 80% of a commanded step in ~0.69 s vs ~1.48 s for lateral — vertical
 acceleration is direct-thrust, lateral needs the airframe to tilt first. It climbs by default
 and dives only when already within 0.5 m of the arena's altitude ceiling (`ArenaSpec.altitude`).
-No cue carries height, so the *choice* to evade still comes only from the threat-in-view gate,
+No cue carries height, so the _choice_ to evade still comes only from the threat-in-view gate,
 not from altitude itself — vertical is a response, not a sensed condition.
 
 The explore drive used to be a fixed constant (`[0.8, 0, 0, 0.25]`), cloned onto every decoder
