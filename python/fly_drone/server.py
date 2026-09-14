@@ -418,7 +418,7 @@ class Session:
         self.thread.join(timeout=10)
 
 
-def make_app(policy=None, looming_policy=None, task_policies=None):
+def make_app(policy=None, looming_policy=None, task_policies=None, port=8000):
     session = Session(policy, looming_policy, task_policies)
 
     @asynccontextmanager
@@ -441,12 +441,11 @@ def make_app(policy=None, looming_policy=None, task_policies=None):
     async def socket(ws: WebSocket):
         # Local-only service; reject unrelated websites attempting local control.
         origin = ws.headers.get("origin", "")
-        if origin and origin not in (
-            "http://127.0.0.1:8000",
-            "http://localhost:8000",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-        ):
+        if origin and origin not in {
+            f"http://{host}:{p}"
+            for host in ("127.0.0.1", "localhost")
+            for p in (port, 5173)
+        }:
             await ws.close(code=1008)
             return
         await ws.accept()

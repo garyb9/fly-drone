@@ -152,7 +152,7 @@ def main():
             for task, path in present.items():
                 task_policies.setdefault(task, path)
         uvicorn.run(
-            make_app(policy, looming_policy, task_policies),
+            make_app(policy, looming_policy, task_policies, args.port),
             host="127.0.0.1",
             port=args.port,
         )
