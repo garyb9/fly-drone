@@ -80,6 +80,20 @@ def test_room_geometry_describes_active_objects():
         plant.close()
 
 
+def test_free_roam_env_resets_repeatedly_with_a_parked_threat():
+    env = ConnectomeEnv(task="free_roam", vision=False, level=3, respawn=True)
+    try:
+        for seed in (1, 2, 1):
+            _, info = env.reset(seed=seed)
+            assert env.plant.obstacle[2] < 0 and info["beacons_collected"] == 0
+            for _ in range(3):
+                env.step(np.zeros(4))
+        env.plant.set_objects(obstacle=[1.0, 1.0, 1.0])
+        env.reset(seed=3)
+    finally:
+        env.close()
+
+
 def test_pillar_contact_registers():
     plant = DronePlant(vision=False, arena=ArenaSpec())
     try:

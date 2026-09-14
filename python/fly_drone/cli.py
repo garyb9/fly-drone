@@ -61,8 +61,69 @@ def main():
     p.add_argument("--seconds", type=float, default=120)
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--level", type=int, default=3)
+    p = sub.add_parser("roam-collect")
+    p.add_argument("--output", required=True)
+    p.add_argument("--flights", type=int, default=128)
+    p.add_argument("--seconds", type=float, default=60)
+    p.add_argument("--student", help="actor.json flown with probability 1 - beta")
+    p.add_argument("--beta", type=float, default=1.0)
+    p.add_argument("--noise", type=float, default=0.2)
+    p.add_argument("--workers", type=int, default=16)
+    p.add_argument("--seed-base", type=int, default=200)
+    p = sub.add_parser("roam-fit")
+    p.add_argument("data", nargs="+")
+    p.add_argument("--output", required=True)
+    p.add_argument("--steps", type=int, default=4000)
+    p.add_argument("--net-arch", type=int, nargs="+", default=[64, 64])
+    p = sub.add_parser("roam-screen")
+    p.add_argument(
+        "controllers", nargs="+", help="teacher, cue_script, random, or a path"
+    )
+    p.add_argument("--output", required=True)
+    p.add_argument("--seeds", type=int, default=10)
+    p.add_argument("--seconds", type=float, default=60)
+    p.add_argument("--level", type=int, default=3)
+    p.add_argument("--workers", type=int, default=16)
+    p.add_argument("--ablations", nargs="+", default=["none"])
     args = parser.parse_args()
-    if args.command == "roam-feasibility":
+    if args.command in ("roam-collect", "roam-fit", "roam-screen"):
+        from . import distill
+
+        if args.command == "roam-collect":
+            result = distill.collect(
+                args.output,
+                args.flights,
+                args.seconds,
+                args.student,
+                args.beta,
+                args.noise,
+                workers=args.workers,
+                seed_base=args.seed_base,
+            )
+        elif args.command == "roam-fit":
+            result = distill.fit(args.data, args.output, args.net_arch, args.steps)
+        else:
+            controllers = [
+                c
+                if c in ("teacher", "cue_script", "random")
+                else f"policy:{Path(c).resolve()}"
+                for c in args.controllers
+            ]
+            report = distill.screen(
+                controllers,
+                args.output,
+                args.seeds,
+                args.seconds,
+                args.level,
+                args.workers,
+                ablations=args.ablations,
+            )
+            result = {
+                k: {m: v for m, v in r.items() if m != "runs"}
+                for k, r in report["results"].items()
+            }
+        print(json.dumps(result, indent=2))
+    elif args.command == "roam-feasibility":
         from .feasibility import run
 
         report = run(args.output, args.episodes, args.seconds, args.workers, args.level)

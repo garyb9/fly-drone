@@ -8,9 +8,10 @@ from .brain import ENCODER_VERSION
 from .plant import LIMITS
 
 
-def export_actor(model, brain, path):
+def export_actor(model, brain, path, limits=None):
     import torch
 
+    limits = LIMITS if limits is None else np.asarray(limits, dtype=float)
     layers = []
     for layer in list(model.policy.mlp_extractor.policy_net) + [
         model.policy.action_net
@@ -36,7 +37,7 @@ def export_actor(model, brain, path):
         if hasattr(model.policy.features_extractor, "scale")
         else [1.0] * len(brain.feature_ids),
         "layers": layers,
-        "action_limits": LIMITS.tolist(),
+        "action_limits": limits.tolist(),
     }
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +46,7 @@ def export_actor(model, brain, path):
     rng = np.random.default_rng(123)
     error = 0.0
     for x in rng.uniform(0, 1, (32, len(brain.feature_ids))).astype(np.float32):
-        expected = model.predict(x, deterministic=True)[0] * LIMITS
+        expected = model.predict(x, deterministic=True)[0] * limits
         error = max(error, float(np.max(np.abs(expected - brain.infer(x)))))
     if error > 1e-4:
         raise RuntimeError(f"Rust policy parity failed: {error}")

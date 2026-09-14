@@ -258,7 +258,10 @@ class DronePlant(BaseAviary):
             self.phase[:] = 0
             self.hold = self.pos[0].copy()
             self.yaw_target = float(self.rpy[0, 2])
-            self.set_objects(target=self.target, obstacle=self.obstacle)
+            # Restores existing state; a free-roam threat may be parked below the floor.
+            self.set_objects(
+                target=self.target, obstacle=self.obstacle, park_obstacle=True
+            )
         return obs
 
     def _body_mocap(self, name):
