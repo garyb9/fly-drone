@@ -57,6 +57,15 @@ Screen on validation seeds 9000–9009, 60 s, level 2, intact:
 - **Clone data check:** 48,000 frames from 32 distinct flights of 1,500 frames each (60 s at 25 Hz). No flight
   was cut short, which settles the parked Task 4 concern about the reported flight count for this dataset.
 
+- **Clone fit** (`learned-v5:b3f4c7b4cbb99f28`, 20k steps, 3 held-out flights):
+
+  | channel | mi1 L / R     | tm3 L / R     | lc4 L / R     | lplc2 L / R   |
+  | ------- | ------------- | ------------- | ------------- | ------------- |
+  | r       | 0.989 / 0.988 | 0.989 / 0.988 | 0.952 / 0.953 | 0.951 / 0.953 |
+  | mse     | 0.012 / 0.013 | 0.012 / 0.013 | 0.010 / 0.011 | 0.010 / 0.011 |
+
+  The loom channels (lc4, lplc2) are the hardest to clone. That fits their sparse, event-driven signal.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
