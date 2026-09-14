@@ -5,6 +5,7 @@ import json
 import queue
 import threading
 import time
+from collections import deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -13,11 +14,13 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
+from .arena import LEVELS, clearance
+from .attribution import for_brain
 from .brain import ROOT
-from .env import TASKS, ConnectomeEnv, EpisodeTracker
+from .env import PATHWAYS, TASKS, ConnectomeEnv, EpisodeTracker
 from .fly import FlyMirror
 
-ABLATION_MODES = ("none", "zero", "sensory", "shuffle")
+ABLATION_MODES = ("none", "zero", "sensory", "shuffle", "light", "loom", "ghost")
 POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
 
 
@@ -119,12 +122,28 @@ class Session:
             fly = FlyMirror()
             task_policies = self.task_policies
             active_policy = None
+            attributor = None
+            policy_limits = None
+            silenced = set()
+            events = deque(maxlen=20)
 
             def use_policy(path):
-                nonlocal active_policy
+                nonlocal active_policy, attributor, policy_limits
                 if path and path != active_policy:
                     env.brain.load_policy(path)
+                    attributor = for_brain(path, env.brain)
+                    policy_limits = json.loads(Path(path).read_text())["action_limits"]
                 active_policy = path
+
+            def apply_silencing():
+                # restore() clears every silence; re-apply the condition, then probes.
+                env.brain.core.restore()
+                if env.ablation == "sensory":
+                    env.brain.silence_sensors()
+                elif env.ablation in PATHWAYS:
+                    env.brain.silence_inputs(PATHWAYS[env.ablation])
+                for name in sorted(silenced):
+                    env.brain.silence_inputs(PATHWAYS[name])
 
             use_policy(self.policy)
             seed = 42
@@ -161,6 +180,7 @@ class Session:
                 "policy": "trained" if self.policy else "PID baseline",
                 "tasks": list(TASKS),
                 "ablations": list(ABLATION_MODES),
+                "levels": sorted(LEVELS),
                 "dataset_hash": env.brain.dataset_hash,
                 "room": env.plant.room(),
             }
@@ -172,6 +192,8 @@ class Session:
             start = deadline
             missed = 0
             last_error = None
+            policy_status = "loaded" if active_policy else "none"
+            explained = None
             while not self.stop.is_set():
                 while True:
                     try:
@@ -193,11 +215,19 @@ class Session:
                             else:
                                 use_policy(task_policies[task] or active_policy)
                             seed = int(c.get("seed", 42))
+                            level = int(c.get("level", env.level))
+                            if level not in LEVELS:
+                                raise ValueError("unknown arena level")
                             env.task = task
                             env.ablation = ablation
+                            env.level = level
+                            # Free roam is continuous: crashes respawn, nothing ends it.
+                            env.respawn = task == "free_roam"
                             _, info = env.reset(seed=seed)
                             tracker = EpisodeTracker(env.task, info)
                             result = None
+                            apply_silencing()
+                            events.clear()
                             self.publish_room(env.plant.room())
                             fly.reset()
                             episode += 1
@@ -215,9 +245,51 @@ class Session:
                                 env.brain.core.stimulate([cell], 1.5)
                             else:
                                 env.interventions[cell] = 1.5
+                        elif op in (
+                            "place_beacon",
+                            "launch_threat",
+                            "pathway",
+                            "ghost",
+                        ):
+                            if env.roam is None:
+                                raise ValueError(
+                                    "free-roam probes need the free_roam task"
+                                )
+                            if op == "place_beacon":
+                                xy = np.array([float(c["x"]), float(c["y"])])
+                                spec = env.spec
+                                if (
+                                    not np.isfinite(xy).all()
+                                    or np.any(np.abs(xy) > spec.inner)
+                                    or clearance(spec, env.plant.pillars, xy)
+                                    < spec.beacon_radius + 0.3
+                                ):
+                                    raise ValueError(
+                                        "beacon must be on free floor inside the arena"
+                                    )
+                                env.plant.set_objects(target=[xy[0], xy[1], 1.0])
+                                env.roam["beacon_hidden"] = False
+                            elif op == "launch_threat":
+                                if not env.launch_threat():
+                                    raise ValueError(
+                                        "a threat is already flying or its path is blocked"
+                                    )
+                            elif op == "pathway":
+                                name = c["name"]
+                                if name not in PATHWAYS:
+                                    raise ValueError("pathway must be light or loom")
+                                if c.get("silenced", True):
+                                    silenced.add(name)
+                                else:
+                                    silenced.discard(name)
+                                apply_silencing()
+                            else:
+                                env.plant.set_ghost(bool(c["value"]))
                         elif op == "restore":
                             env.brain.core.restore()
                             env.interventions.clear()
+                            silenced.clear()
+                            apply_silencing()
                         else:
                             raise ValueError("unknown command")
                         last_error = None
@@ -225,15 +297,30 @@ class Session:
                         last_error = str(exc)
                 if not paused:
                     # observe() applies the zero/shuffle ablations exactly as evaluation.
-                    if active_policy:
-                        command = env.brain.infer(env.observe()) / env.plant.limits
+                    observed = env.observe()
+                    if not active_policy:
+                        policy_status = "none"
+                    elif not np.allclose(policy_limits, env.plant.limits):
+                        # A legacy-room actor would be mis-scaled in the arena: hold.
+                        policy_status = "limits mismatch"
+                    else:
+                        policy_status = "loaded"
+                    if policy_status == "loaded":
+                        command = env.brain.infer(observed) / env.plant.limits
+                        explained = attributor.explain(observed)
                     else:
                         command = np.zeros(4)
+                        explained = None
                     _, _, done, truncated, info = env.step(command)
                     tracker.update(info)
                     for r in env.trace:
                         fly.step(r)
-                    if done or truncated:
+                    if env.roam is not None:
+                        events.extend(
+                            {**e, "time": round(float(info["time"]), 2)}
+                            for e in info["events"]
+                        )
+                    if done or (truncated and env.task != "free_roam"):
                         paused = True
                         finished = tracker.finish(done)
                         result = {
@@ -280,6 +367,25 @@ class Session:
                     },
                     "real_time_factor": env.plant.data.time / max(0.001, now - start),
                     "missed_deadlines": missed,
+                    "policy_status": policy_status,
+                    "attribution": explained,
+                    "free_roam": None
+                    if env.roam is None
+                    else {
+                        "level": env.level,
+                        "beacons": info["beacons_collected"],
+                        "collisions": info["collisions"],
+                        "collision_kinds": info["collision_kinds"],
+                        "threats_finished": len(info["threats"]),
+                        "threats_dodged": sum(t["dodged"] for t in info["threats"]),
+                        "threats_hit": sum(t["hit"] for t in info["threats"]),
+                        "visited_cells": info["visited_cells"],
+                        "beacon_visible": info["beacon_visible"],
+                        "clearance": info["clearance"],
+                        "ghost": env.plant.ghost,
+                        "silenced": sorted(silenced),
+                        "events": list(events),
+                    },
                 }
                 with self.lock:
                     self.latest = frame

@@ -293,16 +293,26 @@ class ConnectomeEnv(gym.Env):
             else:
                 plant.set_objects(obstacle=position)
         elif r["next_threat"] is not None and t >= r["next_threat"]:
-            pos = plant.pos[0]
-            plan = arena.plan_threat(self.np_random, spec, pos, plant.rpy[0, 2])
-            clear = arena.clearance(spec, plant.pillars, plan["origin"])
-            if clear > spec.threat_radius + 0.3:
-                plan.update(t0=t, min_distance=plan["range"])
-                r["threat"] = plan
-                r["events"].append({"type": "threat_launched", "side": plan["side"]})
-                plant.set_objects(obstacle=plan["origin"])
-            else:
+            if not self.launch_threat():
                 r["next_threat"] = t + 0.5
+
+    def launch_threat(self):
+        """Throw a threat from ahead of the drone; False if one is flying or blocked."""
+        r, spec, plant = self.roam, self.spec, self.plant
+        if r is None or r["threat"] is not None:
+            return False
+        pos = plant.pos[0]
+        plan = arena.plan_threat(self.np_random, spec, pos, plant.rpy[0, 2])
+        if (
+            arena.clearance(spec, plant.pillars, plan["origin"])
+            <= spec.threat_radius + 0.3
+        ):
+            return False
+        plan.update(t0=self.frames * FRAME_SECONDS, min_distance=plan["range"])
+        r["threat"] = plan
+        r["events"].append({"type": "threat_launched", "side": plan["side"]})
+        plant.set_objects(obstacle=plan["origin"])
+        return True
 
     def _finish_threat(self, hit):
         r = self.roam
@@ -319,7 +329,9 @@ class ConnectomeEnv(gym.Env):
             {"type": "threat_hit" if hit else "threat_passed", **outcome}
         )
         t = self.frames * FRAME_SECONDS
-        r["next_threat"] = t + float(self.np_random.uniform(8.0, 20.0))
+        # A manually launched threat must not start the scheduler on threat-free levels.
+        if arena.LEVELS[self.level][1]:
+            r["next_threat"] = t + float(self.np_random.uniform(8.0, 20.0))
         self.plant.set_objects(obstacle=[0.0, 0.0, arena.PARK_Z], park_obstacle=True)
 
     def step(self, action):
@@ -327,8 +339,6 @@ class ConnectomeEnv(gym.Env):
         if action.shape != (4,) or not np.isfinite(action).all():
             raise ValueError("action must contain four finite values")
         self.command = np.clip(action, -1, 1) * self.plant.limits
-        if self.roam is not None:
-            self.roam["events"] = []
         self._move_objects()
         self.brain.sense(self.plant.camera())
         self.trace = []
@@ -445,12 +455,15 @@ class ConnectomeEnv(gym.Env):
                 r["beacon_was_visible"] = False
             else:
                 terminated = True
+        info = self.info()
+        # Events since the previous step, including probes issued between steps.
+        r["events"] = []
         return (
             self.observe(),
             float(reward),
             terminated,
             self.frames >= HORIZON_FRAMES["free_roam"],
-            self.info(),
+            info,
         )
 
     def contact_kinds(self):

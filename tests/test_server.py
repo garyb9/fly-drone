@@ -80,7 +80,23 @@ def test_replay_reset_task_ablation_and_policy_guard():
                 pass
             assert len(message["walls"]) == 4 and len(message["bands"]) == 4
             assert len(message["pillars"]) == 16 and message["half_size"] == 8.0
-            ws.send_json({"op": "reset", "policy": "/etc/passwd.json"})
+            frame = next_frame(ws)
+            assert frame["policy_status"] == "none" and frame["attribution"] is None
+            assert (
+                frame["free_roam"]["level"] == 3 and frame["free_roam"]["beacons"] == 0
+            )
+            ws.send_json({"op": "launch_threat"})
+            ws.send_json({"op": "pathway", "name": "loom", "silenced": True})
+            ws.send_json({"op": "ghost", "value": True})
+            ws.send_json({"op": "place_beacon", "x": 99.0, "y": 0.0})
             while not (frame := next_frame(ws))["error"]:
                 pass
-            assert "runs/" in frame["error"]
+            assert "beacon" in frame["error"]
+            roam = frame["free_roam"]
+            assert roam["silenced"] == ["loom"] and roam["ghost"] is True
+            assert any(e["type"] == "threat_launched" for e in roam["events"])
+            assert frame["outcome"]["launched"]
+            ws.send_json({"op": "reset", "policy": "/etc/passwd.json"})
+            # The earlier beacon error persists until a command replaces it.
+            while "runs/" not in (next_frame(ws)["error"] or ""):
+                pass
