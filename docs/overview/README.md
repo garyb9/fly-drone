@@ -273,16 +273,16 @@ dodge rate says nothing about the brain.
 
 ## 9. Where we are
 
-| Milestone                            | Status         | Evidence                                                                            |
-| ------------------------------------ | -------------- | ----------------------------------------------------------------------------------- |
-| Visual steering (trial room)         | ✅ accepted    | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                       |
-| Looming avoidance (trial room)       | ✅ accepted    | 96%, balanced 0.92                                                                  |
-| 0 · Encoder v4 sufficiency           | evidence-gated | no perception failure found so far                                                  |
-| 1 · Viewer diagnostics               | ✅             | axes, heading, velocity, command vectors                                            |
-| 2 · Body step response               | ✅             | vertical 0.69 s vs lateral 1.48 s to 80%                                            |
-| 3 · Teacher redesign                 | ✅             | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast |
-| 4 · Teacher gate (A3 on the teacher) | 🟡 confirming  | see below                                                                           |
-| 5 · DAgger → PPO → evaluation        | next           | asks the user before long runs                                                      |
+| Milestone                            | Status          | Evidence                                                                            |
+| ------------------------------------ | --------------- | ----------------------------------------------------------------------------------- |
+| Visual steering (trial room)         | ✅ accepted     | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                       |
+| Looming avoidance (trial room)       | ✅ accepted     | 96%, balanced 0.92                                                                  |
+| 0 · Encoder v4 sufficiency           | evidence-gated  | no perception failure found so far                                                  |
+| 1 · Viewer diagnostics               | ✅              | axes, heading, velocity, command vectors                                            |
+| 2 · Body step response               | ✅              | vertical 0.69 s vs lateral 1.48 s to 80%                                            |
+| 3 · Teacher redesign                 | ✅              | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast |
+| 4 · Teacher gate (A3 on the teacher) | 🟡 dodge passed | A3 confirmed below; collision and foraging check (`roam-feasibility`) running       |
+| 5 · DAgger → PPO → evaluation        | next            | asks the user before long runs                                                      |
 
 Threat aim decides whether dodging can prove sight (near-throw scoring, 10 seeds × 60 s, level 3):
 
@@ -291,11 +291,22 @@ Threat aim decides whether dodging can prove sight (near-throw scoring, 10 seeds
 | at launch position           |          0.96 |        0.90 |   **0.57** ❌ |   0.45 |
 | ahead of the drone (current) |   **0.90** ✅ | **0.83** ✅ |   **0.12** ✅ |   0.68 |
 
-A 20-seed confirmation on fresh seeds (6000–6019) is running (`runs/roam/screen-5-lead-confirm.json`).
+Confirmation on 20 fresh seeds (6000–6019, `runs/roam/screen-5-lead-confirm.json`), aim ahead:
+
+| Controller             | Near throws | Dodge | Left | Right | Collisions/min |
+| ---------------------- | ----------: | ----: | ---: | ----: | -------------: |
+| teacher, sees threats  |          46 |  0.96 | 1.00 |  0.92 |            0.4 |
+| teacher, ghost threats |          53 |  0.26 | 0.27 |  0.25 |            2.2 |
+| random                 |          69 |  0.57 | 0.62 |  0.51 |            1.5 |
+
+A3 passes on the teacher (≥ 0.8 overall and per side; ghost ≤ 0.3). The ghost margin is thin (0.26
+vs 0.3), so a trained decoder's own ghost rate needs watching. Random flight dodging 0.57 does not
+enter A3, but it shows that erratic movement escapes some throws: a decoder that jitters could look
+better than it is, and the ghost condition is what catches that.
 
 ## 10. Next
 
-1. Finish the teacher gate: 20-seed confirmation, then `roam-feasibility` for collisions and foraging.
+1. Finish the teacher gate: `roam-feasibility` for collisions and foraging (the dodge part passed).
 2. Realisability probe: can features (and, separately, raw cues) predict each drive's label with R² ≥ 0.5?
 3. DAgger iterations 0–3, screening each student.
 4. PPO fine-tune from the last student.
