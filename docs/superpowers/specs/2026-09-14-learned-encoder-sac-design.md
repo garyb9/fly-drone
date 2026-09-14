@@ -1,6 +1,7 @@
 # Learned sensory encoder with SAC (encoder v5) — design
 
-Status: **draft for user review** (2026-09-14). No code or training starts until approved.
+Status: **approved with amendments** (2026-09-14). Decisions recorded in §8. No training run
+starts without asking the user first.
 
 ## 1. Why
 
@@ -85,9 +86,11 @@ dynamics. The encoder's own observation (pixels) is not Markov because the brain
 state, so the **critic** also receives the 2,022 DN traces. Those are neural activity, not
 simulator state, and the critic is discarded after training.
 
-**Decision for the user:** whether the critic (training only, never deployed) may also see true
-threat and beacon geometry (an asymmetric critic). It usually speeds learning a lot and does not
-leak into the deployed encoder. Default in this spec: **no**, until approved.
+**Asymmetric critic (approved):** the critic (training only, never deployed) also receives threat
+and beacon geometry relative to the drone, **only while the object is inside a camera's field of
+view and not occluded**. Otherwise those inputs are zero and a per-object `visible` flag is 0. This
+follows the honest-labels rule (only what the eyes could see) and helps with sparse throws. Nothing
+from the critic reaches the deployed encoder or decoder.
 
 ### 3.4 Reward
 
@@ -95,37 +98,51 @@ Unchanged free-roam reward (`docs/overview/README.md` §7.2), horizon 1,500 fram
 respawn. One addition for the encoder only:
 
 ```
-r_enc = r − λ · mean(currents)        λ = 0.01 (tunable)
+r_enc = r − λ_loom · mean(LC4, LPLC2 currents) − λ_light · mean(Mi1, Tm3 currents)
+λ_loom = 0.01, λ_light = 0.002
 ```
 
 A small metabolic cost stops the encoder from saturating all inputs to drive the brain as a
-wire. It is logged separately so its effect is visible.
+wire. It is split by pathway: one λ = 0.01 on all channels would cost up to 0.02 per step, 40 % of
+the 0.05 alive bonus, and push the encoder to dim the light pathway that foraging needs. Loom
+should be quiet unless something is coming, so it carries the larger cost. Both terms are logged
+separately so their effect is visible.
 
 ## 4. Training stages
 
-| Stage | What                                                                | Cost (6 workers)           | Output                        |
-| ----- | ------------------------------------------------------------------- | -------------------------- | ----------------------------- |
-| 0     | Plumbing: 8 input roles, learned-encoder hook, SAC export           | code + tests               | —                             |
-| 1     | Decoder warm start: DAgger with v4 cues, **L2 (no threats)**        | ~2–3 h                     | `runs/roam/dagger/actor.json` |
-| 2a    | Encoder imitation of v4 (supervised, v4 cues split onto 8 channels) | ~1 h                       | `encoder-v4-clone.pt`         |
-| 2b    | Encoder SAC, decoder frozen, **L3**                                 | budget 1 M frames (~2–3 h) | `encoder-v5.pt`               |
-| 3     | Decoder SAC fine-tune, encoder frozen, L3                           | budget 500 k frames        | `actor.json` (v5)             |
-| 4     | Evaluation and causal tests (§5)                                    | ~1 h                       | `docs/results/`               |
+| Stage | What                                                                                         | Cost (6 workers)                                   | Output                             |
+| ----- | -------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------- |
+| 0     | Plumbing: 8 input roles, learned-encoder hook, SAC export                                    | code + tests                                       | —                                  |
+| 1     | Decoder warm start: DAgger with v4 cues, **L2 (no threats)**                                 | ~2–3 h                                             | `runs/roam/dagger/actor.json`      |
+| 2a    | Encoder imitation of v4 (supervised, v4 cues split onto 8 channels)                          | ~1 h                                               | `encoder-v4-clone.pt`              |
+| 2b/3  | 3 alternating rounds: encoder SAC (decoder frozen) then decoder SAC (encoder frozen), **L3** | per round 350 k + 150 k frames (1.5 M total, ~3 h) | `encoder-v5.pt`, `actor.json` (v5) |
+| 4     | Evaluation and causal tests (§5)                                                             | ~1 h                                               | `docs/results/`                    |
 
 Stage 2a matters: the decoder from stage 1 learned to read brain activity produced by v4
 cues. Starting the encoder as a v4 clone means the decoder's inputs look familiar at the start of
 2b, and SAC improves from a working system instead of noise.
 
-Stop rules: checkpoint every 50 k frames; stop 2b early if the near-dodge rate on a fixed
-validation set (10 seeds) has not improved for 300 k frames, and report before continuing.
-The user is asked before starting each of stages 1, 2b and 3.
+Why alternate: the stage 1 decoder never saw threats (L2), so it has never mapped loom-driven
+brain activity to escape motion. If it stayed frozen for the whole encoder run, the only way for
+the encoder to earn dodge reward would be to find brain states the decoder happens to map to
+sideways or upward velocity, which is exactly the "brain as a wire" failure. Alternating lets the
+decoder learn to read loom-driven activity while the encoder learns to produce it. The two are
+never trained in the same round. Stage 1 stays on L2 because v4 loom cues on L3 would teach the
+decoder to escape from walls.
+
+Stop rules: checkpoint every 50 k frames. At the end of each round, compute the near-dodge rate on
+a fixed validation set (10 seeds, disjoint from the 50 evaluation seeds) and E1 on those
+validation seeds. Stop early and report if the near-dodge rate has not improved for a whole round.
+The user is asked before stage 1 and before each round.
 
 **Throughput:** the full brain runs at about real time per worker, so 6 workers give about
 540 k frames per hour. SAC's replay buffer reuses those frames, which is the main reason to use
 off-policy Q-learning here rather than PPO.
 
-**Memory:** frame stacks are stored as `uint8` luma (18 KB per observation); replay buffer of
-200 k with `optimize_memory_usage` ≈ 3.7 GB, plus DN traces (2,022 × float16 ≈ 4 KB) ≈ 0.8 GB.
+**Memory:** frame stacks are stored as `uint8` luma (18 KB per observation). SB3's
+`DictReplayBuffer` does not support `optimize_memory_usage`, so it stores both obs and next_obs:
+a 100 k buffer holds ≈ 3.7 GB of luma plus ≈ 0.8 GB of DN traces (2,022 × float16 ≈ 4 KB each).
+Default buffer size is **100 k**; a larger buffer needs a custom buffer that stores next_obs by index.
 Critic and actor updates run on the RTX 4070. Environment workers stay ≤ 6.
 
 ## 5. Evaluation
@@ -133,15 +150,25 @@ Critic and actor updates run on the RTX 4070. Environment workers stay ≤ 6.
 Pre-registered A1–A7 (`roam_eval.ACCEPTANCE`) apply unchanged. Silencing ablations map onto the
 new channels (`loom` = LC4 + LPLC2, `light` = Mi1 + Tm3).
 
-Proposed **new** encoder checks (additive; thresholds need user approval before any result is
-seen):
+**New** encoder checks, pre-registered 2026-09-14 before any result (additive; they do not change
+`roam_eval.ACCEPTANCE`). Frames for E1–E2 come from the 50 held-out evaluation seeds, intact
+condition. A threat or beacon is _visible_ when it is inside either camera's field of view and not
+occluded.
 
-| ID  | Check                                                                                                                                           | Proposed bar                           |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| E1  | Loom selectivity: ROC AUC of max(LC4, LPLC2 currents) for "threat within 3 m and closing" vs all other frames                                   | ≥ 0.8 (v4 baseline reported alongside) |
-| E2  | Channel semantics: Mi1/Tm3 currents predict beacon visibility better than threat presence, and LC4/LPLC2 the reverse                            | both hold                              |
-| E3  | Brain necessity: replacing the brain's DN traces with a decoder trained directly on the 8 currents does no better than the full system on A1–A3 | reported, no bar                       |
-| E4  | Legacy reproducibility: `test_legacy_room_mjcf_unchanged` and v4 accepted actors unchanged                                                      | pass                                   |
+Frame labels shared by E1 and E2:
+
+- **threat-positive:** a threat within 3 m, closing, and visible.
+- **threat-negative:** no threat within 6 m.
+- Frames with a threat between those (3–6 m, or within 3 m but not closing or not visible) are
+  excluded from threat AUCs.
+- **beacon-positive / beacon-negative:** beacon visible / not visible.
+
+| ID  | Check                                                                                                                                                                                                                                      | Bar                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| E1  | Loom selectivity: ROC AUC of max(LC4, LPLC2 currents), threat-positive vs threat-negative                                                                                                                                                  | ≥ 0.8 (v4 baseline reported alongside) |
+| E2  | Channel semantics: with `light` = mean(Mi1, Tm3) and `loom` = max(LC4, LPLC2) currents, AUC(light→beacon) − AUC(light→threat) ≥ 0.05 **and** AUC(loom→threat) − AUC(loom→beacon) ≥ 0.1                                                     | both hold                              |
+| E3  | Brain necessity: a decoder trained directly on the 8 currents (brain bypassed), same budget, compared with the full system on A1–A3. If the bypass does **better**, stop and report to the user before any stage 4 conclusions are written | reported, no bar                       |
+| E4  | Legacy reproducibility: `test_legacy_room_mjcf_unchanged` and v4 accepted actors unchanged                                                                                                                                                 | pass                                   |
 
 E1–E2 guard against the encoder becoming a hidden controller that uses the connectome as a wire:
 the loom channels must still mean "something is coming at me".
@@ -170,12 +197,14 @@ the loom channels must still mean "something is coming at me".
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Encoder learns a control code, brain used as a wire         | Uniform per-population current, [0, 2] bound, metabolic cost, E1–E3                 |
 | Non-stationarity: decoder was trained on v4-driven activity | Stage 2a clone start; stages alternate, never joint                                 |
-| Sparse reward for rare throws (one every 8–20 s)            | Replay buffer; optional asymmetric critic (user decision)                           |
+| Sparse reward for rare throws (one every 8–20 s)            | Replay buffer; asymmetric critic with visible-only geometry                         |
+| Frozen decoder never saw threats                            | Alternating encoder/decoder rounds (§4)                                             |
 | Sim throughput limits SAC                                   | 6 workers, GPU updates, budgets with stop rules                                     |
 | Learned encoder overfits the arena's textures               | Evaluate on unseen seeds/layouts (A5); randomise wall band contrast during training |
 
-## 8. Open questions for the user
+## 8. Decisions (user, 2026-09-14)
 
-1. Asymmetric critic with true geometry during training only: yes or no?
-2. 8 channels by cell type (this spec) or keep v4's 4 channels?
-3. Proposed E1–E2 bars acceptable?
+1. Asymmetric critic: **yes, visible-only geometry**, training only (§3.3).
+2. Channels: **8 by cell type** (§3.1).
+3. Training order: **3 alternating encoder/decoder SAC rounds** instead of a single 2b → 3 (§4).
+4. E1–E2 definitions and bars as in §5; split metabolic cost λ_loom = 0.01, λ_light = 0.002 (§3.4).
