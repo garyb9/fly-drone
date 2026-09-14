@@ -362,7 +362,7 @@ def warm_start_decoder(model, paths, dataset_hash, steps=4000, holdout=0.1, seed
         opt.zero_grad()
         loss.backward()
         opt.step()
-        losses.append(float(loss))
+        losses.append(float(loss.detach()))
     report = {
         "samples": int(len(x)),
         "held_out_flights": int(len(held)),
