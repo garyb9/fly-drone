@@ -23,8 +23,23 @@ Screen on validation seeds 9000–9009, 60 s, level 2, intact:
   it0 fit's held-out R² was 0.38 (avoid), 0.25 (beacon), −1.26 (explore). Cost if wrong: the round-0 decoder
   in Task 12 is fitted on all DAgger data anyway, so the choice only sets the sanity-gate reference (1.76).
 
+## Critic-only warm-up review (8dda027)
+
+- Re-run review (opus) **approved** it. The actor and entropy coefficient stay frozen for the first 50k frames:
+  there is no Adam state for the actor, the actor and critic have separate feature extractors, and Polyak averaging updates the critic only.
+- **Four minors are parked:**
+  - A crash resume repeats the warm-up. This is documented, and alternating rounds want it anyway.
+  - The unit round test never steps the actor for decoder or bypass rounds.
+  - The actor losses are still computed during the warm-up. This only wastes compute.
+  - A negative `--actor-warmup` is treated as 0.
+- The missing test coverage is folded into the pre-Task-13 smoke test: the actor parameters must change after the warm-up
+  on the real 6-worker path. Cost if wrong: a regression is caught by the smoke test instead of the unit suite.
+
 ## Task 12: Stage 2a
 
 - **Clone collection started while the warm-up commit (8dda027) was still under review.** `encoder-collect`
   does not use the SAC/warm-up code, and workers import at spawn, so a later fix cannot change a running
   collection. Cost if wrong: none measurable; the rest of Task 12 waits for the review.
+- **Task 12 runs from one driver script.** It chains clone → round-0 decoder → sanity screen → validation → v4 E1 baseline, and
+  it stops automatically if the sanity gate fails (beacons/min < 0.8 × 2.2 = 1.76). The gate uses the Task 11 choice (it0) as its reference, as the plan
+  specifies, not the teacher. Cost if wrong: none; the gate is an engineering check, not acceptance.
