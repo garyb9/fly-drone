@@ -159,10 +159,37 @@ def next_beacon(rng, spec, pillars, pos, yaw, attempts=400):
     return fallback, bool(abs(bearing_to(pos, yaw, fallback)) > IN_VIEW)
 
 
-def plan_threat(rng, spec, pos, yaw):
-    """Launch from 3-4 m ahead (within +-30 deg of heading), aimed at the drone now."""
+def intercept(origin, speed, pos, velocity):
+    """Point where a straight shot at `speed` meets a drone keeping its velocity."""
+    rel = np.asarray(pos, dtype=float) - origin
+    vel = np.asarray(velocity, dtype=float)
+    # |rel + vel t| = speed t  ->  (v.v - s^2) t^2 + 2 rel.v t + rel.rel = 0
+    a = float(vel @ vel - speed**2)
+    b = 2.0 * float(rel @ vel)
+    c = float(rel @ rel)
+    if abs(a) < 1e-9:
+        times = [-c / b] if abs(b) > 1e-9 else []
+    else:
+        disc = b * b - 4 * a * c
+        times = (
+            []
+            if disc < 0
+            else [(-b - np.sqrt(disc)) / (2 * a), (-b + np.sqrt(disc)) / (2 * a)]
+        )
+    times = [t for t in times if t > 0]
+    return np.asarray(pos, dtype=float) + vel * min(times) if times else np.asarray(pos)
+
+
+def plan_threat(rng, spec, pos, yaw, velocity=(0.0, 0.0, 0.0)):
+    """Launch from 5-6 m ahead (within +-30 deg of heading) on an intercept course.
+
+    Measured with the privileged teacher: shots from 3-4 m at 0.8-1.4 m/s aimed at the
+    drone's launch position were dodged only 71% even with perfect knowledge, and 46%
+    of shots missed a blind drone by chance because it had moved on.
+    """
     angle = yaw + rng.uniform(-0.52, 0.52)
-    distance = rng.uniform(3.0, 4.0)
+    distance = rng.uniform(5.0, 6.0)
+    speed = float(rng.uniform(0.6, 1.0))
     limit = spec.inner
     origin = np.array(
         [
@@ -171,13 +198,14 @@ def plan_threat(rng, spec, pos, yaw):
             float(np.clip(pos[2] + rng.uniform(-0.1, 0.1), 0.6, 2.0)),
         ]
     )
-    direction = np.asarray(pos, dtype=float) - origin
+    aim = intercept(origin, speed, pos, velocity)
+    direction = aim - origin
     norm = float(np.linalg.norm(direction))
     side = float(np.sign(bearing_to(pos, yaw, origin)) or 1.0)
     return {
         "origin": origin,
         "direction": direction / max(norm, 1e-9),
-        "speed": float(rng.uniform(0.8, 1.4)),
+        "speed": speed,
         "side": side,
         "range": norm,
     }
