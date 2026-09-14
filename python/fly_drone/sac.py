@@ -465,6 +465,11 @@ def train_round(
     from .arena import ArenaSpec
     from .encoder import LearnedEncoder
 
+    # Fail before spawning workers: a missing frozen partner would only surface inside one.
+    if learner == "encoder" and decoder is None:
+        raise ValueError("an encoder round needs a frozen decoder")
+    if learner in ("decoder", "bypass") and encoder is None:
+        raise ValueError(f"a {learner} round needs a frozen encoder")
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
     workers = max(1, min(int(workers), 6))

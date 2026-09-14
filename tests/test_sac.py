@@ -244,3 +244,12 @@ def test_rounds_for_every_learner_resume_export_and_validate(tmp_path):
     assert json.loads((tmp_path / "val.json").read_text())["encoder"] == str(
         encoder_pt.resolve()
     )
+
+
+def test_train_round_rejects_a_missing_frozen_partner_before_spawning(tmp_path):
+    with pytest.raises(ValueError, match="frozen decoder"):
+        train_round("encoder", tmp_path / "e", 10, encoder="x.pt")
+    for learner in ("decoder", "bypass"):
+        with pytest.raises(ValueError, match="frozen encoder"):
+            train_round(learner, tmp_path / learner, 10, decoder="x.json")
+    assert not any(tmp_path.iterdir())
