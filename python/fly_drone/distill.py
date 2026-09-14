@@ -321,9 +321,35 @@ def _screen_job(job):
     return controller, ablation, runs
 
 
+def near_dodge_rates(runs):
+    """Pre-registered A3 scoring: only throws that hit or came within 2 m count.
+
+    Mirrors roam_eval.dodge_rates so a screen reads the same number as acceptance.
+    """
+    near = [
+        t for r in runs for t in r["threat_log"] if t["hit"] or t["min_distance"] < 2.0
+    ]
+    sides = {
+        name: [t["dodged"] for t in near if (t["side"] > 0) == left]
+        for name, left in (("left", True), ("right", False))
+    }
+    by_side = {k: float(np.mean(v)) if v else None for k, v in sides.items()}
+    return {
+        "near_threats": len(near),
+        "near_dodge_rate": float(np.mean([t["dodged"] for t in near]))
+        if near
+        else None,
+        "near_dodge_by_side": by_side,
+        "balanced_dodge_rate": min(by_side.values())
+        if all(v is not None for v in by_side.values())
+        else None,
+    }
+
+
 def summarise(runs):
     threats = sum(r["threats"] for r in runs)
     return {
+        **near_dodge_rates(runs),
         "beacons_per_min": float(np.mean([r["beacons_per_min"] for r in runs])),
         "collisions_per_min": float(np.mean([r["collisions_per_min"] for r in runs])),
         "threat_dodge_rate": sum(r["threats_dodged"] for r in runs) / threats

@@ -164,16 +164,35 @@ def next_beacon(rng, spec, pillars, pos, yaw, attempts=400):
 MIN_LAUNCH_RANGE = 2.5
 
 
-def plan_threat(rng, spec, pos, yaw):
-    """Launch from 3-4 m ahead (within +-30 deg of heading), aimed at the launch position.
+def intercept(origin, speed, pos, velocity):
+    """Point where a straight shot at `speed` meets a drone keeping its velocity."""
+    rel = np.asarray(pos, dtype=float) - origin
+    vel = np.asarray(velocity, dtype=float)
+    # |rel + vel t| = speed t  ->  (v.v - s^2) t^2 + 2 rel.v t + rel.rel = 0
+    a = float(vel @ vel - speed**2)
+    b = 2.0 * float(rel @ vel)
+    c = float(rel @ rel)
+    if abs(a) < 1e-9:
+        times = [-c / b] if abs(b) > 1e-9 else []
+    else:
+        disc = b * b - 4 * a * c
+        times = (
+            []
+            if disc < 0
+            else [(-b - np.sqrt(disc)) / (2 * a), (-b + np.sqrt(disc)) / (2 * a)]
+        )
+    times = [t for t in times if t > 0]
+    return np.asarray(pos, dtype=float) + vel * min(times) if times else np.asarray(pos)
 
-    Reverted from intercept-lead aiming (2026-09-14): leading the drone's velocity was
-    tuned to defeat a blind, undirected drone (46% missed a fixed aim point by chance),
-    but it punishes a *committed, purposeful* evade at least as hard as it punishes drift
-    -- a real teacher that picks a dodge direction and holds it scored worse (49%) than
-    random jitter (68%) against a lead-aimed shot. Fixed-point aiming is still a real
-    dodge test (a stationary target is trivially hittable) without being adversarial to
-    the one sensory cue (loom, no velocity/TTI channel) the fly's brain actually has.
+
+def plan_threat(rng, spec, pos, yaw, velocity=(0.0, 0.0, 0.0)):
+    """Launch from 3-4 m ahead (within +-30 deg of heading) on an intercept course.
+
+    Aimed at the launch position, a blind drifting drone escaped 57% of near throws
+    (roam-screen, pre-registered near-throw scoring), so the ghost criterion could not
+    separate seeing from drifting. Leading the velocity drops that to 12% while the
+    privileged teacher still dodges 90% (balanced 0.83), because its evasion changes
+    velocity after launch.
     """
     angle = yaw + rng.uniform(-0.52, 0.52)
     distance = rng.uniform(3.0, 4.0)
@@ -186,7 +205,7 @@ def plan_threat(rng, spec, pos, yaw):
             float(np.clip(pos[2] + rng.uniform(-0.1, 0.1), 0.6, 2.0)),
         ]
     )
-    aim = np.asarray(pos, dtype=float)
+    aim = intercept(origin, speed, pos, velocity)
     direction = aim - origin
     norm = float(np.linalg.norm(direction))
     side = float(np.sign(bearing_to(pos, yaw, origin)) or 1.0)

@@ -95,6 +95,7 @@ def main():
     p.add_argument("--level", type=int, default=3)
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--ablations", nargs="+", default=["none"])
+    p.add_argument("--seed-base", type=int, default=5000)
     args = parser.parse_args()
     if args.command in ("roam-collect", "roam-fit", "roam-screen"):
         from . import distill
@@ -127,6 +128,7 @@ def main():
                 args.seconds,
                 args.level,
                 args.workers,
+                seed_base=args.seed_base,
                 ablations=args.ablations,
             )
             result = {
