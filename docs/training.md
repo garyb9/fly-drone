@@ -304,3 +304,112 @@ fly-drone evaluate --task free_roam --policy runs/roam/ppo/actor.json --workers 
 
 This runs seven brain conditions plus teacher, cue-script and random baselines, and checks the
 pre-registered A1–A7 ([`free-roam.md`](free-roam.md) §6). Accepted reports go to `results/`.
+
+## 9. Encoder v5: SAC rounds
+
+Design: [`superpowers/specs/2026-09-14-learned-encoder-sac-design.md`](superpowers/specs/2026-09-14-learned-encoder-sac-design.md);
+math and stage list: [`overview/README.md`](overview/README.md) §7.3–7.4. All commands strip ROS
+(`env -u PYTHONPATH`), run at ≤ 6 workers, and ask the user before starting. Paths live under
+`runs/v5/`.
+
+**Training-only randomisation.** SAC (unlike DAgger/PPO) randomises the wall band's grey level
+each episode, `BAND_GREY = (0.0, 0.15)` (`sac.py`), so the encoder cannot key looming off one
+fixed band contrast.
+
+**Memory.** The default 100 k replay buffer (`uint8` luma + DN traces, both obs and next_obs since
+SB3's `DictReplayBuffer` does not support `optimize_memory_usage`) holds ≈ 5.3 GB; each of the ≤ 6
+environment workers adds ≈ 0.9 GB (brain + renderer). Watch `free -g` a few minutes into every run.
+
+**Stop rule.** Checkpoint every 50 k frames. After each round, `sac-validate` computes the
+near-dodge rate on 10 validation seeds (9000–9009, disjoint from the 50 evaluation seeds) plus E1
+on the same seeds. If a round's `near_dodge_rate` is not higher than the best earlier round's,
+stop and report rather than starting the next round.
+
+### 9.1 Stage 1: DAgger decoder on L2 with v4
+
+Iteration 0 (teacher only):
+
+```bash
+env -u PYTHONPATH .venv/bin/fly-drone roam-collect --output runs/v5/dagger/it0.npz --flights 128 --seconds 60 --levels 2 --workers 6 --seed-base 200
+env -u PYTHONPATH .venv/bin/fly-drone roam-fit runs/v5/dagger/it0.npz --output runs/v5/dagger/it0
+env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/dagger/it0/warm-actor.json teacher random --level 2 --seeds 10 --seed-base 9000 --workers 6 --output runs/v5/dagger/it0-screen.json
+```
+
+Iterations 1–3, student in the loop, for `k, beta` in `(1, 0.5), (2, 0.25), (3, 0.0)`:
+
+```bash
+env -u PYTHONPATH .venv/bin/fly-drone roam-collect --output runs/v5/dagger/it$k.npz --student runs/v5/dagger/it$((k-1))/warm-actor.json --beta $beta --flights 128 --seconds 60 --levels 2 --workers 6 --seed-base $((200 + 1000*k))
+env -u PYTHONPATH .venv/bin/fly-drone roam-fit runs/v5/dagger/it*.npz --output runs/v5/dagger/it$k
+env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/dagger/it$k/warm-actor.json --level 2 --seeds 10 --seed-base 9000 --workers 6 --output runs/v5/dagger/it$k-screen.json
+```
+
+Pick the iteration with the highest beacons/min on the validation seeds (ties: fewer
+collisions/min) and record it in `runs/v5/dagger/choice.json`.
+
+### 9.2 Stage 2a: v4 clone, round-0 decoder, v4 E1 baseline
+
+```bash
+env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data.npz --flights 32 --seconds 60 --workers 6 --seed-base 600
+env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 20000
+env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/dagger/it*.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
+env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --level 2 --seeds 10 --seed-base 9000 --workers 6 --output runs/v5/round0/l2-screen.json
+env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --output runs/v5/round0/validation.json
+env -u PYTHONPATH .venv/bin/fly-drone encoder-checks --policy runs/v5/dagger/it<chosen>/warm-actor.json --output runs/v5/e1-v4-baseline.json
+```
+
+`sac-init-decoder` warm-starts the round-0 decoder from all DAgger data through the frozen clone
+encoder; expect `export_max_error ≤ 1e-4` in `runs/v5/round0/warm-start.json`. The L2 screen is an
+engineering sanity check (not acceptance): if beacons/min is below 0.8× the chosen DAgger actor's,
+the clone or the tanh head lost the skill and SAC would start from a broken system. `encoder-checks`
+with no `--encoder` measures v4 on the 50 evaluation seeds — the "v4 baseline reported alongside" E1.
+
+### 9.3 Rounds 1–3: alternating encoder and decoder SAC
+
+For `k = 1, 2, 3`, with `PREV_DEC`/`PREV_DEC_ZIP` = `runs/v5/round0/decoder.{json,zip}` at k = 1
+(otherwise `runs/v5/round$((k-1))/decoder/decoder.{json,zip}`) and `ENC_INIT` =
+`runs/v5/clone/encoder.pt` at k = 1 (otherwise `runs/v5/round$((k-1))/encoder/encoder.zip`):
+
+```bash
+env -u PYTHONPATH .venv/bin/fly-drone sac-round encoder --output runs/v5/round$k/encoder --frames 350000 --decoder $PREV_DEC --init $ENC_INIT --workers 6 > runs/v5/round$k-encoder.log 2>&1
+env -u PYTHONPATH .venv/bin/fly-drone sac-round decoder --output runs/v5/round$k/decoder --frames 150000 --encoder runs/v5/round$k/encoder/encoder.pt --init $PREV_DEC_ZIP --workers 6 > runs/v5/round$k-decoder.log 2>&1
+env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round$k/decoder/decoder.json --encoder runs/v5/round$k/encoder/encoder.pt --output runs/v5/round$k/validation.json
+```
+
+Report a table of rounds 0..k (near-dodge, balanced, ghost near-dodge, beacons/min,
+collisions/min, E1 AUC, mean metabolic cost from `rollout/metabolic_cost`) and apply the stop rule
+above. Take the round with the best validation near-dodge rate (ties: more beacons/min) as final:
+
+```bash
+mkdir -p runs/v5/final && cp runs/v5/round<best>/encoder/encoder.pt runs/v5/round<best>/decoder/decoder.json runs/v5/final/
+```
+
+### 9.4 E3: brain-bypass control
+
+```bash
+env -u PYTHONPATH .venv/bin/fly-drone sac-round bypass --output runs/v5/bypass --frames 450000 --encoder runs/v5/final/encoder.pt --workers 6 > runs/v5/bypass.log 2>&1
+env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/final/decoder.json runs/v5/bypass/bypass.zip --encoder runs/v5/final/encoder.pt --ablations none ghost --seeds 50 --seconds 120 --level 3 --seed-base 1000 --workers 6 --output runs/v5/e3-screen.json
+env -u PYTHONPATH .venv/bin/python -c "
+import json; from pathlib import Path; from fly_drone.roam_eval import bypass_comparison
+r = json.loads(Path('runs/v5/e3-screen.json').read_text())['results']
+full = next(v for k, v in r.items() if k.startswith('policy:') and k.endswith('|none'))
+byp = next(v for k, v in r.items() if k.startswith('bypass:') and k.endswith('|none'))
+out = bypass_comparison(full, byp); Path('runs/v5/e3.json').write_text(json.dumps(out, indent=2)); print(out)"
+```
+
+`sac-round bypass` trains a decoder that reads the 8 currents directly, brain bypassed, at the
+budget of three decoder rounds (150 k × 3). If `bypass_better` is true in `runs/v5/e3.json`, stop
+and report to the user before drawing any stage-4 conclusion.
+
+### 9.5 Stage 4: evaluation, E1–E4, results
+
+```bash
+env -u PYTHONPATH .venv/bin/fly-drone evaluate --task free_roam --policy runs/v5/final/decoder.json --encoder runs/v5/final/encoder.pt --episodes 50 --workers 6 --output runs/v5/evaluation.json > runs/v5/evaluation.log 2>&1
+env -u PYTHONPATH .venv/bin/fly-drone encoder-checks --policy runs/v5/final/decoder.json --encoder runs/v5/final/encoder.pt --output runs/v5/e1-e2.json
+env -u PYTHONPATH .venv/bin/python -m pytest -q tests/test_arena.py::test_legacy_room_mjcf_unchanged tests/test_env.py -k "legacy or replay_is_bit_identical"
+```
+
+Copy `evaluation.json`, `e1-e2.json`, `e1-v4-baseline.json`, `e3.json` and every round's
+`validation.json` to `docs/results/encoder-v5/`, and record A1–A7, E1 (v5 vs v4 AUC), E2 margins,
+E3 comparison and E4 in [`validation.md`](validation.md), thresholds taken straight from
+`ACCEPTANCE` and `ENCODER_CHECKS`, never rounded in the pass direction. The actor is added to
+`docs/results/accepted-policies.json` only if A1–A6, E1, E2 and E4 all pass and the user agrees.

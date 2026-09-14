@@ -9,14 +9,14 @@ drone never runs a hidden script, planner or mode switch that makes the decision
 
 What that means in practice, and what every change must preserve:
 
-| Principle                 | Concretely                                                                                                                                                                                    |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The brain decides         | The only input to the decoder is neural activity (2,022 descending + VNC motor traces). No pose, task id, target position or pixels.                                                          |
-| The body executes         | The drone supplies reflex-level stabilisation (PID, mixer, rotors) — the role the fly's own VNC and halteres play. It never chooses where to go.                                              |
-| The brain stays the fly's | Wiring, weights, signs and neuron parameters are frozen. Learning lives only in the decoder (and, if the evidence ever demands it, the sensory encoder — see `docs/overview/README.md` §7.3). |
-| One brain, one decoder    | One actor for free roam. No switching decoders by scenario or state.                                                                                                                          |
-| Behaviour must be causal  | A skill counts only if silencing the pathway that carries it (vision, loom, light) removes it, and a blind (ghost) condition cannot pass by chance.                                           |
-| Honest labels             | Teachers use simulator geometry only for what the eyes could actually see.                                                                                                                    |
+| Principle                 | Concretely                                                                                                                                                                                                                                                       |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The brain decides         | The only input to the decoder is neural activity (2,022 descending + VNC motor traces). No pose, task id, target position or pixels.                                                                                                                             |
+| The body executes         | The drone supplies reflex-level stabilisation (PID, mixer, rotors) — the role the fly's own VNC and halteres play. It never chooses where to go.                                                                                                                 |
+| The brain stays the fly's | Wiring, weights, signs and neuron parameters are frozen. Learning lives in the decoder and, for free roam, the v5 sensory encoder (camera images only, 8 uniform population currents in [0, 2]; see docs/sensory-model.md §6). Legacy actors stay on encoder v4. |
+| One brain, one decoder    | One actor for free roam. No switching decoders by scenario or state.                                                                                                                                                                                             |
+| Behaviour must be causal  | A skill counts only if silencing the pathway that carries it (vision, loom, light) removes it, and a blind (ghost) condition cannot pass by chance.                                                                                                              |
+| Honest labels             | Teachers use simulator geometry only for what the eyes could actually see.                                                                                                                                                                                       |
 
 Where we are going: foraging, obstacle avoidance and threat dodging in open, unseen arenas,
 all attributable to neurons (free roam, `docs/free-roam.md`); later, richer senses and feedback

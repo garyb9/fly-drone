@@ -102,6 +102,11 @@ $\theta \approx 2R/d$, so its image area is $D \propto 1/d^2$. Closing at speed 
 $\dot D \propto 2v/d^3$, which rises steeply near contact, like the time-to-contact tuning attributed
 to LC4/LPLC2. With gain 150 the looming cells fire at about 1.5–2 m.
 
+This encoder v4 is a fixed adapter, used by every legacy task. Free roam instead flies a **learned**
+encoder v5: a small CNN over each eye's 3-frame luma stack, driving 8 anatomical populations
+(Mi1, Tm3, LC4, LPLC2 per side) instead of 4 pooled cues. See
+[`../sensory-model.md` §6](../sensory-model.md#6) for the network, channel table and identity scheme.
+
 ## 4. Brain: the frozen connectome
 
 Leaky integrate-and-fire neurons, exact per-tick integration with $\Delta t = 5$ ms and $\tau_m = 20$ ms:
@@ -244,12 +249,52 @@ and exported actors carry the arena limits (`training.action_limits`).
 
 ### 7.3 Could the encoder be learned too?
 
-Only with evidence. If the gate fails because a drive needs information the four v4 cues cannot carry,
-the next step is RL fine-tuning of the encoder upstream of the connectome. That invalidates every
-accepted actor, which must then be re-validated. So far every failure traced to control or arena bugs,
-not perception.
+Only with evidence, and now there is some. The free-roam feasibility gate failed for thrown
+threats (`runs/roam/feasibility-climb.json`, loom-history diagnostic, 8 × 60 s): the v4 loom cue
+triggered 385 escapes with **no** threat in flight, at a median loom level of 0.49 — _higher_ than
+the 0.44 median level at trigger when a threat actually was in flight. `150 · max(0, ΔD)` responds
+as strongly to self-motion past banded walls and pillars as to a ball 3–4 m away, and the brain
+receives only four pooled scalars, so no decoder can recover the distinction the encoder
+discarded. The user chose to **learn** the encoder with RL (SAC), keeping the connectome frozen and
+the encoder's input to camera pixels only. Design: [`superpowers/specs/2026-09-14-learned-encoder-sac-design.md`](../superpowers/specs/2026-09-14-learned-encoder-sac-design.md).
+This invalidated every accepted free-roam actor, which is re-validated against E1–E4 (§8) before
+acceptance; legacy actors stay pinned to v4 and are untouched.
 
-Commands: [`../training.md`](../training.md) §8.
+### 7.4 Encoder v5: alternating SAC rounds
+
+One `ConnectomeEnv` gives two views: the encoder's observation is its eye stack (8 currents out),
+the decoder's is the 2,022 DN + VNC motor traces (4 velocities out). Because the brain has hidden
+state, pixels alone are not Markov for the encoder, so its **critic** (training only, discarded
+afterwards) also reads the DN traces plus threat/beacon geometry relative to the drone — but only
+while that object is inside a camera's field of view and unoccluded (`teacher.visible` /
+`env.beacon_visible`), so even the training-only critic never sees more than the eyes could.
+Nothing from the critic reaches the deployed encoder or decoder.
+
+Stages, all at level 3 except stage 1:
+
+1. **DAgger on L2** — warm-start a decoder against v4 cues with no threats present, so it never
+   learns to dodge walls.
+2. **v4 clone** — supervised copy of v4's four cues onto the 8 v5 channels, so the decoder's inputs
+   look familiar to it from the very first SAC step.
+3. **Round-0 decoder** — the stage-1 decoder re-exported through the v4-clone encoder (warm start,
+   not trained).
+4. **3 alternating rounds** — per round, encoder SAC (decoder frozen, 350 k frames) then decoder SAC
+   (encoder frozen, 150 k frames). The two are never trained jointly: if the decoder stayed frozen
+   for the whole run, the encoder's only path to reward would be finding brain states the frozen
+   decoder happens to map to a dodge, i.e. using the connectome as a wire. Alternating lets the
+   decoder learn to read loom-driven activity while the encoder learns to produce it.
+5. **Evaluation** — A1–A7 unchanged, plus E1–E4 (§8).
+
+Both learners use SB3 SAC with an asymmetric critic and the maximum-entropy objective:
+
+$$
+J(\pi) = \mathbb E\Big[\sum_t \gamma^t \big(r_t + \alpha\, \mathcal H(\pi(\cdot\mid o_t))\big)\Big],
+\qquad
+y = r + \gamma\big(\min_j \bar Q_j(s', a') - \alpha \log \pi(a'\mid o')\big)
+$$
+
+with $\gamma = 0.99$, batch 256, 2 gradient steps per environment step, and a replay buffer of
+100,000 transitions. Commands: [`../training.md`](../training.md) §9.
 
 ## 8. Proving the brain is flying: evaluation
 

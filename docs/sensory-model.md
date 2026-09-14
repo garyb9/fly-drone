@@ -217,3 +217,78 @@ propagate. It does not show behaviour or biological validity. Current values are
 - The cues saturate at 2, so a very bright or very close stimulus loses gradation.
 - Cells are driven by uniform injected current. Real Mi1/Tm3 receive retinotopic,
   photoreceptor-derived input.
+
+## 6. Encoder v5 (learned, free roam only)
+
+Design: [`superpowers/specs/2026-09-14-learned-encoder-sac-design.md`](superpowers/specs/2026-09-14-learned-encoder-sac-design.md).
+Code: `python/fly_drone/encoder.py` (network, save/load, clone), `python/fly_drone/brain.py`
+(`FrameStack`, channel roles, encoder identity). Free roam trains and flies this encoder; every
+legacy task (visual, looming, approach, track, steer_dodge, escape) stays on encoder v4 above.
+
+**Input.** Each eye's Rec. 709 luma (as in §2, `Y ∈ [0, 1]` packed as `uint8`), the last 3
+frames per eye, stacked into a `6 × 48 × 64` tensor. An empty stack repeats the first frame it
+receives across all 3 slots; a respawn or a probe teleport calls `clear_vision_history()`, which
+empties the stack so the encoder does not read the jump as motion.
+
+**Network.** A shared `EyeNet` (conv 16 @ 5×5 stride 2 → conv 32 @ 3×3 stride 2 → conv 32 @ 3×3
+stride 2 → dense 64) runs once per eye. The right eye's 3-frame stack is mirrored left-right and
+both eyes carry a side flag (+1 left, −1 right) as a fourth input channel, so one set of weights
+serves both eyes. The two 64-unit eye features (128 total) feed a linear head to 8 values; `tanh(·)
+
+- 1`maps them to currents in`[0, 2]`, the same range v4 uses.
+
+**Channels (8, one per anatomical population, uniform current within each):**
+
+| Channel     | Cells (L / R) |
+| ----------- | ------------- |
+| `mi1_l/r`   | 886 / 887     |
+| `tm3_l/r`   | 1,017 / 1,037 |
+| `lc4_l/r`   | 71 / 55       |
+| `lplc2_l/r` | 94 / 91       |
+
+The encoder cannot address individual neurons, only these 8 uniform populations. Silencing by
+pathway name still works: `light_l`/`light_r` aggregate `mi1_*`+`tm3_*` and `looming_l`/`looming_r`
+aggregate `lc4_*`+`lplc2_*` per side (`BrainRuntime.pathway_ids`), so the v4 ablation vocabulary
+carries over unchanged.
+
+**Sensing order.** Currents applied at step `t` come from the stack ending with the frame
+rendered at the _end_ of step `t − 1` (`env.py`: `push_frame` after `step`, `encode_stack` at the
+start of the next `_sense`). On `reset`, the drone pushes the first frame and then settles for 40
+brain ticks on zero currents — identical for a deployed encoder and one still learning, since
+neither has a second frame yet. v4 keeps its own order: it renders and encodes the current frame
+synchronously, with no one-step lag.
+
+**Identity.** A learned encoder's version is `"learned-v5:"` followed by the first 16 hex
+characters of the sha256 of its weights (`extractor` + `mu` state dicts, sorted keys). An actor
+(`load_policy`) loads only into a runtime whose `encoder_version` matches exactly — a decoder
+trained against one encoder checkpoint cannot silently run against another. Legacy actors keep
+loading into `BrainRuntime()` with no encoder, `ENCODER_VERSION =
+"bright-contrast-400-splay075-noaa-loom150-v4"`, unaffected by any of this.
+
+**Metabolic cost** (encoder learner only, not part of the deployed system):
+
+```
+r_enc = r − 0.01 · mean(lc4_l, lc4_r, lplc2_l, lplc2_r) − 0.002 · mean(mi1_l, mi1_r, tm3_l, tm3_r)
+```
+
+Split rather than one shared λ: a single λ = 0.01 on all 8 channels could cost up to 0.02 per
+step (40% of the 0.05 alive bonus) and would push the encoder to dim the light channels foraging
+depends on just as hard as it dims loom. Loom should stay quiet unless something is closing, so it
+carries the larger penalty (`λ_loom = 0.01`); light is allowed to run higher (`λ_light = 0.002`).
+Both terms are logged separately (`rollout/metabolic_cost` and its components) so the trade-off is
+visible during training, not just inferred from behaviour.
+
+**Checks E1–E2** (`roam_eval.ENCODER_CHECKS`, spec §5), computed on the 50 held-out evaluation
+seeds, intact brain. A threat is _threat-positive_ if it is within 3 m, closing, and visible;
+_threat-negative_ if no threat is within 6 m (frames in between are excluded). A beacon is
+_beacon-positive_/_negative_ by visibility. `light` = mean(`mi1_*`, `tm3_*`) currents, `loom` =
+max(`lc4_*`, `lplc2_*`) currents:
+
+| ID  | Check                                                                                                                                                 | Bar                                                       |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| E1  | ROC AUC of `loom` on threat-positive vs threat-negative frames                                                                                        | ≥ 0.8 (`E1_min_loom_auc`), v4 baseline reported alongside |
+| E2  | AUC(`light`→beacon) − AUC(`light`→threat) ≥ 0.05 (`E2_min_light_margin`) **and** AUC(`loom`→threat) − AUC(`loom`→beacon) ≥ 0.1 (`E2_min_loom_margin`) | both hold                                                 |
+
+E1 alone would pass if the loom channels just tracked "anything nearby"; E2 forces the light and
+loom channels apart, so a high E1 AUC means the connectome is actually receiving a
+threat-selective loom signal rather than the encoder relabelling one general alarm current.
