@@ -23,6 +23,7 @@ ACCEPTANCE = {
     "A4_light_max_collision_increase_per_min": 0.25,
     "A4_loom_min_collision_ratio": 2.0,
     "A4_loom_min_beacon_fraction": 0.5,
+    "A5_min_balanced": 0.8,
     "A6_min_coverage": 0.4,
     "A6_max_slow_fraction": 0.1,
     "A6_max_abs_yaw_bias": 0.25,
@@ -56,7 +57,7 @@ def dodge_rates(summary):
     return rate, balanced
 
 
-def acceptance(results, policy):
+def acceptance(results, policy, probes=None):
     """results: distill.screen results keyed "controller|ablation"."""
     t = ACCEPTANCE
     r = {c: results[f"{policy}|{c}"] for c in CONDITIONS}
@@ -140,18 +141,181 @@ def acceptance(results, policy):
     out = {"A1": a1, "A2": a2, "A3": a3, "A4": a4, "A6": a6}
     for entry in out.values():
         entry["passed"] = bool(entry["passed"])
-    out["A5"] = {"passed": None, "note": "in-arena skill probes are a separate report"}
+    if probes is None:
+        out["A5"] = {"passed": None, "note": "skill probes not run"}
+    else:
+        out["A5"] = {
+            name: {"success_rate": p["success_rate"], "balanced": p["balanced"]}
+            for name, p in probes.items()
+        }
+        out["A5"]["passed"] = all(
+            p["balanced"] is not None and p["balanced"] >= t["A5_min_balanced"]
+            for p in probes.values()
+        )
     out["A7"] = {
         "passed": None,
         "note": "live real-time factor is measured on the server",
     }
-    out["passed"] = all(out[k]["passed"] for k in ("A1", "A2", "A3", "A4", "A6"))
+    out["passed"] = (
+        all(out[k]["passed"] for k in ("A1", "A2", "A3", "A4", "A6"))
+        and out["A5"]["passed"] is not False
+    )
     out["thresholds"] = ACCEPTANCE
     return out
 
 
+PROBES = {"steer": 10.0, "approach": 15.0, "dodge": 8.0, "wall": 8.0}
+PROBE_WALL_REACH = 2.5
+
+
+def _probe_setup(env, probe, rng):
+    """Place drone and objects for one skill probe in an empty arena; returns the side."""
+    spec = env.spec
+    side = float(rng.choice([-1.0, 1.0]))
+    yaw = float(rng.uniform(-np.pi, np.pi))
+    position = [0.0, 0.0, 1.0]
+    if probe == "wall":
+        yaw = side * float(rng.uniform(0.1, 0.4))
+        position = [spec.half_size - 3.0, 0.0, 1.0]
+    env.plant.teleport(position, yaw)
+    env.brain.clear_vision_history()
+
+    def at(distance, bearing):
+        angle = yaw + bearing
+        return [
+            position[0] + distance * np.cos(angle),
+            position[1] + distance * np.sin(angle),
+            1.0,
+        ]
+
+    if probe == "steer":
+        target = at(2.0, side * rng.uniform(0.6, 1.5))
+    elif probe == "approach":
+        target = at(rng.uniform(2.2, 3.0), side * rng.uniform(0.1, 0.5))
+    elif probe == "dodge":
+        target = at(6.0, np.pi)
+    else:
+        target = [-6.0, 0.0, 1.0]
+    env.plant.set_objects(target=target)
+    return side
+
+
+def _probe_job(job):
+    from .brain import BrainRuntime
+    from .env import FRAME_SECONDS, ConnectomeEnv
+    from .teacher import teacher_action
+
+    controller, probe, seeds, vision, seconds = job
+    brain = BrainRuntime()
+    if controller.startswith("policy:"):
+        brain.load_policy(controller.split(":", 1)[1])
+    env = ConnectomeEnv(
+        task="free_roam", level=0, respawn=False, brain=brain, vision=vision
+    )
+    runs = []
+    try:
+        for seed in seeds:
+            env.reset(seed=int(seed))
+            side = _probe_setup(env, probe, np.random.default_rng(int(seed) + 104729))
+            obs = env.observe()
+            info = env.info()
+            initial = abs(info["bearing"])
+            launch_frame = int(1.0 / FRAME_SECONDS)
+            collected = crashed = False
+            closest_wall = env.spec.half_size - env.plant.pos[0][0]
+            for frame in range(int((seconds or PROBES[probe]) / FRAME_SECONDS)):
+                if probe == "dodge" and frame == launch_frame and env.launch_threat():
+                    side = env.roam["threat"]["side"]
+                if controller == "teacher":
+                    action = teacher_action(env)[0]
+                else:
+                    action = brain.infer(obs) / env.plant.limits
+                obs, _, done, _, info = env.step(action)
+                collected |= any(
+                    e["type"] == "beacon_collected" for e in info["events"]
+                )
+                closest_wall = min(
+                    closest_wall, env.spec.half_size - env.plant.pos[0][0]
+                )
+                if done:
+                    crashed = True
+                    break
+                if probe in ("steer", "approach") and collected:
+                    break
+            threats = env.roam["threats"] + (
+                [env.roam["threat"]] if env.roam["threat"] else []
+            )
+            hit = any(t.get("hit") for t in env.roam["threats"])
+            near = min((t["min_distance"] for t in threats), default=np.inf)
+            success = {
+                "steer": not crashed
+                and (collected or abs(info["bearing"]) < 0.5 * initial),
+                "approach": not crashed and collected,
+                "dodge": not crashed and not hit and near < 2.0,
+                "wall": not crashed and closest_wall < PROBE_WALL_REACH,
+            }[probe]
+            runs.append(
+                {
+                    "seed": int(seed),
+                    "side": "left" if side > 0 else "right",
+                    "success": bool(success),
+                    "crashed": bool(crashed),
+                    "collected": bool(collected),
+                    "closest_threat": float(near),
+                    "closest_wall": float(closest_wall),
+                }
+            )
+    finally:
+        env.close()
+    return probe, runs
+
+
+def skill_probes(
+    controller, episodes=50, workers=16, vision=True, seconds=None, seed_base=1000
+):
+    """A5: steer, approach, dodge and wall probes, balanced by side."""
+    import multiprocessing
+    from concurrent.futures import ProcessPoolExecutor
+
+    seeds = np.arange(seed_base, seed_base + episodes)
+    per = max(1, workers // len(PROBES))
+    jobs = [
+        (controller, probe, chunk.tolist(), vision, seconds)
+        for probe in PROBES
+        for chunk in np.array_split(seeds, min(per, episodes))
+        if len(chunk)
+    ]
+    collected = {probe: [] for probe in PROBES}
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
+        for probe, runs in pool.map(_probe_job, jobs):
+            collected[probe] += runs
+    report = {}
+    for probe, runs in collected.items():
+        by_side = {
+            s: [r["success"] for r in runs if r["side"] == s] for s in ("left", "right")
+        }
+        rates = {s: float(np.mean(v)) if v else None for s, v in by_side.items()}
+        report[probe] = {
+            "success_rate": float(np.mean([r["success"] for r in runs])),
+            "success_by_side": rates,
+            "balanced": min(rates.values())
+            if all(v is not None for v in rates.values())
+            else None,
+            "runs": sorted(runs, key=lambda r: r["seed"]),
+        }
+    return report
+
+
 def evaluate_free_roam(
-    policy, output, episodes=50, seconds=120, workers=16, level=3, seed_base=1000
+    policy,
+    output,
+    episodes=50,
+    seconds=120,
+    workers=16,
+    level=3,
+    seed_base=1000,
+    probes=True,
 ):
     from .distill import screen
 
@@ -169,6 +333,9 @@ def evaluate_free_roam(
     )
     report["policy"] = str(Path(policy).resolve())
     report["task"] = "free_roam"
-    report["acceptance"] = acceptance(report["results"], key)
+    report["probes"] = (
+        skill_probes(key, episodes, workers, seed_base=seed_base) if probes else None
+    )
+    report["acceptance"] = acceptance(report["results"], key, report["probes"])
     Path(output).write_text(json.dumps(report, indent=2))
     return report

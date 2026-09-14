@@ -1,5 +1,12 @@
 import numpy as np
-from fly_drone.roam_eval import BASELINES, CONDITIONS, acceptance, paired_bootstrap
+from fly_drone.roam_eval import (
+    BASELINES,
+    CONDITIONS,
+    PROBES,
+    _probe_job,
+    acceptance,
+    paired_bootstrap,
+)
 
 POLICY = "policy:/x/actor.json"
 
@@ -72,6 +79,22 @@ def test_a_blind_forager_fails_the_dissociation():
     )
     assert not report["A4"]["passed"] and not report["A1"]["passed"]
     assert not report["passed"]
+
+
+def test_a5_requires_every_probe_balanced():
+    good = {p: {"success_rate": 0.95, "balanced": 0.9} for p in PROBES}
+    assert acceptance(results(), POLICY, good)["A5"]["passed"]
+    weak = {**good, "dodge": {"success_rate": 0.6, "balanced": 0.4}}
+    report = acceptance(results(), POLICY, weak)
+    assert report["A5"]["passed"] is False and not report["passed"]
+
+
+def test_skill_probe_jobs_run_and_report_sides():
+    for probe in PROBES:
+        name, runs = _probe_job(("teacher", probe, [1, 2], False, 1.2))
+        assert name == probe and len(runs) == 2
+        assert all(r["side"] in ("left", "right") for r in runs)
+        assert all(isinstance(r["success"], bool) for r in runs)
 
 
 def test_light_silencing_that_also_causes_crashes_is_not_a_dissociation():
