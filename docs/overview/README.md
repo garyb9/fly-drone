@@ -312,4 +312,5 @@ better than it is, and the ghost condition is what catches that.
 4. PPO fine-tune from the last student.
 5. Full evaluation (A1–A7), accepted actor to `docs/results/accepted-policies.json`, viewer probe and attribution panels.
 6. Later, proposed: ascending/proprioceptive feedback from the body into the connectome; senses beyond two
-   luminance statistics; onboard compute that runs the full graph.
+   luminance statistics; onboard compute that runs the full graph (estimate:
+   [`../hardware-estimate.md`](../hardware-estimate.md)).
