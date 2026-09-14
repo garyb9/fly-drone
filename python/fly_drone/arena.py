@@ -159,33 +159,16 @@ def next_beacon(rng, spec, pillars, pos, yaw, attempts=400):
     return fallback, bool(abs(bearing_to(pos, yaw, fallback)) > IN_VIEW)
 
 
-def intercept(origin, speed, pos, velocity):
-    """Point where a straight shot at `speed` meets a drone keeping its velocity."""
-    rel = np.asarray(pos, dtype=float) - origin
-    vel = np.asarray(velocity, dtype=float)
-    # |rel + vel t| = speed t  ->  (v.v - s^2) t^2 + 2 rel.v t + rel.rel = 0
-    a = float(vel @ vel - speed**2)
-    b = 2.0 * float(rel @ vel)
-    c = float(rel @ rel)
-    if abs(a) < 1e-9:
-        times = [-c / b] if abs(b) > 1e-9 else []
-    else:
-        disc = b * b - 4 * a * c
-        times = (
-            []
-            if disc < 0
-            else [(-b - np.sqrt(disc)) / (2 * a), (-b + np.sqrt(disc)) / (2 * a)]
-        )
-    times = [t for t in times if t > 0]
-    return np.asarray(pos, dtype=float) + vel * min(times) if times else np.asarray(pos)
+def plan_threat(rng, spec, pos, yaw):
+    """Launch from 3-4 m ahead (within +-30 deg of heading), aimed at the launch position.
 
-
-def plan_threat(rng, spec, pos, yaw, velocity=(0.0, 0.0, 0.0)):
-    """Launch from 3-4 m ahead (within +-30 deg of heading) on an intercept course.
-
-    Aimed at the launch position, 46% of shots missed a blind, moving drone by chance.
-    Slow shots from 5-6 m (5-10 s flights) let even random drift escape 76% of them,
-    so flights stay short (about 2-4 s) and lead the drone's velocity.
+    Reverted from intercept-lead aiming (2026-09-14): leading the drone's velocity was
+    tuned to defeat a blind, undirected drone (46% missed a fixed aim point by chance),
+    but it punishes a *committed, purposeful* evade at least as hard as it punishes drift
+    -- a real teacher that picks a dodge direction and holds it scored worse (49%) than
+    random jitter (68%) against a lead-aimed shot. Fixed-point aiming is still a real
+    dodge test (a stationary target is trivially hittable) without being adversarial to
+    the one sensory cue (loom, no velocity/TTI channel) the fly's brain actually has.
     """
     angle = yaw + rng.uniform(-0.52, 0.52)
     distance = rng.uniform(3.0, 4.0)
@@ -198,7 +181,7 @@ def plan_threat(rng, spec, pos, yaw, velocity=(0.0, 0.0, 0.0)):
             float(np.clip(pos[2] + rng.uniform(-0.1, 0.1), 0.6, 2.0)),
         ]
     )
-    aim = intercept(origin, speed, pos, velocity)
+    aim = np.asarray(pos, dtype=float)
     direction = aim - origin
     norm = float(np.linalg.norm(direction))
     side = float(np.sign(bearing_to(pos, yaw, origin)) or 1.0)

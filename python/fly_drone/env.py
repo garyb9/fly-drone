@@ -305,9 +305,7 @@ class ConnectomeEnv(gym.Env):
         if r is None or r["threat"] is not None:
             return False
         pos = plant.pos[0]
-        plan = arena.plan_threat(
-            self.np_random, spec, pos, plant.rpy[0, 2], plant.vel[0]
-        )
+        plan = arena.plan_threat(self.np_random, spec, pos, plant.rpy[0, 2])
         if (
             arena.clearance(spec, plant.pillars, plan["origin"])
             <= spec.threat_radius + 0.3

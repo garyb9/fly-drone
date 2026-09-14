@@ -94,20 +94,15 @@ def test_free_roam_env_resets_repeatedly_with_a_parked_threat():
         env.close()
 
 
-def test_threats_lead_a_moving_drone_and_hit_a_still_one():
+def test_threats_are_aimed_at_the_launch_position():
     spec = ArenaSpec()
     rng = np.random.default_rng(5)
     pos = np.array([0.0, 0.0, 1.0])
-    velocity = np.array([0.5, 0.2, 0.0])
     for _ in range(20):
-        plan = arena.plan_threat(rng, spec, pos, 0.0, velocity)
+        plan = arena.plan_threat(rng, spec, pos, 0.0)
         assert 0.9 <= plan["speed"] <= 1.3
         assert 2.9 <= np.linalg.norm(plan["origin"][:2] - pos[:2]) <= 4.1
-        time = plan["range"] / plan["speed"]
-        shot = plan["origin"] + plan["direction"] * plan["speed"] * time
-        np.testing.assert_allclose(shot, pos + velocity * time, atol=1e-6)
-        still = arena.plan_threat(rng, spec, pos, 0.0)
-        shot = still["origin"] + still["direction"] * still["range"]
+        shot = plan["origin"] + plan["direction"] * plan["range"]
         np.testing.assert_allclose(shot, pos, atol=1e-9)
 
 
