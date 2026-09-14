@@ -126,6 +126,20 @@ def main():
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--buffer-size", type=int, default=100_000)
+    p = sub.add_parser("sac-export")
+    p.add_argument(
+        "checkpoint",
+        nargs="?",
+        help="SAC .zip (round output or CheckpointCallback checkpoint)",
+    )
+    p.add_argument("--learner", choices=["encoder", "decoder"])
+    p.add_argument(
+        "--encoder", help="frozen encoder .pt (decoder learner, or --repin-decoder)"
+    )
+    p.add_argument(
+        "--repin-decoder", help="frozen decoder JSON to re-pin onto --encoder"
+    )
+    p.add_argument("--output", required=True)
     p = sub.add_parser("sac-validate")
     p.add_argument("--decoder", required=True)
     p.add_argument("--encoder", required=True)
@@ -147,6 +161,7 @@ def main():
         "encoder-clone",
         "sac-init-decoder",
         "sac-round",
+        "sac-export",
         "sac-validate",
         "encoder-checks",
     ):
@@ -177,6 +192,19 @@ def main():
                 seed=args.seed,
                 buffer_size=args.buffer_size,
             )
+        elif args.command == "sac-export":
+            if args.repin_decoder:
+                result = sac.repin_decoder(
+                    args.repin_decoder, args.encoder, args.output
+                )
+            elif args.learner is None:
+                raise SystemExit("sac-export needs --learner or --repin-decoder")
+            else:
+                if not args.checkpoint:
+                    raise SystemExit("sac-export needs a checkpoint .zip")
+                result = sac.export_checkpoint(
+                    args.checkpoint, args.learner, args.output, encoder=args.encoder
+                )
         elif args.command == "sac-validate":
             result = sac.validate(
                 args.decoder,

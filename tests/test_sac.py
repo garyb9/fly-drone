@@ -16,7 +16,9 @@ from fly_drone.sac import (
     SacRoamEnv,
     SpacesOnlyEnv,
     build_sac,
+    export_checkpoint,
     export_decoder,
+    repin_decoder,
     set_dn_stats,
     train_round,
     validate,
@@ -244,6 +246,135 @@ def test_rounds_for_every_learner_resume_export_and_validate(tmp_path):
     assert json.loads((tmp_path / "val.json").read_text())["encoder"] == str(
         encoder_pt.resolve()
     )
+
+
+def test_export_checkpoint_writes_encoder_and_parity_checked_decoder(tmp_path):
+    enc_model = build_sac(
+        "encoder", SpacesOnlyEnv("encoder"), buffer_size=1, device="cpu"
+    )
+    enc_model.save(tmp_path / "enc_ckpt")
+    result = export_checkpoint(
+        tmp_path / "enc_ckpt.zip", "encoder", tmp_path / "encoder.pt"
+    )
+    assert result["learner"] == "encoder"
+    assert (
+        result["encoder_version"]
+        == LearnedEncoder.load(tmp_path / "encoder.pt").version
+    )
+
+    LearnedEncoder.fresh(seed=9).save(tmp_path / "e2.pt")
+    dec_model = build_sac(
+        "decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu"
+    )
+    rng = np.random.default_rng(3)
+    set_dn_stats(dec_model, rng.uniform(0, 0.1, 2022), rng.uniform(0.5, 1.5, 2022))
+    dec_model.save(tmp_path / "dec_ckpt")
+    result = export_checkpoint(
+        tmp_path / "dec_ckpt.zip",
+        "decoder",
+        tmp_path / "decoder.json",
+        encoder=tmp_path / "e2.pt",
+    )
+    assert result["export_max_error"] <= 1e-4
+    BrainRuntime(encoder=tmp_path / "e2.pt").load_policy(tmp_path / "decoder.json")
+
+    with pytest.raises(ValueError, match="learner"):
+        export_checkpoint(tmp_path / "dec_ckpt.zip", "bypass", tmp_path / "x.json")
+    with pytest.raises(ValueError, match="encoder"):
+        export_checkpoint(tmp_path / "dec_ckpt.zip", "decoder", tmp_path / "x.json")
+
+
+def test_repin_decoder_copies_weights_verbatim_and_updates_pinning(tmp_path):
+    LearnedEncoder.fresh(seed=1).save(tmp_path / "old.pt")
+    LearnedEncoder.fresh(seed=2).save(tmp_path / "new.pt")
+    old_brain = BrainRuntime(encoder=tmp_path / "old.pt")
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    rng = np.random.default_rng(4)
+    set_dn_stats(model, rng.uniform(0, 0.1, 2022), rng.uniform(0.5, 1.5, 2022))
+    export_decoder(model, old_brain, tmp_path / "decoder.json", ArenaSpec().limits)
+    source = json.loads((tmp_path / "decoder.json").read_text())
+
+    new_encoder_version = LearnedEncoder.load(tmp_path / "new.pt").version
+    result = repin_decoder(
+        tmp_path / "decoder.json", tmp_path / "new.pt", tmp_path / "repinned.json"
+    )
+    assert result["encoder_version"] == new_encoder_version
+    assert result["repinned_from"] == old_brain.encoder_version
+
+    repinned = json.loads((tmp_path / "repinned.json").read_text())
+    assert repinned["layers"] == source["layers"]
+    assert repinned["mean"] == source["mean"] and repinned["scale"] == source["scale"]
+    assert repinned["output"] == source["output"]
+    assert repinned["encoder_version"] == new_encoder_version
+    assert repinned["repinned_from"] == old_brain.encoder_version
+
+    # Loads strictly (check_encoder=True) into a runtime built on the new encoder.
+    BrainRuntime(encoder=tmp_path / "new.pt").load_policy(tmp_path / "repinned.json")
+
+    bad = dict(source)
+    bad["output"] = "linear"
+    (tmp_path / "bad.json").write_text(json.dumps(bad))
+    with pytest.raises(ValueError, match="tanh"):
+        repin_decoder(tmp_path / "bad.json", tmp_path / "new.pt", tmp_path / "out.json")
+
+    missing = dict(source)
+    del missing["layers"]
+    (tmp_path / "missing.json").write_text(json.dumps(missing))
+    with pytest.raises(ValueError, match="missing fields"):
+        repin_decoder(
+            tmp_path / "missing.json", tmp_path / "new.pt", tmp_path / "out.json"
+        )
+
+
+def test_resumed_round_uses_the_given_seed_not_the_saved_one(tmp_path, monkeypatch):
+    """SAC.load restores the saved seed unless told otherwise; a resumed round must
+    still draw its first training episode from the `--seed` the caller passed in."""
+    decoder0 = zero_actor(tmp_path / "decoder0.json", BrainRuntime())
+    LearnedEncoder.fresh(seed=7).save(tmp_path / "clone.pt")
+    small = {"workers": 1, "buffer_size": 50, "device": "cpu", "learning_starts": 5}
+    train_round(
+        "encoder",
+        tmp_path / "base",
+        10,
+        decoder=decoder0,
+        init=tmp_path / "clone.pt",
+        **small,
+    )
+
+    seen = []
+    original_reset = SacRoamEnv.reset
+
+    def recording_reset(self, seed=None, options=None):
+        seen.append(seed)
+        return original_reset(self, seed=seed, options=options)
+
+    monkeypatch.setattr(SacRoamEnv, "reset", recording_reset)
+
+    seen.clear()
+    train_round(
+        "encoder",
+        tmp_path / "resumeA",
+        10,
+        decoder=decoder0,
+        init=tmp_path / "base" / "encoder.zip",
+        seed=101,
+        **small,
+    )
+    first_a = seen[1]  # index 0 is the factory's construction reset
+
+    seen.clear()
+    train_round(
+        "encoder",
+        tmp_path / "resumeB",
+        10,
+        decoder=decoder0,
+        init=tmp_path / "base" / "encoder.zip",
+        seed=202,
+        **small,
+    )
+    first_b = seen[1]
+
+    assert first_a == 101 and first_b == 202
 
 
 def test_train_round_rejects_a_missing_frozen_partner_before_spawning(tmp_path):

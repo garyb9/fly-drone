@@ -422,10 +422,96 @@ def init_decoder(paths, encoder, output, steps=4000, device="auto"):
     return report
 
 
+def export_checkpoint(checkpoint, learner, output, encoder=None, device="auto"):
+    """Deployable artifact from any SAC `.zip` (a round output or a CheckpointCallback
+    checkpoint): `encoder.pt` for `learner="encoder"`, or a parity-checked `decoder.json`
+    (pinned to `encoder`) for `learner="decoder"`. Reuses the same helpers a round uses to
+    export its own result, so a mid-round checkpoint can be validated early.
+    """
+    from stable_baselines3 import SAC
+
+    from .arena import ArenaSpec
+    from .encoder import LearnedEncoder
+
+    # buffer_size=1: exporting only reads the actor's weights, no replay buffer needed.
+    model = SAC.load(checkpoint, device=device, buffer_size=1)
+    out = Path(output)
+    if learner == "encoder":
+        version = LearnedEncoder.from_actor(model.actor).save(out)
+        return {"learner": "encoder", "encoder_version": version, "output": str(out)}
+    if learner == "decoder":
+        if encoder is None:
+            raise ValueError("a decoder export needs --encoder")
+        brain = BrainRuntime(encoder=encoder)
+        error = export_decoder(model, brain, out, ArenaSpec().limits)
+        return {
+            "learner": "decoder",
+            "export_max_error": error,
+            "encoder_version": brain.encoder_version,
+            "output": str(out),
+        }
+    raise ValueError("learner must be 'encoder' or 'decoder'")
+
+
+_DECODER_FIELDS = {
+    "version",
+    "encoder_version",
+    "dataset_hash",
+    "feature_ids",
+    "mean",
+    "scale",
+    "layers",
+    "action_limits",
+    "output",
+}
+
+
+def repin_decoder(source, encoder, output):
+    """Copy a frozen decoder JSON unchanged onto a new encoder, so `sac-validate`/
+    `encoder-checks` can measure the new encoder (`check_encoder=False`, same pairing the
+    encoder-learning env uses) before a decoder round is spent re-training against it.
+
+    Refuses any source JSON whose `output` or `layers` it cannot copy verbatim.
+    """
+    from .encoder import LearnedEncoder
+
+    data = json.loads(Path(source).read_text())
+    missing = _DECODER_FIELDS - data.keys()
+    if missing:
+        raise ValueError(f"{source}: missing fields {sorted(missing)}")
+    if data["output"] != "tanh":
+        raise ValueError(
+            f"{source}: only tanh-output decoders are supported, got {data['output']!r}"
+        )
+    layers = data["layers"]
+    if not isinstance(layers, list) or not layers:
+        raise ValueError(f"{source}: no layers to copy verbatim")
+    for i, layer in enumerate(layers):
+        if not isinstance(layer, dict) or "weights" not in layer or "bias" not in layer:
+            raise ValueError(f"{source}: layer {i} missing weights/bias")
+        if len(layer["weights"]) != len(layer["bias"]):
+            raise ValueError(f"{source}: layer {i} weights/bias shape mismatch")
+
+    new_encoder = LearnedEncoder.load(encoder)
+    pinned = dict(data)
+    pinned["repinned_from"] = data["encoder_version"]
+    pinned["encoder_version"] = new_encoder.version
+    out = Path(output)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(pinned, indent=2))
+    return {
+        "output": str(out),
+        "encoder_version": new_encoder.version,
+        "repinned_from": data["encoder_version"],
+    }
+
+
 class MetabolicLogger(BaseCallback):
     def _on_step(self):
-        costs = [info.get("metabolic_cost", 0.0) for info in self.locals["infos"]]
-        self.logger.record_mean("rollout/metabolic_cost", float(np.mean(costs)))
+        infos = self.locals["infos"]
+        for key in ("metabolic_cost", "loom_cost", "light_cost"):
+            values = [info.get(key, 0.0) for info in infos]
+            self.logger.record_mean(f"rollout/{key}", float(np.mean(values)))
         return True
 
 
@@ -493,6 +579,7 @@ def train_round(
                 device=device,
                 buffer_size=buffer_size,
                 learning_starts=learning_starts,
+                seed=seed,
             )
         else:
             model = build_sac(learner, vec, buffer_size, seed, device, learning_starts)

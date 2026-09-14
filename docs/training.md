@@ -325,6 +325,34 @@ near-dodge rate on 10 validation seeds (9000–9009, disjoint from the 50 evalua
 on the same seeds. If a round's `near_dodge_rate` is not higher than the best earlier round's,
 stop and report rather than starting the next round.
 
+**Resuming after a crash.** `sac-round ... --init checkpoints/<learner>_<n>_steps.zip` restarts
+training from that checkpoint's weights, but `train_round` always starts a fresh replay buffer
+and calls `model.learn(..., reset_num_timesteps=True)`, so the run begins at frame 0 again and
+trains the full `--frames` you pass — it does not pick up where the crashed run left off. Pass
+the _remaining_ frames (`--frames` minus the checkpoint's step count), not the original budget,
+or the round will overshoot. Use `sac-export` (below) to validate a checkpoint before deciding.
+
+**`sac-export`: deployable artifacts from any `.zip`.** Turns a round's own output or a
+mid-round `CheckpointCallback` checkpoint into the same artifacts `train_round` writes, reusing
+`LearnedEncoder.from_actor(...).save`/`export_decoder` and the version pinning — nothing about
+the export path is reimplemented.
+
+```bash
+# Validate the 50k checkpoint early, instead of waiting for the whole round:
+env -u PYTHONPATH .venv/bin/fly-drone sac-export runs/v5/round1/encoder/checkpoints/encoder_50000_steps.zip --learner encoder --output runs/v5/round1/encoder-50k.pt
+env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round0/decoder.json --encoder runs/v5/round1/encoder-50k.pt --output runs/v5/round1/validation-50k.json
+
+# Re-pin the frozen decoder onto a new encoder round's output to measure it before a decoder
+# round: same pairing (check_encoder=False) the encoder-learning env already uses.
+env -u PYTHONPATH .venv/bin/fly-drone sac-export --repin-decoder runs/v5/round0/decoder.json --encoder runs/v5/round1/encoder/encoder.pt --output runs/v5/round1/decoder-repinned.json
+env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round1/decoder-repinned.json --encoder runs/v5/round1/encoder/encoder.pt --output runs/v5/round1/validation-repinned.json
+```
+
+`--learner decoder --encoder <pt>` exports and parity-checks (≤ 1e-4) a decoder checkpoint the
+same way. `--repin-decoder` copies the source JSON's weights and shapes unchanged, only
+rewriting `encoder_version` to the new encoder and recording `repinned_from`; it refuses any
+source JSON whose `output` or `layers` it cannot copy verbatim.
+
 ### 9.1 Stage 1: DAgger decoder on L2 with v4
 
 Iteration 0 (teacher only):
@@ -369,9 +397,13 @@ For `k = 1, 2, 3`, with `PREV_DEC`/`PREV_DEC_ZIP` = `runs/v5/round0/decoder.{jso
 (otherwise `runs/v5/round$((k-1))/decoder/decoder.{json,zip}`) and `ENC_INIT` =
 `runs/v5/clone/encoder.pt` at k = 1 (otherwise `runs/v5/round$((k-1))/encoder/encoder.zip`):
 
+Give each round its own `--seed` (e.g. `42 + 10*k`): resuming a round from a `.zip` init
+restores the frozen partner's weights but must still draw fresh episode layouts, and a
+repeated seed across rounds would replay the same episodes.
+
 ```bash
-env -u PYTHONPATH .venv/bin/fly-drone sac-round encoder --output runs/v5/round$k/encoder --frames 350000 --decoder $PREV_DEC --init $ENC_INIT --workers 6 > runs/v5/round$k-encoder.log 2>&1
-env -u PYTHONPATH .venv/bin/fly-drone sac-round decoder --output runs/v5/round$k/decoder --frames 150000 --encoder runs/v5/round$k/encoder/encoder.pt --init $PREV_DEC_ZIP --workers 6 > runs/v5/round$k-decoder.log 2>&1
+env -u PYTHONPATH .venv/bin/fly-drone sac-round encoder --output runs/v5/round$k/encoder --frames 350000 --decoder $PREV_DEC --init $ENC_INIT --seed $((42 + 10*k)) --workers 6 > runs/v5/round$k-encoder.log 2>&1
+env -u PYTHONPATH .venv/bin/fly-drone sac-round decoder --output runs/v5/round$k/decoder --frames 150000 --encoder runs/v5/round$k/encoder/encoder.pt --init $PREV_DEC_ZIP --seed $((43 + 10*k)) --workers 6 > runs/v5/round$k-decoder.log 2>&1
 env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round$k/decoder/decoder.json --encoder runs/v5/round$k/encoder/encoder.pt --output runs/v5/round$k/validation.json
 ```
 
