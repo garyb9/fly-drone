@@ -23,6 +23,17 @@ Screen on validation seeds 9000–9009, 60 s, level 2, intact:
   it0 fit's held-out R² was 0.38 (avoid), 0.25 (beacon), −1.26 (explore). Cost if wrong: the round-0 decoder
   in Task 12 is fitted on all DAgger data anyway, so the choice only sets the sanity-gate reference (1.76).
 
+## Scope of autonomy
+
+- **User decision (2026-09-15):** run autonomously through Task 15, without asking before Tasks 13–15.
+- **How the plan's stop rules are applied:**
+  - **Task 12 sanity gate fails:** stop and report. SAC would start from a broken system.
+  - **Task 13, a round does not improve near-dodge:** do not start the next round. Pick the best round so far and continue.
+  - **Task 14, the bypass beats the full system:** still run the Task 15 measurements. The result is recorded as a failed E3, and no
+    behaviour is attributed to neurons.
+  - **The smoke test fails:** debug and fix it, with review, before Task 13.
+- **Cost if wrong:** some evaluation compute spent after a failed E3.
+
 ## Critic-only warm-up review (8dda027)
 
 - Re-run review (opus) **approved** it. The actor and entropy coefficient stay frozen for the first 50k frames:
