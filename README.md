@@ -8,6 +8,16 @@ The browser shows the drone, its two eyes, a live anatomical activity graph, and
 fly receiving the same neural outputs. The drone is the primary body; the fly has an independent
 trajectory.
 
+## Goal
+
+**The fly's connectome is the brain; the drone is its body — a cyborg.** The frozen connectome
+should fly the drone autonomously: it sees through the drone's cameras, only its descending and
+motor neurons reach the decoder, and the drone supplies reflexes (stabilisation), never decisions.
+Every skill must be causal — it disappears when the pathway carrying it is silenced. Start with
+[`docs/overview/README.md`](docs/overview/README.md) and the diagrams in
+[`docs/overview/architecture.html`](docs/overview/architecture.html); agents also read
+[`AGENTS.md`](AGENTS.md).
+
 ## Requirements
 
 Rust (stable, via `rust-toolchain.toml`), Python 3.11+, Node 22 (`.nvmrc`) with Yarn 1, and
@@ -98,6 +108,7 @@ drone mesh is drawn 6× larger than its physical size.
 
 | Doc                                                          | Contents                                                                                                          |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| [`docs/overview/`](docs/overview/)                           | **start here**: the cyborg goal, architecture diagrams (HTML), math, training, evidence, roadmap                  |
 | [`docs/architecture.md`](docs/architecture.md)               | system overview, process boundaries, contracts                                                                    |
 | [`docs/neuron-model.md`](docs/neuron-model.md)               | LIF equations, weights and signs, tonic fixed point, activity trace, CSR format, determinism, Rust actor          |
 | [`docs/sensory-model.md`](docs/sensory-model.md)             | camera geometry, encoder equations, looming math, splay dead-zone experiment, causal assay                        |

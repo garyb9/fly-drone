@@ -237,3 +237,70 @@ runs/<name>/
 
 `runs/` is git-ignored. Accepted reports are copied to [`results/`](results/) and summarised in
 [`validation.md`](validation.md).
+
+## 8. Free roam: DAgger warm start, then PPO
+
+One decoder (`2022 → 64 → 64 → 4`, tanh) learns all free-roam skills. Stage 1 imitates the
+sight-gated composite teacher (`teacher.py`, [`free-roam.md`](free-roam.md) §4) in closed loop.
+Stage 2 is reinforcement learning (PPO) on the free-roam reward. The connectome is frozen in
+both. The math is in [`overview/README.md`](overview/README.md) §7.
+
+### 8.1 Gate before training
+
+The teacher itself must pass A3 first. Otherwise the decoder would clone a behaviour that cannot
+prove sight.
+
+```bash
+fly-drone roam-screen teacher random --ablations none ghost --seeds 20 --seed-base 6000 \
+    --seconds 60 --level 3 --workers 6 --output runs/roam/screen.json
+```
+
+The report's `near_dodge_rate`, `near_dodge_by_side` and `balanced_dodge_rate` use the
+pre-registered scoring (only throws that hit or came within 2 m, as `roam_eval.dodge_rates`).
+`threat_dodge_rate` counts every throw and is kept for comparison only. Pass: teacher
+`near_dodge_rate` ≥ 0.8 and `balanced_dodge_rate` ≥ 0.8, teacher|ghost `near_dodge_rate` ≤ 0.3.
+
+### 8.2 DAgger
+
+| Iteration | Who flies                                               | Command                                                                                                      |
+| --------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 0         | teacher + action noise (σ 0.2 on forward, lateral, yaw) | `roam-collect --output runs/roam/d0.npz --flights 128`                                                       |
+| 1         | student with prob. 0.5                                  | `roam-collect --student runs/roam/fit0/warm-actor.json --beta 0.5 --output runs/roam/d1.npz --seed-base 400` |
+| 2         | student with prob. 0.75                                 | `... --student runs/roam/fit1/warm-actor.json --beta 0.25 --seed-base 600`                                   |
+| 3         | student only                                            | `... --student runs/roam/fit2/warm-actor.json --beta 0 --seed-base 800`                                      |
+
+The teacher labels every frame (every second frame is stored). After each collection, fit on
+**all** data so far and screen the student:
+
+```bash
+fly-drone roam-fit runs/roam/d0.npz runs/roam/d1.npz --output runs/roam/fit1 --steps 4000
+fly-drone roam-screen runs/roam/fit1/warm-actor.json teacher --ablations none ghost \
+    --seeds 10 --workers 6 --output runs/roam/fit1/screen.json
+```
+
+`roam-fit` weights each drive equally (inverse frequency), holds out 10% of flights, reports
+per-drive MSE and R², sets `log σ_π = −2.5`, and exports a parity-checked `warm-actor.json` with
+arena limits plus `warm-ppo.zip` for PPO.
+
+### 8.3 PPO fine-tune
+
+```bash
+fly-drone train --task free_roam --resume runs/roam/fit3/warm-ppo.zip --steps 200000 \
+    --envs 4 --learning-rate 1e-5 --log-std -1.5 --output runs/roam/ppo
+```
+
+Free-roam environments run level 3 with respawn, so a crash costs −20 without ending the
+episode (horizon 1,500 frames = 60 s), and `actor.json` is exported with the arena limits
+`[0.7, 0.5, 0.3, 0.8]`. Keep the learning rate small so PPO refines the clone instead of erasing
+it. `--log-std` reopens exploration, which a warm start sets to −2.5. The step count is a
+starting point; watch screened A1–A3 on checkpoints rather than reward alone.
+
+### 8.4 Evaluate
+
+```bash
+fly-drone evaluate --task free_roam --policy runs/roam/ppo/actor.json --workers 6 \
+    --output runs/roam/ppo/evaluation.json
+```
+
+This runs seven brain conditions plus teacher, cue-script and random baselines, and checks the
+pre-registered A1–A7 ([`free-roam.md`](free-roam.md) §6). Accepted reports go to `results/`.
