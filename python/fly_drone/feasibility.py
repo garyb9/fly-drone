@@ -25,19 +25,23 @@ class CueController:
         self.escape_dir = 1.0
         self.search_dir = 1.0
 
+    def _escape_action(self):
+        # Brake and sidestep; only a little yaw, because turning itself reads as loom.
+        return np.array([-0.4, self.escape_dir, 0.0, 0.3 * self.escape_dir])
+
     def act(self, cues):
         light_l, light_r, loom_l, loom_r = (float(c) for c in cues)
         self.history.append((loom_l, loom_r))
         if self.escape > 0:
             self.escape -= 1
-            return np.array([-0.2, 0.6 * self.escape_dir, 0.0, self.escape_dir])
-        recent = [max(a, b) > 0.5 for a, b in list(self.history)[-3:]]
-        if sum(recent) >= 2:
+            return self._escape_action()
+        recent = [max(a, b) > FIRE for a, b in list(self.history)[-3:]]
+        if sum(recent) >= 2 and max(loom_l, loom_r) > 0.3:
             if abs(loom_l - loom_r) > 0.1:
                 # +yaw and +lateral are left: move away from the louder eye.
                 self.escape_dir = 1.0 if loom_r > loom_l else -1.0
-            self.escape = 8
-            return np.array([-0.2, 0.6 * self.escape_dir, 0.0, self.escape_dir])
+            self.escape = 15
+            return self._escape_action()
         light = light_l + light_r
         if light > 0.3:
             side = (light_l - light_r) / light
