@@ -44,3 +44,17 @@ def test_screen_job_reports_rates_for_teacher_and_baselines():
         assert 0 <= run["slow_fraction"] <= 1
     summary = distill.summarise(runs)
     assert "threat_dodge_rate" in summary and summary["runs"][0]["seed"] == 3
+
+
+def test_screen_warns_when_no_controller_would_fly_the_given_encoder(tmp_path, capsys):
+    distill.screen(
+        ["teacher"],
+        tmp_path / "screen.json",
+        seeds=1,
+        seconds=0.2,
+        level=0,
+        workers=1,
+        seed_base=1,
+        encoder="unused.pt",
+    )
+    assert "ignored" in capsys.readouterr().err

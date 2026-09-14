@@ -233,9 +233,8 @@ empties the stack so the encoder does not read the jump as motion.
 **Network.** A shared `EyeNet` (conv 16 @ 5×5 stride 2 → conv 32 @ 3×3 stride 2 → conv 32 @ 3×3
 stride 2 → dense 64) runs once per eye. The right eye's 3-frame stack is mirrored left-right and
 both eyes carry a side flag (+1 left, −1 right) as a fourth input channel, so one set of weights
-serves both eyes. The two 64-unit eye features (128 total) feed a linear head to 8 values; `tanh(·)
-
-- 1`maps them to currents in`[0, 2]`, the same range v4 uses.
+serves both eyes. The two 64-unit eye features (128 total) feed a linear head to 8 values, which
+`tanh` squashes to `[-1, 1]` and shifts up by one to currents in `[0, 2]`, the same range v4 uses.
 
 **Channels (8, one per anatomical population, uniform current within each):**
 
@@ -275,8 +274,9 @@ Split rather than one shared λ: a single λ = 0.01 on all 8 channels could cost
 step (40% of the 0.05 alive bonus) and would push the encoder to dim the light channels foraging
 depends on just as hard as it dims loom. Loom should stay quiet unless something is closing, so it
 carries the larger penalty (`λ_loom = 0.01`); light is allowed to run higher (`λ_light = 0.002`).
-Both terms are logged separately (`rollout/metabolic_cost` and its components) so the trade-off is
-visible during training, not just inferred from behaviour.
+Both terms are logged separately (`rollout/loom_cost`, `rollout/light_cost`), alongside their sum
+(`rollout/metabolic_cost`), so the trade-off is visible during training, not just inferred from
+behaviour.
 
 **Checks E1–E2** (`roam_eval.ENCODER_CHECKS`, spec §5), computed on the 50 held-out evaluation
 seeds, intact brain. A threat is _threat-positive_ if it is within 3 m, closing, and visible;

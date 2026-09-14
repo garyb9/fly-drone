@@ -144,19 +144,21 @@ class SacRoamEnv(gym.Env):
     def step(self, action):
         action = np.clip(np.asarray(action, dtype=np.float32), -1, 1)
         brain = self.env.brain
-        cost = 0.0
+        cost = loom_cost = light_cost = 0.0
         if self.learner == "encoder":
             currents = brain.set_currents(action + 1.0)
             velocity = brain.infer(self.features) / self.env.plant.limits
-            cost = self.lambda_loom * float(
-                currents[LOOM].mean()
-            ) + self.lambda_light * float(currents[LIGHT].mean())
+            loom_cost = self.lambda_loom * float(currents[LOOM].mean())
+            light_cost = self.lambda_light * float(currents[LIGHT].mean())
+            cost = loom_cost + light_cost
         else:
             velocity = action
         self.features, reward, terminated, truncated, info = self.env.step(
             np.clip(velocity, -1, 1)
         )
         info["metabolic_cost"] = cost
+        info["loom_cost"] = loom_cost
+        info["light_cost"] = light_cost
         return self._obs(), float(reward - cost), terminated, truncated, info
 
     def close(self):
@@ -625,16 +627,17 @@ def train_round(
             report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(
                 out / "encoder.pt"
             )
-        elif learner == "decoder":
-            brain = BrainRuntime(encoder=encoder)
-            report["export_max_error"] = export_decoder(
-                model, brain, out / "decoder.json", ArenaSpec().limits
-            )
-            report["encoder_version"] = brain.encoder_version
-        (out / "round.json").write_text(json.dumps(report, indent=2))
-        return report
     finally:
         vec.close()
+    # Built after the workers are gone: parity/export only needs the actor's weights.
+    if learner == "decoder":
+        brain = BrainRuntime(encoder=encoder)
+        report["export_max_error"] = export_decoder(
+            model, brain, out / "decoder.json", ArenaSpec().limits
+        )
+        report["encoder_version"] = brain.encoder_version
+    (out / "round.json").write_text(json.dumps(report, indent=2))
+    return report
 
 
 def validate(

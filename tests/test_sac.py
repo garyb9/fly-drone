@@ -93,8 +93,14 @@ def test_encoder_env_spaces_and_metabolic_cost(tmp_path):
         assert env.action_space.shape == (8,)
         _, _, _, _, info = env.step(-np.ones(8))
         assert info["metabolic_cost"] == pytest.approx(0.0)
+        assert info["loom_cost"] == pytest.approx(0.0)
+        assert info["light_cost"] == pytest.approx(0.0)
         _, _, _, _, info = env.step(np.ones(8))
-        assert info["metabolic_cost"] == pytest.approx(0.01 * 2 + 0.002 * 2)
+        assert info["loom_cost"] == pytest.approx(0.01 * 2)
+        assert info["light_cost"] == pytest.approx(0.002 * 2)
+        assert info["metabolic_cost"] == pytest.approx(
+            info["loom_cost"] + info["light_cost"]
+        )
         np.testing.assert_array_equal(env.env.brain.cues, np.full(8, 2.0))
     finally:
         env.env.close()

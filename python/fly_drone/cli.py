@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -394,6 +395,12 @@ def main():
     else:
         from .training import evaluate
 
+        if args.encoder:
+            print(
+                "warning: --encoder is ignored (only --task free_roam flies a "
+                "learned encoder)",
+                file=sys.stderr,
+            )
         print(
             json.dumps(
                 evaluate(

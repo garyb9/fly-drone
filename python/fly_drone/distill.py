@@ -5,6 +5,7 @@ labels (teacher.py, visibility-gated) and never reaches the decoder.
 """
 
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -410,6 +411,12 @@ def screen(
     combos = combos or [(c, a) for c in controllers for a in ablations]
     per = max(1, workers // len(combos))
     learned = ("policy:", "bypass:")
+    if encoder and not any(c.startswith(learned) for c, _ in combos):
+        print(
+            "warning: --encoder is ignored (no policy:/bypass: controller flies it; "
+            "every baseline flies v4)",
+            file=sys.stderr,
+        )
     jobs = [
         (
             c,
