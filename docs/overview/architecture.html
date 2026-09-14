@@ -1,607 +1,1163 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fly–Drone Cyborg Blueprint</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap">
-<style>
-/* Tokens follow web/src/style.css (--bp-*): the blueprint look of the live viewer. */
-:root {
-  --bg: #eef5f7;
-  --sheet: #f8fbfc;
-  --rule: #c2d8df;
-  --grid: #dbe9ee;
-  --ink: #0b2a38;
-  --dim: #4d6d79;
-  --frozen: #0f7d72;
-  --frozen-fill: #e1f2ef;
-  --learned: #b3610c;
-  --learned-fill: #fbecd9;
-  --sim: #5f7f8b;
-  --pass: #1f8a55;
-  --fail: #c24a2a;
-  --pending: #8a6d12;
-  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
-  --body: "DM Sans", "Segoe UI", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #071b26; --sheet: #0b212c; --rule: #1f3d4b; --grid: #10303d;
-    --ink: #eaf6f9; --dim: #85aab5; --frozen: #8be6d5; --frozen-fill: #0e3338;
-    --learned: #ffb15c; --learned-fill: #3a2a17; --sim: #7fa0ab;
-    --pass: #7fdca6; --fail: #ff9b7a; --pending: #e7c565;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #071b26; --sheet: #0b212c; --rule: #1f3d4b; --grid: #10303d;
-  --ink: #eaf6f9; --dim: #85aab5; --frozen: #8be6d5; --frozen-fill: #0e3338;
-  --learned: #ffb15c; --learned-fill: #3a2a17; --sim: #7fa0ab;
-  --pass: #7fdca6; --fail: #ff9b7a; --pending: #e7c565;
-}
-* { box-sizing: border-box; }
-html { background: var(--bg); }
-body {
-  margin: 0;
-  background-color: var(--bg);
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 32px 32px;
-  color: var(--ink);
-  font: 16px/1.6 var(--body);
-  padding-inline: 20px;
-  padding-block: 40px 64px;
-}
-.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 40px; }
-h1, h2, h3 { font-family: var(--display); font-weight: 500; text-wrap: balance; margin: 0; }
-h1 { font-size: clamp(2.1rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.03em; }
-h2 { font-size: 1.6rem; letter-spacing: -0.02em; }
-h3 { font-size: 1.1rem; }
-p { margin: 0; max-width: 68ch; }
-.label {
-  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--dim);
-}
-code, .mono { font-family: var(--mono); font-size: 0.88em; }
-a { color: var(--frozen); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--learned); outline-offset: 3px; }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fly–Drone Cyborg Blueprint</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap"
+    />
+    <style>
+      /* Tokens follow web/src/style.css (--bp-*): the blueprint look of the live viewer. */
+      :root {
+        --bg: #eef5f7;
+        --sheet: #f8fbfc;
+        --rule: #c2d8df;
+        --grid: #dbe9ee;
+        --ink: #0b2a38;
+        --dim: #4d6d79;
+        --frozen: #0f7d72;
+        --frozen-fill: #e1f2ef;
+        --learned: #b3610c;
+        --learned-fill: #fbecd9;
+        --sim: #5f7f8b;
+        --pass: #1f8a55;
+        --fail: #c24a2a;
+        --pending: #8a6d12;
+        --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+        --body: "DM Sans", "Segoe UI", system-ui, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #071b26;
+          --sheet: #0b212c;
+          --rule: #1f3d4b;
+          --grid: #10303d;
+          --ink: #eaf6f9;
+          --dim: #85aab5;
+          --frozen: #8be6d5;
+          --frozen-fill: #0e3338;
+          --learned: #ffb15c;
+          --learned-fill: #3a2a17;
+          --sim: #7fa0ab;
+          --pass: #7fdca6;
+          --fail: #ff9b7a;
+          --pending: #e7c565;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #071b26;
+        --sheet: #0b212c;
+        --rule: #1f3d4b;
+        --grid: #10303d;
+        --ink: #eaf6f9;
+        --dim: #85aab5;
+        --frozen: #8be6d5;
+        --frozen-fill: #0e3338;
+        --learned: #ffb15c;
+        --learned-fill: #3a2a17;
+        --sim: #7fa0ab;
+        --pass: #7fdca6;
+        --fail: #ff9b7a;
+        --pending: #e7c565;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        background: var(--bg);
+      }
+      body {
+        margin: 0;
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 32px 32px;
+        color: var(--ink);
+        font: 16px/1.6 var(--body);
+        padding-inline: 20px;
+        padding-block: 40px 64px;
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        gap: 40px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--display);
+        font-weight: 500;
+        text-wrap: balance;
+        margin: 0;
+      }
+      h1 {
+        font-size: clamp(2.1rem, 5vw, 3.6rem);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+      h2 {
+        font-size: 1.6rem;
+        letter-spacing: -0.02em;
+      }
+      h3 {
+        font-size: 1.1rem;
+      }
+      p {
+        margin: 0;
+        max-width: 68ch;
+      }
+      .label {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      code,
+      .mono {
+        font-family: var(--mono);
+        font-size: 0.88em;
+      }
+      a {
+        color: var(--frozen);
+      }
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--learned);
+        outline-offset: 3px;
+      }
 
-/* Hero */
-.hero { display: grid; gap: 20px; padding-top: 12px; }
-.hero .lede { font-size: 1.15rem; color: var(--ink); }
-.hero .lede em { font-style: normal; color: var(--frozen); }
-.contract { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip {
-  font-family: var(--mono); font-size: 0.78rem; padding: 4px 10px;
-  border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); color: var(--ink);
-}
+      /* Hero */
+      .hero {
+        display: grid;
+        gap: 20px;
+        padding-top: 12px;
+      }
+      .hero .lede {
+        font-size: 1.15rem;
+        color: var(--ink);
+      }
+      .hero .lede em {
+        font-style: normal;
+        color: var(--frozen);
+      }
+      .contract {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        padding: 4px 10px;
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        background: var(--sheet);
+        color: var(--ink);
+      }
 
-/* Sheets: blueprint drawing plates with a title block */
-.sheet { background: var(--sheet); border: 1px solid var(--rule); display: grid; }
-.titleblock {
-  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
-  gap: 8px 24px; padding: 14px 20px; border-bottom: 1px solid var(--rule);
-}
-.titleblock .meta { display: flex; flex-wrap: wrap; gap: 4px 18px; }
-.sheet-body { padding: 20px; display: grid; gap: 20px; }
-.scroll { overflow-x: auto; }
-.scroll svg { display: block; min-width: 760px; width: 100%; height: auto; }
-.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.85rem; color: var(--dim); }
-.legend span { display: inline-flex; align-items: center; gap: 8px; }
-.sw { width: 22px; height: 12px; border: 1.5px solid; display: inline-block; }
-.sw.frozen { border-color: var(--frozen); background: var(--frozen-fill); }
-.sw.learned { border-color: var(--learned); background: var(--learned-fill); }
-.sw.sim { border-color: var(--sim); border-style: dashed; }
+      /* Sheets: blueprint drawing plates with a title block */
+      .sheet {
+        background: var(--sheet);
+        border: 1px solid var(--rule);
+        display: grid;
+      }
+      .titleblock {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px 24px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--rule);
+      }
+      .titleblock .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 18px;
+      }
+      .sheet-body {
+        padding: 20px;
+        display: grid;
+        gap: 20px;
+      }
+      .scroll {
+        overflow-x: auto;
+      }
+      .scroll svg {
+        display: block;
+        min-width: 760px;
+        width: 100%;
+        height: auto;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        font-size: 0.85rem;
+        color: var(--dim);
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sw {
+        width: 22px;
+        height: 12px;
+        border: 1.5px solid;
+        display: inline-block;
+      }
+      .sw.frozen {
+        border-color: var(--frozen);
+        background: var(--frozen-fill);
+      }
+      .sw.learned {
+        border-color: var(--learned);
+        background: var(--learned-fill);
+      }
+      .sw.sim {
+        border-color: var(--sim);
+        border-style: dashed;
+      }
 
-/* SVG styling through tokens */
-svg text { fill: var(--ink); font-family: var(--body); font-size: 14px; }
-svg .t-title { font-family: var(--display); font-size: 16px; font-weight: 500; }
-svg .t-dim { fill: var(--dim); font-size: 12.5px; }
-svg .t-mono { font-family: var(--mono); font-size: 12px; fill: var(--dim); }
-svg .t-edge { font-family: var(--mono); font-size: 11px; fill: var(--dim); }
-svg .box-frozen { fill: var(--frozen-fill); stroke: var(--frozen); stroke-width: 1.5; }
-svg .box-learned { fill: var(--learned-fill); stroke: var(--learned); stroke-width: 2; }
-svg .box-sim { fill: var(--sheet); stroke: var(--sim); stroke-width: 1.5; stroke-dasharray: 6 4; }
-svg .box-plain { fill: var(--sheet); stroke: var(--rule); stroke-width: 1.5; }
-svg .edge { stroke: var(--ink); stroke-width: 1.5; fill: none; }
-svg .edge-dim { stroke: var(--sim); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
-svg .edge-learned { stroke: var(--learned); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
-svg .axis { stroke: var(--rule); stroke-width: 1; }
-svg .fill-frozen { fill: var(--frozen); }
-svg .fill-learned { fill: var(--learned); }
-svg .fill-dim { fill: var(--sim); }
-svg .fill-rule { fill: var(--rule); }
-svg .fill-sheet { fill: var(--sheet); }
-svg .thr { stroke: var(--fail); stroke-width: 1.5; stroke-dasharray: 6 4; }
-svg .thr-pass { stroke: var(--pass); stroke-width: 1.5; stroke-dasharray: 6 4; }
-svg .t-pass { fill: var(--pass); font-family: var(--mono); font-size: 11.5px; }
-svg .t-fail { fill: var(--fail); font-family: var(--mono); font-size: 11.5px; }
-svg #arrow path { fill: var(--ink); }
-svg #arrow-dim path { fill: var(--sim); }
-svg #arrow-learned path { fill: var(--learned); }
+      /* SVG styling through tokens */
+      svg text {
+        fill: var(--ink);
+        font-family: var(--body);
+        font-size: 14px;
+      }
+      svg .t-title {
+        font-family: var(--display);
+        font-size: 16px;
+        font-weight: 500;
+      }
+      svg .t-dim {
+        fill: var(--dim);
+        font-size: 12.5px;
+      }
+      svg .t-mono {
+        font-family: var(--mono);
+        font-size: 12px;
+        fill: var(--dim);
+      }
+      svg .t-edge {
+        font-family: var(--mono);
+        font-size: 11px;
+        fill: var(--dim);
+      }
+      svg .box-frozen {
+        fill: var(--frozen-fill);
+        stroke: var(--frozen);
+        stroke-width: 1.5;
+      }
+      svg .box-learned {
+        fill: var(--learned-fill);
+        stroke: var(--learned);
+        stroke-width: 2;
+      }
+      svg .box-sim {
+        fill: var(--sheet);
+        stroke: var(--sim);
+        stroke-width: 1.5;
+        stroke-dasharray: 6 4;
+      }
+      svg .box-plain {
+        fill: var(--sheet);
+        stroke: var(--rule);
+        stroke-width: 1.5;
+      }
+      svg .edge {
+        stroke: var(--ink);
+        stroke-width: 1.5;
+        fill: none;
+      }
+      svg .edge-dim {
+        stroke: var(--sim);
+        stroke-width: 1.5;
+        fill: none;
+        stroke-dasharray: 5 4;
+      }
+      svg .edge-learned {
+        stroke: var(--learned);
+        stroke-width: 1.5;
+        fill: none;
+        stroke-dasharray: 5 4;
+      }
+      svg .axis {
+        stroke: var(--rule);
+        stroke-width: 1;
+      }
+      svg .fill-frozen {
+        fill: var(--frozen);
+      }
+      svg .fill-learned {
+        fill: var(--learned);
+      }
+      svg .fill-dim {
+        fill: var(--sim);
+      }
+      svg .fill-rule {
+        fill: var(--rule);
+      }
+      svg .fill-sheet {
+        fill: var(--sheet);
+      }
+      svg .thr {
+        stroke: var(--fail);
+        stroke-width: 1.5;
+        stroke-dasharray: 6 4;
+      }
+      svg .thr-pass {
+        stroke: var(--pass);
+        stroke-width: 1.5;
+        stroke-dasharray: 6 4;
+      }
+      svg .t-pass {
+        fill: var(--pass);
+        font-family: var(--mono);
+        font-size: 11.5px;
+      }
+      svg .t-fail {
+        fill: var(--fail);
+        font-family: var(--mono);
+        font-size: 11.5px;
+      }
+      svg #arrow path {
+        fill: var(--ink);
+      }
+      svg #arrow-dim path {
+        fill: var(--sim);
+      }
+      svg #arrow-learned path {
+        fill: var(--learned);
+      }
 
-/* Two-column facts */
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; }
-.panel { border: 1px solid var(--rule); padding: 16px 18px; display: grid; gap: 12px; align-content: start; }
-.panel.learned { border-color: var(--learned); }
-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
-th { font-family: var(--mono); font-weight: 500; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
-td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.math {
-  font-family: var(--mono); font-size: 0.86rem; line-height: 1.75; white-space: pre;
-  overflow-x: auto; padding: 12px 14px; border-left: 2px solid var(--frozen); background: var(--bg);
-}
-.math.learned { border-left-color: var(--learned); }
-.note { font-size: 0.92rem; color: var(--dim); }
+      /* Two-column facts */
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        gap: 20px;
+      }
+      .panel {
+        border: 1px solid var(--rule);
+        padding: 16px 18px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+      .panel.learned {
+        border-color: var(--learned);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 7px 10px 7px 0;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--mono);
+        font-weight: 500;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      td.num {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .math {
+        font-family: var(--mono);
+        font-size: 0.86rem;
+        line-height: 1.75;
+        white-space: pre;
+        overflow-x: auto;
+        padding: 12px 14px;
+        border-left: 2px solid var(--frozen);
+        background: var(--bg);
+      }
+      .math.learned {
+        border-left-color: var(--learned);
+      }
+      .note {
+        font-size: 0.92rem;
+        color: var(--dim);
+      }
 
-/* Roadmap */
-.road { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.road li {
-  display: grid; grid-template-columns: 56px 1fr auto; gap: 4px 16px; align-items: baseline;
-  padding: 14px 0; border-bottom: 1px solid var(--rule);
-}
-.road .n { font-family: var(--mono); color: var(--dim); font-size: 0.9rem; }
-.road p { grid-column: 2 / 3; color: var(--dim); font-size: 0.93rem; }
-.pill {
-  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
-  padding: 2px 9px; border: 1px solid currentColor; border-radius: 999px; white-space: nowrap;
-}
-.pill.pass { color: var(--pass); }
-.pill.fail { color: var(--fail); }
-.pill.pending { color: var(--pending); }
-.pill.idle { color: var(--dim); }
-@media (max-width: 560px) {
-  .road li { grid-template-columns: 40px 1fr; }
-  .road .pill { grid-column: 2; justify-self: start; }
-}
-footer { color: var(--dim); font-size: 0.85rem; }
-</style>
-</head>
-<body>
-<div class="wrap">
-
-<header class="hero">
-  <span class="label">fly-drone · architecture blueprint · encoder v4 · 2026-09-14</span>
-  <h1>The connectome flies. The drone is its body.</h1>
-  <p class="lede">A frozen <em>166,700-neuron</em> fly brain sees through the drone's two cameras, and
-  the drone moves because of what its <em>descending and motor neurons</em> do. The drone adds
-  only reflex-level stabilisation, the job a fly's own nerve cord and halteres do. It never decides
-  where to go. This page is the map: what is wired, what is learned, what we have measured, and
-  what comes next.</p>
-  <div class="contract" aria-label="Contract">
-    <span class="chip">only neurons reach the decoder</span>
-    <span class="chip">connectome frozen</span>
-    <span class="chip">one decoder, no mode switch</span>
-    <span class="chip">skills must vanish when their pathway is silenced</span>
-    <span class="chip">teacher sees only what the eyes can see</span>
-  </div>
-</header>
-
-<!-- SHEET: signal path -->
-<section class="sheet" aria-labelledby="s-loop">
-  <div class="titleblock">
-    <h2 id="s-loop">The closed loop</h2>
-    <div class="meta">
-      <span class="label">units SI</span><span class="label">+X fwd · +Y left · +Z up</span><span class="label">loop 25 Hz</span>
-    </div>
-  </div>
-  <div class="sheet-body">
-    <div class="legend">
-      <span><i class="sw frozen"></i>frozen (fly biology, fixed adapter)</span>
-      <span><i class="sw learned"></i>learned (trained)</span>
-      <span><i class="sw sim"></i>simulator / privileged, never an input to the brain</span>
-    </div>
-    <div class="scroll">
-<svg viewBox="0 0 1120 600" role="img" aria-labelledby="loop-title">
-  <title id="loop-title">Sense path from world through eyes, encoder and input cells into the connectome; act path from descending and motor neurons through the learned decoder, motion intent, stabiliser and rotors back into the world.</title>
-  <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
-    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
-    <marker id="arrow-learned" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
-  </defs>
-
-  <text x="20" y="28" class="label t-mono">SENSE →</text>
-  <text x="20" y="372" class="label t-mono">← ACT</text>
-
-  <!-- Top row: sense -->
-  <rect x="20" y="60" width="150" height="90" class="box-sim"/>
-  <text x="34" y="88" class="t-title">MuJoCo world</text>
-  <text x="34" y="110" class="t-dim">16 × 16 m arena</text>
-  <text x="34" y="130" class="t-mono">physics 1 kHz</text>
-
-  <rect x="200" y="60" width="150" height="90" class="box-frozen"/>
-  <text x="214" y="88" class="t-title">Two eyes</text>
-  <text x="214" y="110" class="t-dim">64 × 48 px each</text>
-  <text x="214" y="130" class="t-mono">177° field · 25 Hz</text>
-
-  <rect x="380" y="60" width="160" height="128" class="box-frozen"/>
-  <text x="394" y="88" class="t-title">Encoder v4</text>
-  <text x="394" y="110" class="t-dim">light L/R · loom L/R</text>
-  <text x="394" y="130" class="t-mono">4 currents ∈ [0, 2]</text>
-  <text x="394" y="150" class="t-edge" style="font-size:10px">free roam: learned v5 CNN →</text>
-  <text x="394" y="164" class="t-edge" style="font-size:10px">8 population currents</text>
-
-  <rect x="570" y="60" width="170" height="90" class="box-frozen"/>
-  <text x="584" y="88" class="t-title">Input cells</text>
-  <text x="584" y="110" class="t-mono">Mi1 + Tm3  3,827</text>
-  <text x="584" y="130" class="t-mono">LC4 + LPLC2  311</text>
-
-  <rect x="770" y="40" width="330" height="270" class="box-frozen"/>
-  <text x="790" y="72" class="t-title">Connectome · MaleCNS</text>
-  <text x="790" y="100" class="t-mono">166,700 LIF neurons</text>
-  <text x="790" y="120" class="t-mono">10,520,431 directed edges</text>
-  <text x="790" y="140" class="t-mono">tick 5 ms · τm 20 ms · 1-tick synapse</text>
-  <text x="790" y="178" class="t-dim">share of neurons by group</text>
-  <rect x="790" y="188" width="155.4" height="16" class="fill-dim" opacity="0.55"/>
-  <rect x="945.4" y="188" width="56" height="16" class="fill-dim" opacity="0.8"/>
-  <rect x="1001.4" y="188" width="22.9" height="16" class="fill-dim" opacity="0.4"/>
-  <rect x="1024.3" y="188" width="16" height="16" class="fill-frozen" opacity="0.5"/>
-  <rect x="1040.3" y="188" width="30.2" height="16" class="fill-dim" opacity="0.65"/>
-  <rect x="1070.5" y="188" width="5.9" height="16" class="fill-rule"/>
-  <rect x="1076.4" y="184" width="3.6" height="24" class="fill-learned"/>
-  <text x="790" y="226" class="t-edge">optic lobe 54% · brain 19% · VNC 8%</text>
-  <text x="790" y="244" class="t-edge">projection 6% · sensory 10% · other 2%</text>
-  <text x="790" y="262" class="t-edge">DN + VNC motor 1.2% (amber tick)</text>
-  <text x="790" y="292" class="t-dim">weights, signs, parameters: never trained</text>
-
-  <path d="M170 105 H196" class="edge" marker-end="url(#arrow)"/>
-  <path d="M350 105 H376" class="edge" marker-end="url(#arrow)"/>
-  <path d="M540 105 H566" class="edge" marker-end="url(#arrow)"/>
-  <path d="M740 105 H766" class="edge" marker-end="url(#arrow)"/>
-  <text x="178" y="52" class="t-edge">pixels</text>
-  <text x="352" y="52" class="t-edge">cues</text>
-  <text x="540" y="52" class="t-edge">inject</text>
-  <text x="738" y="52" class="t-edge">spikes</text>
-
-  <!-- Middle: thesis and fly mirror -->
-  <text x="140" y="220" class="t-title" style="font-size:22px">Brain decides.</text>
-  <text x="140" y="250" class="t-title" style="font-size:22px">Body executes.</text>
-  <text x="140" y="280" class="t-dim">Nothing crosses from the simulator</text>
-  <text x="140" y="298" class="t-dim">into the decoder except neural activity.</text>
-
-  <rect x="520" y="200" width="220" height="80" class="box-plain"/>
-  <text x="534" y="226" class="t-title">Illustrative fly</text>
-  <text x="534" y="248" class="t-dim">wing · thrust · steer readouts</text>
-  <text x="534" y="266" class="t-mono">display only, no feedback</text>
-  <path d="M770 240 H744" class="edge-dim" marker-end="url(#arrow-dim)"/>
-
-  <!-- Bottom row: act -->
-  <rect x="860" y="380" width="240" height="90" class="box-frozen"/>
-  <text x="874" y="408" class="t-title">Descending + VNC motor</text>
-  <text x="874" y="430" class="t-mono">2,022 traces · τ 200 ms</text>
-  <text x="874" y="450" class="t-mono">1,314 DN + 708 motor</text>
-  <path d="M980 310 V376" class="edge" marker-end="url(#arrow)"/>
-
-  <rect x="610" y="380" width="220" height="90" class="box-learned"/>
-  <text x="624" y="408" class="t-title">Decoder</text>
-  <text x="624" y="430" class="t-mono">x̂ = (f − μ) / σ</text>
-  <text x="624" y="450" class="t-mono">2022 → 64 → 64 → 4 · tanh</text>
-  <path d="M860 425 H834" class="edge" marker-end="url(#arrow)"/>
-  <text x="836" y="372" class="t-edge">features</text>
-
-  <rect x="400" y="380" width="180" height="90" class="box-frozen"/>
-  <text x="414" y="408" class="t-title">Motion intent</text>
-  <text x="414" y="430" class="t-mono">[vx, vy, vz, ψ̇]</text>
-  <text x="414" y="450" class="t-mono">max 0.7 0.5 0.3 0.8</text>
-  <path d="M610 425 H584" class="edge" marker-end="url(#arrow)"/>
-  <text x="582" y="372" class="t-edge">a ∈ [−1,1]⁴</text>
-
-  <rect x="200" y="380" width="170" height="90" class="box-sim"/>
-  <text x="214" y="408" class="t-title">Stabiliser</text>
-  <text x="214" y="430" class="t-dim">cascaded PID</text>
-  <text x="214" y="450" class="t-mono">200 Hz · true state</text>
-  <path d="M400 425 H374" class="edge" marker-end="url(#arrow)"/>
-  <text x="372" y="372" class="t-edge">setpoints</text>
-
-  <rect x="20" y="380" width="150" height="90" class="box-sim"/>
-  <text x="34" y="408" class="t-title">Mixer + rotors</text>
-  <text x="34" y="430" class="t-dim">Crazyflie X frame</text>
-  <text x="34" y="450" class="t-mono">4 motors · RPM</text>
-  <path d="M200 425 H174" class="edge" marker-end="url(#arrow)"/>
-  <path d="M95 380 V154" class="edge" marker-end="url(#arrow)"/>
-  <text x="104" y="180" class="t-edge">thrust</text>
-
-  <!-- Teacher -->
-  <rect x="610" y="515" width="220" height="70" class="box-sim"/>
-  <text x="624" y="542" class="t-title">Teacher labels</text>
-  <text x="624" y="564" class="t-mono">training only · sight-gated</text>
-  <path d="M720 515 V474" class="edge-learned" marker-end="url(#arrow-learned)"/>
-  <text x="730" y="498" class="t-edge">imitation target y</text>
-  <text x="860" y="530" class="t-edge">PPO reward r_t also trains</text>
-  <text x="860" y="548" class="t-edge">the decoder, never the brain</text>
-</svg>
-    </div>
-  </div>
-</section>
-
-<!-- SHEET: what goes in / what comes out -->
-<section class="sheet" aria-labelledby="s-io">
-  <div class="titleblock">
-    <h2 id="s-io">What the brain reads and writes</h2>
-    <span class="label">encoder v4 · bright-contrast-400-splay075-noaa-loom150</span>
-  </div>
-  <div class="sheet-body">
-    <div class="cols">
-      <div class="panel">
-        <span class="label">In · 4 currents into 4,138 cells</span>
-        <table>
-          <thead><tr><th>Role</th><th>Cells</th><th>Cue</th></tr></thead>
-          <tbody>
-            <tr><td>light_l</td><td class="num">1,903</td><td>Tm3 1,017 · Mi1 886</td></tr>
-            <tr><td>light_r</td><td class="num">1,924</td><td>Tm3 1,037 · Mi1 887</td></tr>
-            <tr><td>looming_l</td><td class="num">165</td><td>LPLC2 94 · LC4 71</td></tr>
-            <tr><td>looming_r</td><td class="num">146</td><td>LPLC2 91 · LC4 55</td></tr>
-          </tbody>
-        </table>
-        <div class="math">Y  = (0.2126 r + 0.7152 g + 0.0722 b) / 255
-B  = mean 400·max(0, Y − 0.55)      bright excess
-D  = mean 1[Y &lt; 0.18]               dark area
-light = clamp(1.5 B + 6·max(0, B − B′), 0, 2)
-loom  = clamp(150·max(0, D − D′),       0, 2)</div>
-        <p class="note">Dark area grows as 1/d² while an object closes in, so its per-frame growth
-        rises as 1/d³, a crude stand-in for the time-to-contact tuning of LC4/LPLC2. Loom fires at
-        about 1.5–2 m.</p>
-      </div>
-      <div class="panel learned">
-        <span class="label">Out · 2,022 traces → 4 drone axes</span>
-        <table>
-          <thead><tr><th>Axis</th><th>Meaning</th><th>Limit</th></tr></thead>
-          <tbody>
-            <tr><td class="num">a₀ → vx</td><td>forward / back</td><td class="num">0.7 m/s</td></tr>
-            <tr><td class="num">a₁ → vy</td><td>sidestep left / right</td><td class="num">0.5 m/s</td></tr>
-            <tr><td class="num">a₂ → vz</td><td>climb / dive</td><td class="num">0.3 m/s</td></tr>
-            <tr><td class="num">a₃ → ψ̇</td><td>turn (yaw rate)</td><td class="num">0.8 rad/s</td></tr>
-          </tbody>
-        </table>
-        <div class="math learned">a = clamp(W₃ tanh(W₂ tanh(W₁ x̂ + b₁) + b₂) + b₃, −1, 1)
-u = a ⊙ [0.7, 0.5, 0.3, 0.8]</div>
-        <p class="note">There is no hand-wired "this neuron is thrust" map to the drone. Flies have no
-        rotors, so the decoder <em>learns</em> how descending and motor activity translates into
-        the four things a quadrotor can do. The anatomical readouts (wing, thrust, steer, escape)
-        drive only the illustrative fly.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SHEET: clocks -->
-<section class="sheet" aria-labelledby="s-clock">
-  <div class="titleblock">
-    <h2 id="s-clock">One decision, 40 ms</h2>
-    <span class="label">brain_tick = physics_tick / 5 + 40</span>
-  </div>
-  <div class="sheet-body">
-    <div class="scroll">
-<svg viewBox="0 0 1000 170" role="img" aria-labelledby="clk-title">
-  <title id="clk-title">A 40 millisecond camera frame contains 8 brain ticks of 5 ms and 40 physics steps of 1 ms.</title>
-  <line x1="40" y1="120" x2="960" y2="120" class="axis"/>
-  <g class="fill-rule">
-    <rect x="40" y="108" width="1" height="12"/><rect x="63" y="108" width="1" height="12"/><rect x="86" y="108" width="1" height="12"/><rect x="109" y="108" width="1" height="12"/><rect x="132" y="108" width="1" height="12"/><rect x="155" y="108" width="1" height="12"/><rect x="178" y="108" width="1" height="12"/><rect x="201" y="108" width="1" height="12"/><rect x="224" y="108" width="1" height="12"/><rect x="247" y="108" width="1" height="12"/><rect x="270" y="108" width="1" height="12"/><rect x="293" y="108" width="1" height="12"/><rect x="316" y="108" width="1" height="12"/><rect x="339" y="108" width="1" height="12"/><rect x="362" y="108" width="1" height="12"/><rect x="385" y="108" width="1" height="12"/><rect x="408" y="108" width="1" height="12"/><rect x="431" y="108" width="1" height="12"/><rect x="454" y="108" width="1" height="12"/><rect x="477" y="108" width="1" height="12"/><rect x="500" y="108" width="1" height="12"/><rect x="523" y="108" width="1" height="12"/><rect x="546" y="108" width="1" height="12"/><rect x="569" y="108" width="1" height="12"/><rect x="592" y="108" width="1" height="12"/><rect x="615" y="108" width="1" height="12"/><rect x="638" y="108" width="1" height="12"/><rect x="661" y="108" width="1" height="12"/><rect x="684" y="108" width="1" height="12"/><rect x="707" y="108" width="1" height="12"/><rect x="730" y="108" width="1" height="12"/><rect x="753" y="108" width="1" height="12"/><rect x="776" y="108" width="1" height="12"/><rect x="799" y="108" width="1" height="12"/><rect x="822" y="108" width="1" height="12"/><rect x="845" y="108" width="1" height="12"/><rect x="868" y="108" width="1" height="12"/><rect x="891" y="108" width="1" height="12"/><rect x="914" y="108" width="1" height="12"/><rect x="937" y="108" width="1" height="12"/>
-  </g>
-  <g class="fill-frozen">
-    <rect x="40" y="80" width="3" height="40"/><rect x="155" y="80" width="3" height="40"/><rect x="270" y="80" width="3" height="40"/><rect x="385" y="80" width="3" height="40"/><rect x="500" y="80" width="3" height="40"/><rect x="615" y="80" width="3" height="40"/><rect x="730" y="80" width="3" height="40"/><rect x="845" y="80" width="3" height="40"/>
-  </g>
-  <rect x="38" y="30" width="8" height="90" class="fill-learned"/>
-  <rect x="956" y="30" width="8" height="90" class="fill-learned"/>
-  <text x="56" y="44" class="t-title">camera frame → cues → … → decoder action</text>
-  <text x="956" y="22" class="t-mono" text-anchor="end">next frame</text>
-  <text x="163" y="72" class="t-mono">brain + PID tick · 5 ms (×8)</text>
-  <text x="40" y="146" class="t-mono">physics step · 1 ms (×40)</text>
-  <text x="960" y="146" class="t-mono" text-anchor="end">40 ms</text>
-</svg>
-    </div>
-    <p class="note">Time advances by ticks, not wall clock. Each neuron integrates
-    v ← e<sup>−Δt/τm</sup>·v + I<sub>syn</sub> + I<sub>inj</sub> + b + σξ and spikes at v ≥ 1. A spike
-    reaches the next neuron one tick later. The decoder reads a 200 ms activity trace, which is the
-    brain's short-term memory within a frame.</p>
-  </div>
-</section>
-
-<!-- SHEET: training -->
-<section class="sheet" aria-labelledby="s-train">
-  <div class="titleblock">
-    <h2 id="s-train">How the decoder learns</h2>
-    <span class="label">imitation warm start → reinforcement learning (PPO)</span>
-  </div>
-  <div class="sheet-body">
-    <p>Yes, this is RL, with a warm start. Reinforcement learning from scratch on 2,022 noisy traces
-    is sample-hungry, so the decoder first imitates a sight-gated teacher with DAgger (behaviour
-    cloning in closed loop). PPO then fine-tunes it on the free-roam reward. Both stages change
-    only the amber decoder.</p>
-    <div class="scroll">
-<svg viewBox="0 0 1100 270" role="img" aria-labelledby="tr-title">
-  <title id="tr-title">Training pipeline: teacher, DAgger collect, behaviour cloning fit, screen gate looping back to collect, PPO fine-tune, and evaluation under seven brain conditions.</title>
-  <rect x="20" y="70" width="150" height="100" class="box-sim"/>
-  <text x="34" y="98" class="t-title">Teacher</text>
-  <text x="34" y="120" class="t-dim">evade · avoid ·</text>
-  <text x="34" y="138" class="t-dim">beacon · explore</text>
-  <text x="34" y="158" class="t-mono">sight-gated</text>
-
-  <rect x="200" y="70" width="150" height="100" class="box-plain"/>
-  <text x="214" y="98" class="t-title">Collect</text>
-  <text x="214" y="120" class="t-dim">student flies with</text>
-  <text x="214" y="138" class="t-dim">prob. 1 − β</text>
-  <text x="214" y="158" class="t-mono">roam-collect</text>
-
-  <rect x="380" y="70" width="150" height="100" class="box-learned"/>
-  <text x="394" y="98" class="t-title">Fit</text>
-  <text x="394" y="120" class="t-dim">drive-balanced MSE</text>
-  <text x="394" y="138" class="t-dim">held-out flights</text>
-  <text x="394" y="158" class="t-mono">roam-fit</text>
-
-  <rect x="560" y="70" width="150" height="100" class="box-frozen"/>
-  <text x="574" y="98" class="t-title">Screen</text>
-  <text x="574" y="120" class="t-dim">closed-loop flights</text>
-  <text x="574" y="138" class="t-dim">intact vs ghost</text>
-  <text x="574" y="158" class="t-mono">roam-screen</text>
-
-  <rect x="740" y="70" width="150" height="100" class="box-learned"/>
-  <text x="754" y="98" class="t-title">PPO</text>
-  <text x="754" y="120" class="t-dim">clipped surrogate</text>
-  <text x="754" y="138" class="t-dim">on reward r_t</text>
-  <text x="754" y="158" class="t-mono">train --task free_roam</text>
-
-  <rect x="920" y="70" width="160" height="100" class="box-frozen"/>
-  <text x="934" y="98" class="t-title">Evaluate</text>
-  <text x="934" y="120" class="t-dim">7 brain conditions</text>
-  <text x="934" y="138" class="t-dim">A1–A7 gates</text>
-  <text x="934" y="158" class="t-mono">50 held-out seeds</text>
-
-  <path d="M170 120 H196" class="edge" marker-end="url(#arrow)"/>
-  <path d="M350 120 H376" class="edge" marker-end="url(#arrow)"/>
-  <path d="M530 120 H556" class="edge" marker-end="url(#arrow)"/>
-  <path d="M710 120 H736" class="edge" marker-end="url(#arrow)"/>
-  <path d="M890 120 H916" class="edge" marker-end="url(#arrow)"/>
-  <path d="M635 170 V215 H275 V174" class="edge-learned" marker-end="url(#arrow-learned)"/>
-  <text x="300" y="240" class="t-edge">DAgger iterations: β = 1 → 0.5 → 0.25 → 0 (teacher always labels)</text>
-  <text x="20" y="40" class="t-mono">labels y</text>
-  <text x="740" y="40" class="t-mono">starts from the cloned decoder</text>
-</svg>
-    </div>
-    <div class="cols">
-      <div class="math learned">Imitation (fit)
-L(θ) = Σ_t w_drive(t) · ‖m_θ(x̂_t) − y_t‖²
-w_drive ∝ 1 / count(drive), mean 1
-Adam 1e−3 · 4,000 steps · batch 256
-then log σ_π ← −2.5  (std ≈ 0.08)</div>
-      <div class="math learned">Reinforcement (PPO)
-ρ_t = π_θ(a_t|o_t) / π_θold(a_t|o_t)
-L   = E[min(ρ_t Â_t, clip(ρ_t, 1±0.2) Â_t)]
-Â_t = Σ_l (γλ)^l δ_{t+l},  γ .99  λ .95
-δ_t = r_t + γV(o_{t+1}) − V(o_t)</div>
-    </div>
-    <div class="math">Free-roam reward per 40 ms step
-r_t = 0.05 − 0.05‖a‖²
-    + 20·1[beacon collected]  + 2·(d_{t−1} − d_t)·1[beacon seen]
-    + 0.5·1[new 1 m cell]      − 2·exp(−clearance² / 0.2)
-    − 2·max(0, |z − 1.1| − 0.5)²  − 20·1[pillar · wall · threat · tilt · bounds · altitude]</div>
-  </div>
-</section>
-
-<!-- SHEET: evidence -->
-<section class="sheet" aria-labelledby="s-evidence">
-  <div class="titleblock">
-    <h2 id="s-evidence">Evidence so far</h2>
-    <span class="label">teacher gate (A3) · 10 seeds × 60 s · level 3</span>
-  </div>
-  <div class="sheet-body">
-    <div class="cols">
-      <div class="panel">
-        <h3>Where the thrown ball is aimed decides whether dodging proves sight</h3>
-        <div class="scroll">
-<svg viewBox="0 0 640 300" role="img" aria-labelledby="dg-title" style="min-width:520px">
-  <title id="dg-title">Near-throw dodge rates. Aimed at launch position: sighted teacher 0.96, blind teacher 0.57, random 0.45. Aimed ahead of the drone: sighted teacher 0.90, blind teacher 0.12, random 0.68.</title>
-  <line x1="60" y1="250" x2="620" y2="250" class="axis"/>
-  <line x1="60" y1="30" x2="60" y2="250" class="axis"/>
-  <text x="52" y="254" class="t-mono" text-anchor="end">0</text>
-  <text x="52" y="144" class="t-mono" text-anchor="end">0.5</text>
-  <text x="52" y="34" class="t-mono" text-anchor="end">1</text>
-  <line x1="60" y1="74" x2="620" y2="74" class="thr-pass"/>
-  <line x1="60" y1="184" x2="620" y2="184" class="thr"/>
-  <text x="618" y="68" class="t-pass" text-anchor="end">sighted ≥ 0.8</text>
-  <text x="618" y="178" class="t-fail" text-anchor="end">blind ≤ 0.3</text>
-
-  <rect x="115" y="38.8" width="50" height="211.2" class="fill-frozen"/>
-  <rect x="175" y="124.6" width="50" height="125.4" class="fill-learned"/>
-  <rect x="235" y="151" width="50" height="99" class="fill-dim"/>
-  <text x="140" y="32" class="t-mono" text-anchor="middle">.96</text>
-  <text x="200" y="118" class="t-mono" text-anchor="middle">.57</text>
-  <text x="260" y="145" class="t-mono" text-anchor="middle">.45</text>
-
-  <rect x="385" y="52" width="50" height="198" class="fill-frozen"/>
-  <rect x="445" y="223.6" width="50" height="26.4" class="fill-learned"/>
-  <rect x="505" y="100.4" width="50" height="149.6" class="fill-dim"/>
-  <text x="410" y="46" class="t-mono" text-anchor="middle">.90</text>
-  <text x="470" y="217" class="t-mono" text-anchor="middle">.12</text>
-  <text x="530" y="94" class="t-mono" text-anchor="middle">.68</text>
-
-  <text x="200" y="274" class="t-dim" text-anchor="middle">aimed at launch point</text>
-  <text x="470" y="274" class="t-dim" text-anchor="middle">aimed ahead (current)</text>
-</svg>
+      /* Roadmap */
+      .road {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0;
+      }
+      .road li {
+        display: grid;
+        grid-template-columns: 56px 1fr auto;
+        gap: 4px 16px;
+        align-items: baseline;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      .road .n {
+        font-family: var(--mono);
+        color: var(--dim);
+        font-size: 0.9rem;
+      }
+      .road p {
+        grid-column: 2 / 3;
+        color: var(--dim);
+        font-size: 0.93rem;
+      }
+      .pill {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 2px 9px;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .pill.pass {
+        color: var(--pass);
+      }
+      .pill.fail {
+        color: var(--fail);
+      }
+      .pill.pending {
+        color: var(--pending);
+      }
+      .pill.idle {
+        color: var(--dim);
+      }
+      @media (max-width: 560px) {
+        .road li {
+          grid-template-columns: 40px 1fr;
+        }
+        .road .pill {
+          grid-column: 2;
+          justify-self: start;
+        }
+      }
+      footer {
+        color: var(--dim);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <span class="label">fly-drone · architecture blueprint · encoder v4 · 2026-09-14</span>
+        <h1>The connectome flies. The drone is its body.</h1>
+        <p class="lede">
+          A frozen <em>166,700-neuron</em> fly brain sees through the drone's two cameras, and the
+          drone moves because of what its <em>descending and motor neurons</em> do. The drone adds
+          only reflex-level stabilisation, the job a fly's own nerve cord and halteres do. It never
+          decides where to go. This page is the map: what is wired, what is learned, what we have
+          measured, and what comes next.
+        </p>
+        <div class="contract" aria-label="Contract">
+          <span class="chip">only neurons reach the decoder</span>
+          <span class="chip">connectome frozen</span>
+          <span class="chip">one decoder, no mode switch</span>
+          <span class="chip">skills must vanish when their pathway is silenced</span>
+          <span class="chip">teacher sees only what the eyes can see</span>
         </div>
-        <div class="legend">
-          <span><i class="sw" style="background:var(--frozen);border-color:var(--frozen)"></i>teacher, sees threat</span>
-          <span><i class="sw" style="background:var(--learned);border-color:var(--learned)"></i>teacher, threat invisible</span>
-          <span><i class="sw" style="background:var(--sim);border-color:var(--sim)"></i>random flight</span>
+      </header>
+
+      <!-- SHEET: signal path -->
+      <section class="sheet" aria-labelledby="s-loop">
+        <div class="titleblock">
+          <h2 id="s-loop">The closed loop</h2>
+          <div class="meta">
+            <span class="label">units SI</span><span class="label">+X fwd · +Y left · +Z up</span
+            ><span class="label">loop 25 Hz</span>
+          </div>
         </div>
-        <p class="note">Scored as pre-registered: only throws that hit or came within 2 m. Aimed ahead,
-        the sighted teacher dodges 0.90 (worst side 0.83) and the blind one 0.12, so a dodge now
-        means the fly saw it. Confirmed on 20 fresh seeds: sighted 0.96 (worst side 0.92), blind
-        0.26, random 0.57.</p>
-      </div>
-      <div class="panel">
-        <h3>Why the dodge climbs instead of sidestepping</h3>
-        <div class="scroll">
-<svg viewBox="0 0 640 190" role="img" aria-labelledby="sr-title" style="min-width:520px">
-  <title id="sr-title">Time to reach 80 percent of a commanded velocity step: vertical 0.69 seconds, lateral 1.48 seconds. A threat first seen at 2 m reaches the drone in about 1.45 seconds.</title>
-  <line x1="110" y1="120" x2="610" y2="120" class="axis"/>
-  <rect x="110" y="24" width="172.5" height="28" class="fill-frozen"/>
-  <rect x="110" y="68" width="370" height="28" class="fill-dim"/>
-  <text x="100" y="43" class="t-mono" text-anchor="end">vertical</text>
-  <text x="100" y="87" class="t-mono" text-anchor="end">lateral</text>
-  <text x="290" y="43" class="t-mono">0.69 s</text>
-  <text x="488" y="87" class="t-mono">1.48 s</text>
-  <line x1="472" y1="14" x2="472" y2="120" class="thr"/>
-  <text x="466" y="176" class="t-fail" text-anchor="end">threat seen at 2 m → contact ≈ 1.45 s</text>
-  <text x="110" y="138" class="t-mono" text-anchor="middle">0</text>
-  <text x="235" y="138" class="t-mono" text-anchor="middle">0.5</text>
-  <text x="360" y="138" class="t-mono" text-anchor="middle">1.0</text>
-  <text x="610" y="138" class="t-mono" text-anchor="middle">2.0 s</text>
-</svg>
+        <div class="sheet-body">
+          <div class="legend">
+            <span><i class="sw frozen"></i>frozen (fly biology, fixed adapter)</span>
+            <span><i class="sw learned"></i>learned (trained)</span>
+            <span><i class="sw sim"></i>simulator / privileged, never an input to the brain</span>
+          </div>
+          <div class="scroll">
+            <svg viewBox="0 0 1120 600" role="img" aria-labelledby="loop-title">
+              <title id="loop-title">
+                Sense path from world through eyes, encoder and input cells into the connectome; act
+                path from descending and motor neurons through the learned decoder, motion intent,
+                stabiliser and rotors back into the world.
+              </title>
+              <defs>
+                <marker
+                  id="arrow"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="8"
+                  markerHeight="8"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" />
+                </marker>
+                <marker
+                  id="arrow-dim"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="8"
+                  markerHeight="8"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" />
+                </marker>
+                <marker
+                  id="arrow-learned"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="8"
+                  markerHeight="8"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" />
+                </marker>
+              </defs>
+
+              <text x="20" y="28" class="label t-mono">SENSE →</text>
+              <text x="20" y="372" class="label t-mono">← ACT</text>
+
+              <!-- Top row: sense -->
+              <rect x="20" y="60" width="150" height="90" class="box-sim" />
+              <text x="34" y="88" class="t-title">MuJoCo world</text>
+              <text x="34" y="110" class="t-dim">16 × 16 m arena</text>
+              <text x="34" y="130" class="t-mono">physics 1 kHz</text>
+
+              <rect x="200" y="60" width="150" height="90" class="box-frozen" />
+              <text x="214" y="88" class="t-title">Two eyes</text>
+              <text x="214" y="110" class="t-dim">64 × 48 px each</text>
+              <text x="214" y="130" class="t-mono">177° field · 25 Hz</text>
+
+              <rect x="380" y="60" width="160" height="128" class="box-frozen" />
+              <text x="394" y="88" class="t-title">Encoder v4</text>
+              <text x="394" y="110" class="t-dim">light L/R · loom L/R</text>
+              <text x="394" y="130" class="t-mono">4 currents ∈ [0, 2]</text>
+              <text x="394" y="150" class="t-edge" style="font-size: 10px">
+                free roam: learned v5 CNN →
+              </text>
+              <text x="394" y="164" class="t-edge" style="font-size: 10px">
+                8 population currents
+              </text>
+
+              <rect x="570" y="60" width="170" height="90" class="box-frozen" />
+              <text x="584" y="88" class="t-title">Input cells</text>
+              <text x="584" y="110" class="t-mono">Mi1 + Tm3 3,827</text>
+              <text x="584" y="130" class="t-mono">LC4 + LPLC2 311</text>
+
+              <rect x="770" y="40" width="330" height="270" class="box-frozen" />
+              <text x="790" y="72" class="t-title">Connectome · MaleCNS</text>
+              <text x="790" y="100" class="t-mono">166,700 LIF neurons</text>
+              <text x="790" y="120" class="t-mono">10,520,431 directed edges</text>
+              <text x="790" y="140" class="t-mono">tick 5 ms · τm 20 ms · 1-tick synapse</text>
+              <text x="790" y="178" class="t-dim">share of neurons by group</text>
+              <rect x="790" y="188" width="155.4" height="16" class="fill-dim" opacity="0.55" />
+              <rect x="945.4" y="188" width="56" height="16" class="fill-dim" opacity="0.8" />
+              <rect x="1001.4" y="188" width="22.9" height="16" class="fill-dim" opacity="0.4" />
+              <rect x="1024.3" y="188" width="16" height="16" class="fill-frozen" opacity="0.5" />
+              <rect x="1040.3" y="188" width="30.2" height="16" class="fill-dim" opacity="0.65" />
+              <rect x="1070.5" y="188" width="5.9" height="16" class="fill-rule" />
+              <rect x="1076.4" y="184" width="3.6" height="24" class="fill-learned" />
+              <text x="790" y="226" class="t-edge">optic lobe 54% · brain 19% · VNC 8%</text>
+              <text x="790" y="244" class="t-edge">projection 6% · sensory 10% · other 2%</text>
+              <text x="790" y="262" class="t-edge">DN + VNC motor 1.2% (amber tick)</text>
+              <text x="790" y="292" class="t-dim">weights, signs, parameters: never trained</text>
+
+              <path d="M170 105 H196" class="edge" marker-end="url(#arrow)" />
+              <path d="M350 105 H376" class="edge" marker-end="url(#arrow)" />
+              <path d="M540 105 H566" class="edge" marker-end="url(#arrow)" />
+              <path d="M740 105 H766" class="edge" marker-end="url(#arrow)" />
+              <text x="178" y="52" class="t-edge">pixels</text>
+              <text x="352" y="52" class="t-edge">cues</text>
+              <text x="540" y="52" class="t-edge">inject</text>
+              <text x="738" y="52" class="t-edge">spikes</text>
+
+              <!-- Middle: thesis and fly mirror -->
+              <text x="140" y="220" class="t-title" style="font-size: 22px">Brain decides.</text>
+              <text x="140" y="250" class="t-title" style="font-size: 22px">Body executes.</text>
+              <text x="140" y="280" class="t-dim">Nothing crosses from the simulator</text>
+              <text x="140" y="298" class="t-dim">into the decoder except neural activity.</text>
+
+              <rect x="520" y="200" width="220" height="80" class="box-plain" />
+              <text x="534" y="226" class="t-title">Illustrative fly</text>
+              <text x="534" y="248" class="t-dim">wing · thrust · steer readouts</text>
+              <text x="534" y="266" class="t-mono">display only, no feedback</text>
+              <path d="M770 240 H744" class="edge-dim" marker-end="url(#arrow-dim)" />
+
+              <!-- Bottom row: act -->
+              <rect x="860" y="380" width="240" height="90" class="box-frozen" />
+              <text x="874" y="408" class="t-title">Descending + VNC motor</text>
+              <text x="874" y="430" class="t-mono">2,022 traces · τ 200 ms</text>
+              <text x="874" y="450" class="t-mono">1,314 DN + 708 motor</text>
+              <path d="M980 310 V376" class="edge" marker-end="url(#arrow)" />
+
+              <rect x="610" y="380" width="220" height="90" class="box-learned" />
+              <text x="624" y="408" class="t-title">Decoder</text>
+              <text x="624" y="430" class="t-mono">x̂ = (f − μ) / σ</text>
+              <text x="624" y="450" class="t-mono">2022 → 64 → 64 → 4 · tanh</text>
+              <path d="M860 425 H834" class="edge" marker-end="url(#arrow)" />
+              <text x="836" y="372" class="t-edge">features</text>
+
+              <rect x="400" y="380" width="180" height="90" class="box-frozen" />
+              <text x="414" y="408" class="t-title">Motion intent</text>
+              <text x="414" y="430" class="t-mono">[vx, vy, vz, ψ̇]</text>
+              <text x="414" y="450" class="t-mono">max 0.7 0.5 0.3 0.8</text>
+              <path d="M610 425 H584" class="edge" marker-end="url(#arrow)" />
+              <text x="582" y="372" class="t-edge">a ∈ [−1,1]⁴</text>
+
+              <rect x="200" y="380" width="170" height="90" class="box-sim" />
+              <text x="214" y="408" class="t-title">Stabiliser</text>
+              <text x="214" y="430" class="t-dim">cascaded PID</text>
+              <text x="214" y="450" class="t-mono">200 Hz · true state</text>
+              <path d="M400 425 H374" class="edge" marker-end="url(#arrow)" />
+              <text x="372" y="372" class="t-edge">setpoints</text>
+
+              <rect x="20" y="380" width="150" height="90" class="box-sim" />
+              <text x="34" y="408" class="t-title">Mixer + rotors</text>
+              <text x="34" y="430" class="t-dim">Crazyflie X frame</text>
+              <text x="34" y="450" class="t-mono">4 motors · RPM</text>
+              <path d="M200 425 H174" class="edge" marker-end="url(#arrow)" />
+              <path d="M95 380 V154" class="edge" marker-end="url(#arrow)" />
+              <text x="104" y="180" class="t-edge">thrust</text>
+
+              <!-- Teacher -->
+              <rect x="610" y="515" width="220" height="70" class="box-sim" />
+              <text x="624" y="542" class="t-title">Teacher labels</text>
+              <text x="624" y="564" class="t-mono">training only · sight-gated</text>
+              <path d="M720 515 V474" class="edge-learned" marker-end="url(#arrow-learned)" />
+              <text x="730" y="498" class="t-edge">imitation target y</text>
+              <text x="860" y="530" class="t-edge">PPO reward r_t also trains</text>
+              <text x="860" y="548" class="t-edge">the decoder, never the brain</text>
+            </svg>
+          </div>
         </div>
-        <p class="note">Time to reach 80% of a commanded step (<code>roam-step-response</code>).
-        Vertical is direct thrust. Lateral must tilt the airframe first, which takes longer than
-        the threat takes to arrive.</p>
-        <table>
-          <thead><tr><th>Teacher fix</th><th>Before</th><th>After</th></tr></thead>
-          <tbody>
-            <tr><td>Corner trap: avoid turn flipped between walls</td><td class="num">2.0 hits/min</td><td class="num">0.1 hits/min</td></tr>
-            <tr><td>Scripted idle arc → random search cast</td><td>fixed</td><td>resampled 1.5–3.5 s</td></tr>
-            <tr><td>Throws from on top of a cornered drone</td><td>allowed</td><td class="num">refused &lt; 2.5 m</td></tr>
-          </tbody>
-        </table>
-      </div>
+      </section>
+
+      <!-- SHEET: what goes in / what comes out -->
+      <section class="sheet" aria-labelledby="s-io">
+        <div class="titleblock">
+          <h2 id="s-io">What the brain reads and writes</h2>
+          <span class="label">encoder v4 · bright-contrast-400-splay075-noaa-loom150</span>
+        </div>
+        <div class="sheet-body">
+          <div class="cols">
+            <div class="panel">
+              <span class="label">In · 4 currents into 4,138 cells</span>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Cells</th>
+                    <th>Cue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>light_l</td>
+                    <td class="num">1,903</td>
+                    <td>Tm3 1,017 · Mi1 886</td>
+                  </tr>
+                  <tr>
+                    <td>light_r</td>
+                    <td class="num">1,924</td>
+                    <td>Tm3 1,037 · Mi1 887</td>
+                  </tr>
+                  <tr>
+                    <td>looming_l</td>
+                    <td class="num">165</td>
+                    <td>LPLC2 94 · LC4 71</td>
+                  </tr>
+                  <tr>
+                    <td>looming_r</td>
+                    <td class="num">146</td>
+                    <td>LPLC2 91 · LC4 55</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="math">
+                Y = (0.2126 r + 0.7152 g + 0.0722 b) / 255 B = mean 400·max(0, Y − 0.55) bright
+                excess D = mean 1[Y &lt; 0.18] dark area light = clamp(1.5 B + 6·max(0, B − B′), 0,
+                2) loom = clamp(150·max(0, D − D′), 0, 2)
+              </div>
+              <p class="note">
+                Dark area grows as 1/d² while an object closes in, so its per-frame growth rises as
+                1/d³, a crude stand-in for the time-to-contact tuning of LC4/LPLC2. Loom fires at
+                about 1.5–2 m.
+              </p>
+            </div>
+            <div class="panel learned">
+              <span class="label">Out · 2,022 traces → 4 drone axes</span>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Axis</th>
+                    <th>Meaning</th>
+                    <th>Limit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="num">a₀ → vx</td>
+                    <td>forward / back</td>
+                    <td class="num">0.7 m/s</td>
+                  </tr>
+                  <tr>
+                    <td class="num">a₁ → vy</td>
+                    <td>sidestep left / right</td>
+                    <td class="num">0.5 m/s</td>
+                  </tr>
+                  <tr>
+                    <td class="num">a₂ → vz</td>
+                    <td>climb / dive</td>
+                    <td class="num">0.3 m/s</td>
+                  </tr>
+                  <tr>
+                    <td class="num">a₃ → ψ̇</td>
+                    <td>turn (yaw rate)</td>
+                    <td class="num">0.8 rad/s</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="math learned">
+                a = clamp(W₃ tanh(W₂ tanh(W₁ x̂ + b₁) + b₂) + b₃, −1, 1) u = a ⊙ [0.7, 0.5, 0.3, 0.8]
+              </div>
+              <p class="note">
+                There is no hand-wired "this neuron is thrust" map to the drone. Flies have no
+                rotors, so the decoder <em>learns</em> how descending and motor activity translates
+                into the four things a quadrotor can do. The anatomical readouts (wing, thrust,
+                steer, escape) drive only the illustrative fly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHEET: clocks -->
+      <section class="sheet" aria-labelledby="s-clock">
+        <div class="titleblock">
+          <h2 id="s-clock">One decision, 40 ms</h2>
+          <span class="label">brain_tick = physics_tick / 5 + 40</span>
+        </div>
+        <div class="sheet-body">
+          <div class="scroll">
+            <svg viewBox="0 0 1000 170" role="img" aria-labelledby="clk-title">
+              <title id="clk-title">
+                A 40 millisecond camera frame contains 8 brain ticks of 5 ms and 40 physics steps of
+                1 ms.
+              </title>
+              <line x1="40" y1="120" x2="960" y2="120" class="axis" />
+              <g class="fill-rule">
+                <rect x="40" y="108" width="1" height="12" />
+                <rect x="63" y="108" width="1" height="12" />
+                <rect x="86" y="108" width="1" height="12" />
+                <rect x="109" y="108" width="1" height="12" />
+                <rect x="132" y="108" width="1" height="12" />
+                <rect x="155" y="108" width="1" height="12" />
+                <rect x="178" y="108" width="1" height="12" />
+                <rect x="201" y="108" width="1" height="12" />
+                <rect x="224" y="108" width="1" height="12" />
+                <rect x="247" y="108" width="1" height="12" />
+                <rect x="270" y="108" width="1" height="12" />
+                <rect x="293" y="108" width="1" height="12" />
+                <rect x="316" y="108" width="1" height="12" />
+                <rect x="339" y="108" width="1" height="12" />
+                <rect x="362" y="108" width="1" height="12" />
+                <rect x="385" y="108" width="1" height="12" />
+                <rect x="408" y="108" width="1" height="12" />
+                <rect x="431" y="108" width="1" height="12" />
+                <rect x="454" y="108" width="1" height="12" />
+                <rect x="477" y="108" width="1" height="12" />
+                <rect x="500" y="108" width="1" height="12" />
+                <rect x="523" y="108" width="1" height="12" />
+                <rect x="546" y="108" width="1" height="12" />
+                <rect x="569" y="108" width="1" height="12" />
+                <rect x="592" y="108" width="1" height="12" />
+                <rect x="615" y="108" width="1" height="12" />
+                <rect x="638" y="108" width="1" height="12" />
+                <rect x="661" y="108" width="1" height="12" />
+                <rect x="684" y="108" width="1" height="12" />
+                <rect x="707" y="108" width="1" height="12" />
+                <rect x="730" y="108" width="1" height="12" />
+                <rect x="753" y="108" width="1" height="12" />
+                <rect x="776" y="108" width="1" height="12" />
+                <rect x="799" y="108" width="1" height="12" />
+                <rect x="822" y="108" width="1" height="12" />
+                <rect x="845" y="108" width="1" height="12" />
+                <rect x="868" y="108" width="1" height="12" />
+                <rect x="891" y="108" width="1" height="12" />
+                <rect x="914" y="108" width="1" height="12" />
+                <rect x="937" y="108" width="1" height="12" />
+              </g>
+              <g class="fill-frozen">
+                <rect x="40" y="80" width="3" height="40" />
+                <rect x="155" y="80" width="3" height="40" />
+                <rect x="270" y="80" width="3" height="40" />
+                <rect x="385" y="80" width="3" height="40" />
+                <rect x="500" y="80" width="3" height="40" />
+                <rect x="615" y="80" width="3" height="40" />
+                <rect x="730" y="80" width="3" height="40" />
+                <rect x="845" y="80" width="3" height="40" />
+              </g>
+              <rect x="38" y="30" width="8" height="90" class="fill-learned" />
+              <rect x="956" y="30" width="8" height="90" class="fill-learned" />
+              <text x="56" y="44" class="t-title">camera frame → cues → … → decoder action</text>
+              <text x="956" y="22" class="t-mono" text-anchor="end">next frame</text>
+              <text x="163" y="72" class="t-mono">brain + PID tick · 5 ms (×8)</text>
+              <text x="40" y="146" class="t-mono">physics step · 1 ms (×40)</text>
+              <text x="960" y="146" class="t-mono" text-anchor="end">40 ms</text>
+            </svg>
+          </div>
+          <p class="note">
+            Time advances by ticks, not wall clock. Each neuron integrates v ← e<sup>−Δt/τm</sup>·v
+            + I<sub>syn</sub> + I<sub>inj</sub> + b + σξ and spikes at v ≥ 1. A spike reaches the
+            next neuron one tick later. The decoder reads a 200 ms activity trace, which is the
+            brain's short-term memory within a frame.
+          </p>
+        </div>
+      </section>
+
+      <!-- SHEET: training -->
+      <section class="sheet" aria-labelledby="s-train">
+        <div class="titleblock">
+          <h2 id="s-train">How the decoder learns</h2>
+          <span class="label">imitation warm start → reinforcement learning (PPO)</span>
+        </div>
+        <div class="sheet-body">
+          <p>
+            Yes, this is RL, with a warm start. Reinforcement learning from scratch on 2,022 noisy
+            traces is sample-hungry, so the decoder first imitates a sight-gated teacher with DAgger
+            (behaviour cloning in closed loop). PPO then fine-tunes it on the free-roam reward. Both
+            stages change only the amber decoder.
+          </p>
+          <div class="scroll">
+            <svg viewBox="0 0 1100 270" role="img" aria-labelledby="tr-title">
+              <title id="tr-title">
+                Training pipeline: teacher, DAgger collect, behaviour cloning fit, screen gate
+                looping back to collect, PPO fine-tune, and evaluation under seven brain conditions.
+              </title>
+              <rect x="20" y="70" width="150" height="100" class="box-sim" />
+              <text x="34" y="98" class="t-title">Teacher</text>
+              <text x="34" y="120" class="t-dim">evade · avoid ·</text>
+              <text x="34" y="138" class="t-dim">beacon · explore</text>
+              <text x="34" y="158" class="t-mono">sight-gated</text>
+
+              <rect x="200" y="70" width="150" height="100" class="box-plain" />
+              <text x="214" y="98" class="t-title">Collect</text>
+              <text x="214" y="120" class="t-dim">student flies with</text>
+              <text x="214" y="138" class="t-dim">prob. 1 − β</text>
+              <text x="214" y="158" class="t-mono">roam-collect</text>
+
+              <rect x="380" y="70" width="150" height="100" class="box-learned" />
+              <text x="394" y="98" class="t-title">Fit</text>
+              <text x="394" y="120" class="t-dim">drive-balanced MSE</text>
+              <text x="394" y="138" class="t-dim">held-out flights</text>
+              <text x="394" y="158" class="t-mono">roam-fit</text>
+
+              <rect x="560" y="70" width="150" height="100" class="box-frozen" />
+              <text x="574" y="98" class="t-title">Screen</text>
+              <text x="574" y="120" class="t-dim">closed-loop flights</text>
+              <text x="574" y="138" class="t-dim">intact vs ghost</text>
+              <text x="574" y="158" class="t-mono">roam-screen</text>
+
+              <rect x="740" y="70" width="150" height="100" class="box-learned" />
+              <text x="754" y="98" class="t-title">PPO</text>
+              <text x="754" y="120" class="t-dim">clipped surrogate</text>
+              <text x="754" y="138" class="t-dim">on reward r_t</text>
+              <text x="754" y="158" class="t-mono">train --task free_roam</text>
+
+              <rect x="920" y="70" width="160" height="100" class="box-frozen" />
+              <text x="934" y="98" class="t-title">Evaluate</text>
+              <text x="934" y="120" class="t-dim">7 brain conditions</text>
+              <text x="934" y="138" class="t-dim">A1–A7 gates</text>
+              <text x="934" y="158" class="t-mono">50 held-out seeds</text>
+
+              <path d="M170 120 H196" class="edge" marker-end="url(#arrow)" />
+              <path d="M350 120 H376" class="edge" marker-end="url(#arrow)" />
+              <path d="M530 120 H556" class="edge" marker-end="url(#arrow)" />
+              <path d="M710 120 H736" class="edge" marker-end="url(#arrow)" />
+              <path d="M890 120 H916" class="edge" marker-end="url(#arrow)" />
+              <path
+                d="M635 170 V215 H275 V174"
+                class="edge-learned"
+                marker-end="url(#arrow-learned)"
+              />
+              <text x="300" y="240" class="t-edge">
+                DAgger iterations: β = 1 → 0.5 → 0.25 → 0 (teacher always labels)
+              </text>
+              <text x="20" y="40" class="t-mono">labels y</text>
+              <text x="740" y="40" class="t-mono">starts from the cloned decoder</text>
+            </svg>
+          </div>
+          <div class="cols">
+            <div class="math learned">
+              Imitation (fit) L(θ) = Σ_t w_drive(t) · ‖m_θ(x̂_t) − y_t‖² w_drive ∝ 1 / count(drive),
+              mean 1 Adam 1e−3 · 4,000 steps · batch 256 then log σ_π ← −2.5 (std ≈ 0.08)
+            </div>
+            <div class="math learned">
+              Reinforcement (PPO) ρ_t = π_θ(a_t|o_t) / π_θold(a_t|o_t) L = E[min(ρ_t Â_t, clip(ρ_t,
+              1±0.2) Â_t)] Â_t = Σ_l (γλ)^l δ_{t+l}, γ .99 λ .95 δ_t = r_t + γV(o_{t+1}) − V(o_t)
+            </div>
+          </div>
+          <div class="math">
+            Free-roam reward per 40 ms step r_t = 0.05 − 0.05‖a‖² + 20·1[beacon collected] +
+            2·(d_{t−1} − d_t)·1[beacon seen] + 0.5·1[new 1 m cell] − 2·exp(−clearance² / 0.2) −
+            2·max(0, |z − 1.1| − 0.5)² − 20·1[pillar · wall · threat · tilt · bounds · altitude]
+          </div>
+        </div>
+      </section>
+
+      <!-- SHEET: evidence -->
+      <section class="sheet" aria-labelledby="s-evidence">
+        <div class="titleblock">
+          <h2 id="s-evidence">Evidence so far</h2>
+          <span class="label">teacher gate (A3) · 10 seeds × 60 s · level 3</span>
+        </div>
+        <div class="sheet-body">
+          <div class="cols">
+            <div class="panel">
+              <h3>Where the thrown ball is aimed decides whether dodging proves sight</h3>
+              <div class="scroll">
+                <svg
+                  viewBox="0 0 640 300"
+                  role="img"
+                  aria-labelledby="dg-title"
+                  style="min-width: 520px"
+                >
+                  <title id="dg-title">
+                    Near-throw dodge rates. Aimed at launch position: sighted teacher 0.96, blind
+                    teacher 0.57, random 0.45. Aimed ahead of the drone: sighted teacher 0.90, blind
+                    teacher 0.12, random 0.68.
+                  </title>
+                  <line x1="60" y1="250" x2="620" y2="250" class="axis" />
+                  <line x1="60" y1="30" x2="60" y2="250" class="axis" />
+                  <text x="52" y="254" class="t-mono" text-anchor="end">0</text>
+                  <text x="52" y="144" class="t-mono" text-anchor="end">0.5</text>
+                  <text x="52" y="34" class="t-mono" text-anchor="end">1</text>
+                  <line x1="60" y1="74" x2="620" y2="74" class="thr-pass" />
+                  <line x1="60" y1="184" x2="620" y2="184" class="thr" />
+                  <text x="618" y="68" class="t-pass" text-anchor="end">sighted ≥ 0.8</text>
+                  <text x="618" y="178" class="t-fail" text-anchor="end">blind ≤ 0.3</text>
+
+                  <rect x="115" y="38.8" width="50" height="211.2" class="fill-frozen" />
+                  <rect x="175" y="124.6" width="50" height="125.4" class="fill-learned" />
+                  <rect x="235" y="151" width="50" height="99" class="fill-dim" />
+                  <text x="140" y="32" class="t-mono" text-anchor="middle">.96</text>
+                  <text x="200" y="118" class="t-mono" text-anchor="middle">.57</text>
+                  <text x="260" y="145" class="t-mono" text-anchor="middle">.45</text>
+
+                  <rect x="385" y="52" width="50" height="198" class="fill-frozen" />
+                  <rect x="445" y="223.6" width="50" height="26.4" class="fill-learned" />
+                  <rect x="505" y="100.4" width="50" height="149.6" class="fill-dim" />
+                  <text x="410" y="46" class="t-mono" text-anchor="middle">.90</text>
+                  <text x="470" y="217" class="t-mono" text-anchor="middle">.12</text>
+                  <text x="530" y="94" class="t-mono" text-anchor="middle">.68</text>
+
+                  <text x="200" y="274" class="t-dim" text-anchor="middle">
+                    aimed at launch point
+                  </text>
+                  <text x="470" y="274" class="t-dim" text-anchor="middle">
+                    aimed ahead (current)
+                  </text>
+                </svg>
+              </div>
+              <div class="legend">
+                <span
+                  ><i class="sw" style="background: var(--frozen); border-color: var(--frozen)"></i
+                  >teacher, sees threat</span
+                >
+                <span
+                  ><i
+                    class="sw"
+                    style="background: var(--learned); border-color: var(--learned)"
+                  ></i
+                  >teacher, threat invisible</span
+                >
+                <span
+                  ><i class="sw" style="background: var(--sim); border-color: var(--sim)"></i>random
+                  flight</span
+                >
+              </div>
+              <p class="note">
+                Scored as pre-registered: only throws that hit or came within 2 m. Aimed ahead, the
+                sighted teacher dodges 0.90 (worst side 0.83) and the blind one 0.12, so a dodge now
+                means the fly saw it. Confirmed on 20 fresh seeds: sighted 0.96 (worst side 0.92),
+                blind 0.26, random 0.57.
+              </p>
+            </div>
+            <div class="panel">
+              <h3>Why the dodge climbs instead of sidestepping</h3>
+              <div class="scroll">
+                <svg
+                  viewBox="0 0 640 190"
+                  role="img"
+                  aria-labelledby="sr-title"
+                  style="min-width: 520px"
+                >
+                  <title id="sr-title">
+                    Time to reach 80 percent of a commanded velocity step: vertical 0.69 seconds,
+                    lateral 1.48 seconds. A threat first seen at 2 m reaches the drone in about 1.45
+                    seconds.
+                  </title>
+                  <line x1="110" y1="120" x2="610" y2="120" class="axis" />
+                  <rect x="110" y="24" width="172.5" height="28" class="fill-frozen" />
+                  <rect x="110" y="68" width="370" height="28" class="fill-dim" />
+                  <text x="100" y="43" class="t-mono" text-anchor="end">vertical</text>
+                  <text x="100" y="87" class="t-mono" text-anchor="end">lateral</text>
+                  <text x="290" y="43" class="t-mono">0.69 s</text>
+                  <text x="488" y="87" class="t-mono">1.48 s</text>
+                  <line x1="472" y1="14" x2="472" y2="120" class="thr" />
+                  <text x="466" y="176" class="t-fail" text-anchor="end">
+                    threat seen at 2 m → contact ≈ 1.45 s
+                  </text>
+                  <text x="110" y="138" class="t-mono" text-anchor="middle">0</text>
+                  <text x="235" y="138" class="t-mono" text-anchor="middle">0.5</text>
+                  <text x="360" y="138" class="t-mono" text-anchor="middle">1.0</text>
+                  <text x="610" y="138" class="t-mono" text-anchor="middle">2.0 s</text>
+                </svg>
+              </div>
+              <p class="note">
+                Time to reach 80% of a commanded step (<code>roam-step-response</code>). Vertical is
+                direct thrust. Lateral must tilt the airframe first, which takes longer than the
+                threat takes to arrive.
+              </p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Teacher fix</th>
+                    <th>Before</th>
+                    <th>After</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Corner trap: avoid turn flipped between walls</td>
+                    <td class="num">2.0 hits/min</td>
+                    <td class="num">0.1 hits/min</td>
+                  </tr>
+                  <tr>
+                    <td>Scripted idle arc → random search cast</td>
+                    <td>fixed</td>
+                    <td>resampled 1.5–3.5 s</td>
+                  </tr>
+                  <tr>
+                    <td>Throws from on top of a cornered drone</td>
+                    <td>allowed</td>
+                    <td class="num">refused &lt; 2.5 m</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHEET: roadmap -->
+      <section class="sheet" aria-labelledby="s-road">
+        <div class="titleblock">
+          <h2 id="s-road">Road to an autonomous cyborg</h2>
+          <span class="label">free-roam plan · steps run in order</span>
+        </div>
+        <div class="sheet-body">
+          <ol class="road">
+            <li>
+              <span class="n">done</span>
+              <h3>Steering and looming in the trial room</h3>
+              <span class="pill pass">accepted</span>
+              <p>
+                Visual steering 100% (balanced 1.00). Looming avoidance 96% (balanced 0.92). Both
+                collapse under ablations.
+              </p>
+            </li>
+            <li>
+              <span class="n">0</span>
+              <h3>Is encoder v4 enough?</h3>
+              <span class="pill pending">v5 chosen</span>
+              <p>
+                No: the scalar loom cue can't separate thrown threats from self-motion (385 false
+                escapes in 8 min, loom level 0.49 vs 0.44 with a threat in flight). Encoder v5, a
+                learned CNN trained with SAC, was chosen instead. Its code is in place; the training
+                runs are pending.
+              </p>
+            </li>
+            <li>
+              <span class="n">1</span>
+              <h3>Viewer diagnostics</h3>
+              <span class="pill pass">done</span>
+              <p>World axes, heading, velocity and commanded-action vectors in the live scene.</p>
+            </li>
+            <li>
+              <span class="n">2</span>
+              <h3>Measure the body</h3>
+              <span class="pill pass">done</span>
+              <p>Vertical reaches 80% of a step 2× faster than lateral, so the dodge climbs.</p>
+            </li>
+            <li>
+              <span class="n">3</span>
+              <h3>Redesign the teacher</h3>
+              <span class="pill pass">done</span>
+              <p>Climbing evade, committed avoid turn, random search cast.</p>
+            </li>
+            <li>
+              <span class="n">4</span>
+              <h3>Teacher gate</h3>
+              <span class="pill pending">dodge passed</span>
+              <p>
+                A3 on 20 fresh seeds: sighted 0.96, worst side 0.92, blind 0.26 (limit 0.3).
+                Collision and foraging check running.
+              </p>
+            </li>
+            <li>
+              <span class="n">5</span>
+              <h3>Train and prove it</h3>
+              <span class="pill idle">next</span>
+              <p>
+                Realisability probe → DAgger ×4 → PPO → evaluation under intact, zeroed, shuffled,
+                vision-, light- and loom-silenced and ghost brains. Accept only if A1–A7 pass.
+              </p>
+            </li>
+            <li>
+              <span class="n">later</span>
+              <h3>Beyond free roam</h3>
+              <span class="pill idle">proposed</span>
+              <p>
+                Feed the body back into the connectome through ascending neurons, add senses beyond
+                two luminance cues, and profile the full graph on onboard compute.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <footer>
+        Written companion: <a href="README.md">docs/overview/README.md</a> (math and details).
+        Figures come from <code>runs/roam/screen-3.json</code>, <code>screen-4-lead.json</code>,
+        <code>docs/results/roam-step-response.json</code> and <code>docs/validation.md</code>.
+      </footer>
     </div>
-  </div>
-</section>
-
-<!-- SHEET: roadmap -->
-<section class="sheet" aria-labelledby="s-road">
-  <div class="titleblock">
-    <h2 id="s-road">Road to an autonomous cyborg</h2>
-    <span class="label">free-roam plan · steps run in order</span>
-  </div>
-  <div class="sheet-body">
-    <ol class="road">
-      <li><span class="n">done</span><h3>Steering and looming in the trial room</h3><span class="pill pass">accepted</span>
-        <p>Visual steering 100% (balanced 1.00). Looming avoidance 96% (balanced 0.92). Both collapse under ablations.</p></li>
-      <li><span class="n">0</span><h3>Is encoder v4 enough?</h3><span class="pill pending">evidence-gated</span>
-        <p>Every failure so far traced to control or arena bugs, not perception. We evolve the encoder only if a drive needs information its 4 cues cannot carry.</p></li>
-      <li><span class="n">1</span><h3>Viewer diagnostics</h3><span class="pill pass">done</span>
-        <p>World axes, heading, velocity and commanded-action vectors in the live scene.</p></li>
-      <li><span class="n">2</span><h3>Measure the body</h3><span class="pill pass">done</span>
-        <p>Vertical reaches 80% of a step 2× faster than lateral, so the dodge climbs.</p></li>
-      <li><span class="n">3</span><h3>Redesign the teacher</h3><span class="pill pass">done</span>
-        <p>Climbing evade, committed avoid turn, random search cast.</p></li>
-      <li><span class="n">4</span><h3>Teacher gate</h3><span class="pill pending">dodge passed</span>
-        <p>A3 on 20 fresh seeds: sighted 0.96, worst side 0.92, blind 0.26 (limit 0.3). Collision and foraging check running.</p></li>
-      <li><span class="n">5</span><h3>Train and prove it</h3><span class="pill idle">next</span>
-        <p>Realisability probe → DAgger ×4 → PPO → evaluation under intact, zeroed, shuffled, vision-, light- and loom-silenced and ghost brains. Accept only if A1–A7 pass.</p></li>
-      <li><span class="n">later</span><h3>Beyond free roam</h3><span class="pill idle">proposed</span>
-        <p>Feed the body back into the connectome through ascending neurons, add senses beyond two luminance cues, and profile the full graph on onboard compute.</p></li>
-    </ol>
-  </div>
-</section>
-
-<footer>
-  Written companion: <a href="README.md">docs/overview/README.md</a> (math and details). Figures come from
-  <code>runs/roam/screen-3.json</code>, <code>screen-4-lead.json</code>, <code>docs/results/roam-step-response.json</code> and <code>docs/validation.md</code>.
-</footer>
-
-</div>
-</body>
+  </body>
 </html>

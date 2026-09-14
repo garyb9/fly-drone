@@ -318,16 +318,16 @@ dodge rate says nothing about the brain.
 
 ## 9. Where we are
 
-| Milestone                            | Status          | Evidence                                                                            |
-| ------------------------------------ | --------------- | ----------------------------------------------------------------------------------- |
-| Visual steering (trial room)         | ✅ accepted     | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                       |
-| Looming avoidance (trial room)       | ✅ accepted     | 96%, balanced 0.92                                                                  |
-| 0 · Encoder v4 sufficiency           | evidence-gated  | no perception failure found so far                                                  |
-| 1 · Viewer diagnostics               | ✅              | axes, heading, velocity, command vectors                                            |
-| 2 · Body step response               | ✅              | vertical 0.69 s vs lateral 1.48 s to 80%                                            |
-| 3 · Teacher redesign                 | ✅              | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast |
-| 4 · Teacher gate (A3 on the teacher) | 🟡 dodge passed | A3 confirmed below; collision and foraging check (`roam-feasibility`) running       |
-| 5 · DAgger → PPO → evaluation        | next            | asks the user before long runs                                                      |
+| Milestone                            | Status          | Evidence                                                                                                      |
+| ------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------- |
+| Visual steering (trial room)         | ✅ accepted     | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                                                 |
+| Looming avoidance (trial room)       | ✅ accepted     | 96%, balanced 0.92                                                                                            |
+| 0 · Encoder v4 sufficiency           | 🟡 v5 chosen    | gate failed (385 false loom escapes/8 min, level 0.49 vs 0.44); v5 code in place, training pending (§7.3–7.4) |
+| 1 · Viewer diagnostics               | ✅              | axes, heading, velocity, command vectors                                                                      |
+| 2 · Body step response               | ✅              | vertical 0.69 s vs lateral 1.48 s to 80%                                                                      |
+| 3 · Teacher redesign                 | ✅              | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast                           |
+| 4 · Teacher gate (A3 on the teacher) | 🟡 dodge passed | A3 confirmed below; collision and foraging check (`roam-feasibility`) running                                 |
+| 5 · DAgger → PPO → evaluation        | next            | asks the user before long runs                                                                                |
 
 Threat aim decides whether dodging can prove sight (near-throw scoring, 10 seeds × 60 s, level 3):
 
