@@ -75,6 +75,9 @@ def main():
     p.add_argument("--noise", type=float, default=0.2)
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--seed-base", type=int, default=200)
+    p.add_argument(
+        "--levels", type=int, nargs="+", help="arena levels to collect (default: all)"
+    )
     p = sub.add_parser("roam-fit")
     p.add_argument("data", nargs="+")
     p.add_argument("--output", required=True)
@@ -104,6 +107,7 @@ def main():
                 args.noise,
                 workers=args.workers,
                 seed_base=args.seed_base,
+                levels=args.levels,
             )
         elif args.command == "roam-fit":
             result = distill.fit(args.data, args.output, args.net_arch, args.steps)

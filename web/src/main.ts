@@ -63,7 +63,14 @@ type Frame = {
   ablation: string;
   seed: number;
   active_policy: string | null;
+  policy_status?: "none" | "loaded" | "limits mismatch";
   outcome: Outcome;
+};
+// Without a flying decoder every motion command is zero: say so instead of looking stuck.
+const HOLDING: Record<string, string> = {
+  none: "DRONE HOLDING — no decoder loaded for this task",
+  "limits mismatch":
+    "DRONE HOLDING — no decoder trained for this task yet (loaded one is for another room)",
 };
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
@@ -484,7 +491,13 @@ function update(f: Frame) {
     `${f.missed_deadlines} missed frame deadlines · Full graph running · Fly panel uses modeled dynamics`;
   if (f.task) {
     el("trial").textContent =
-      `SEED ${f.seed} · ${TASK_TRIAL_LABEL[f.task] ?? f.task.toUpperCase()} · ${CONDITIONS[f.ablation] ?? f.ablation.toUpperCase()}${f.active_policy ? ` · ${f.active_policy}` : " · NO POLICY"}`;
+      `SEED ${f.seed} · ${TASK_TRIAL_LABEL[f.task] ?? f.task.toUpperCase()} · ${CONDITIONS[f.ablation] ?? f.ablation.toUpperCase()}${f.policy_status === "loaded" && f.active_policy ? ` · ${f.active_policy}` : " · NO DECODER"}`;
+    const holding = HOLDING[f.policy_status ?? (f.active_policy ? "loaded" : "none")];
+    if (holding) {
+      el("outcome").textContent = holding;
+      el("outcome").className = "outcome fail";
+      return;
+    }
     const o = f.outcome;
     const live =
       f.task === "looming"

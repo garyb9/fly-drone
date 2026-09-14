@@ -64,6 +64,7 @@ def collect(
     stride=2,
     workers=16,
     seed_base=200,
+    levels=None,
 ):
     """Teacher-labelled features; beta < 1 flies the student that often (DAgger)."""
     import multiprocessing
@@ -72,10 +73,12 @@ def collect(
     from .arena import LEVELS
 
     seeds = np.arange(seed_base, seed_base + flights)
-    levels = sorted(LEVELS)
+    levels = sorted(levels if levels is not None else LEVELS)
+    if not levels or any(level not in LEVELS for level in levels):
+        raise ValueError(f"levels must be drawn from {sorted(LEVELS)}")
     jobs = []
-    for level in levels:
-        level_seeds = seeds[level :: len(levels)]
+    for i, level in enumerate(levels):
+        level_seeds = seeds[i :: len(levels)]
         for chunk in np.array_split(level_seeds, max(1, workers // len(levels))):
             if len(chunk):
                 jobs.append(
