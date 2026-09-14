@@ -28,8 +28,10 @@ class CueController:
 
     def _escape_action(self):
         if self.escape_kind == "threat":
-            # Brake and sidestep; little yaw, because turning itself reads as loom.
-            return np.array([-0.4, self.escape_dir, 0.0, 0.3 * self.escape_dir])
+            # Brake, sidestep and climb, as the teacher evades: vertical reaches 80% of
+            # a step in ~0.69 s vs ~1.48 s lateral (roam-step-response), and a sidestep
+            # alone was hit 102 times in 40 min. Little yaw: turning itself reads as loom.
+            return np.array([-0.4, self.escape_dir, 1.0, 0.3 * self.escape_dir])
         # Static obstacle: slow down and turn away so the path clears.
         return np.array([0.1, 0.0, 0.0, self.escape_dir])
 
