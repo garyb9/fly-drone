@@ -60,6 +60,7 @@ def main():
     p.add_argument("--hover-episodes", type=int, default=5)
     p.add_argument("--hover-seconds", type=float, default=30)
     p.add_argument("--task", choices=list(TASKS), default="visual")
+    p.add_argument("--encoder", help="learned encoder .pt (free roam)")
     p = sub.add_parser("roam-feasibility")
     p.add_argument("--output", default="runs/roam-feasibility.json")
     p.add_argument("--episodes", type=int, default=20)
@@ -96,7 +97,108 @@ def main():
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--ablations", nargs="+", default=["none"])
     p.add_argument("--seed-base", type=int, default=5000)
+    p.add_argument(
+        "--encoder", help="learned encoder .pt for policy/bypass controllers"
+    )
+    p = sub.add_parser("encoder-collect")
+    p.add_argument("--output", required=True)
+    p.add_argument("--flights", type=int, default=32)
+    p.add_argument("--seconds", type=float, default=60)
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--seed-base", type=int, default=600)
+    p.add_argument("--level", type=int, default=3)
+    p = sub.add_parser("encoder-clone")
+    p.add_argument("data", nargs="+")
+    p.add_argument("--output", required=True)
+    p.add_argument("--steps", type=int, default=20000)
+    p = sub.add_parser("sac-init-decoder")
+    p.add_argument("data", nargs="+", help="stage-1 DAgger .npz files")
+    p.add_argument("--encoder", required=True)
+    p.add_argument("--output", required=True)
+    p.add_argument("--steps", type=int, default=4000)
+    p = sub.add_parser("sac-round")
+    p.add_argument("learner", choices=["encoder", "decoder", "bypass"])
+    p.add_argument("--output", required=True)
+    p.add_argument("--frames", type=int, required=True)
+    p.add_argument("--decoder", help="frozen decoder actor.json (encoder learner)")
+    p.add_argument("--encoder", help="frozen encoder .pt (decoder/bypass learner)")
+    p.add_argument("--init", help="previous round .zip, or the clone encoder.pt")
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--buffer-size", type=int, default=100_000)
+    p = sub.add_parser("sac-validate")
+    p.add_argument("--decoder", required=True)
+    p.add_argument("--encoder", required=True)
+    p.add_argument("--output", required=True)
+    p.add_argument("--seeds", type=int, default=10)
+    p.add_argument("--seed-base", type=int, default=9000)
+    p.add_argument("--seconds", type=float, default=60)
+    p.add_argument("--workers", type=int, default=6)
+    p = sub.add_parser("encoder-checks")
+    p.add_argument("--policy", required=True)
+    p.add_argument("--encoder", help="omit for the v4 baseline")
+    p.add_argument("--output", required=True)
+    p.add_argument("--episodes", type=int, default=50)
+    p.add_argument("--seconds", type=float, default=120)
+    p.add_argument("--workers", type=int, default=6)
     args = parser.parse_args()
+    if args.command in (
+        "encoder-collect",
+        "encoder-clone",
+        "sac-init-decoder",
+        "sac-round",
+        "sac-validate",
+        "encoder-checks",
+    ):
+        from . import encoder, roam_eval, sac
+
+        if args.command == "encoder-collect":
+            result = encoder.collect_clone(
+                args.output,
+                args.flights,
+                args.seconds,
+                args.workers,
+                args.seed_base,
+                args.level,
+            )
+        elif args.command == "encoder-clone":
+            result = encoder.fit_clone(args.data, args.output, args.steps)
+        elif args.command == "sac-init-decoder":
+            result = sac.init_decoder(args.data, args.encoder, args.output, args.steps)
+        elif args.command == "sac-round":
+            result = sac.train_round(
+                args.learner,
+                args.output,
+                args.frames,
+                decoder=args.decoder,
+                encoder=args.encoder,
+                init=args.init,
+                workers=args.workers,
+                seed=args.seed,
+                buffer_size=args.buffer_size,
+            )
+        elif args.command == "sac-validate":
+            result = sac.validate(
+                args.decoder,
+                args.encoder,
+                args.output,
+                args.seeds,
+                args.seed_base,
+                args.seconds,
+                args.workers,
+            )
+        else:
+            result = roam_eval.encoder_checks(
+                args.policy,
+                args.output,
+                args.encoder,
+                args.episodes,
+                args.seconds,
+                args.workers,
+            )
+            result = {k: result[k] for k in ("frames", "E1", "E2")}
+        print(json.dumps(result, indent=2))
+        return
     if args.command in ("roam-collect", "roam-fit", "roam-screen"):
         from . import distill
 
@@ -118,6 +220,8 @@ def main():
             controllers = [
                 c
                 if c in ("teacher", "cue_script", "random")
+                else f"bypass:{Path(c).resolve()}"
+                if c.endswith(".zip")
                 else f"policy:{Path(c).resolve()}"
                 for c in args.controllers
             ]
@@ -130,6 +234,7 @@ def main():
                 args.workers,
                 seed_base=args.seed_base,
                 ablations=args.ablations,
+                encoder=args.encoder,
             )
             result = {
                 k: {m: v for m, v in r.items() if m != "runs"}
@@ -255,6 +360,7 @@ def main():
             args.episodes,
             args.seconds or 120,
             args.workers,
+            encoder=args.encoder,
         )
         print(json.dumps(report["acceptance"], indent=2))
     else:

@@ -5,11 +5,15 @@ DN traces. The critic exists only during training and additionally sees DN trace
 geometry of objects the eyes can currently see (honest-labels rule).
 """
 
+import json
+from pathlib import Path
+
 import gymnasium as gym
 import mujoco
 import numpy as np
 import torch
 from gymnasium import spaces
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.sac.policies import MultiInputPolicy
 from torch import nn
@@ -286,9 +290,6 @@ class SpacesOnlyEnv(gym.Env):
 
 def export_decoder(model, brain, path, limits):
     """SAC decoder actor -> Rust actor JSON (tanh hidden, tanh output) with a parity check."""
-    import json
-    from pathlib import Path
-
     actor = model.actor
     layers = []
     for layer in list(actor.latent_pi) + [actor.mu]:
@@ -398,9 +399,6 @@ def warm_start_decoder(model, paths, dataset_hash, steps=4000, holdout=0.1, seed
 
 def init_decoder(paths, encoder, output, steps=4000, device="auto"):
     """Round-0 decoder: DAgger labels on a tanh head, exported for the given encoder."""
-    import json
-    from pathlib import Path
-
     from .arena import ArenaSpec
 
     brain = BrainRuntime(encoder=encoder)
@@ -422,3 +420,176 @@ def init_decoder(paths, encoder, output, steps=4000, device="auto"):
     report["paths"] = [str(p) for p in paths]
     (out / "warm-start.json").write_text(json.dumps(report, indent=2))
     return report
+
+
+class MetabolicLogger(BaseCallback):
+    def _on_step(self):
+        costs = [info.get("metabolic_cost", 0.0) for info in self.locals["infos"]]
+        self.logger.record_mean("rollout/metabolic_cost", float(np.mean(costs)))
+        return True
+
+
+def _factory(learner, rank, seed, decoder, encoder, level):
+    def make():
+        from stable_baselines3.common.monitor import Monitor
+
+        torch.set_num_threads(1)
+        env = Monitor(
+            SacRoamEnv(learner, decoder=decoder, encoder=encoder, level=level)
+        )
+        env.reset(seed=seed + rank)
+        return env
+
+    return make
+
+
+def train_round(
+    learner,
+    output,
+    frames,
+    decoder=None,
+    encoder=None,
+    init=None,
+    workers=6,
+    seed=42,
+    buffer_size=100_000,
+    device="auto",
+    level=3,
+    learning_starts=5_000,
+):
+    """One SAC round for one learner; the other half is frozen inside the environment."""
+    from stable_baselines3 import SAC
+    from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+
+    from .arena import ArenaSpec
+    from .encoder import LearnedEncoder
+
+    out = Path(output)
+    out.mkdir(parents=True, exist_ok=True)
+    workers = max(1, min(int(workers), 6))
+    decoder = str(Path(decoder).resolve()) if decoder else None
+    encoder = str(Path(encoder).resolve()) if encoder else None
+    factories = [
+        _factory(learner, r, seed, decoder, encoder, level) for r in range(workers)
+    ]
+    # Each env owns a full brain and renderer; spawn keeps EGL state per process.
+    vec = (
+        SubprocVecEnv(factories, start_method="spawn")
+        if workers > 1
+        else DummyVecEnv(factories)
+    )
+    try:
+        if init is not None and str(init).endswith(".zip"):
+            # Fresh replay buffer each round: the frozen partner changed, old transitions are stale.
+            model = SAC.load(
+                init,
+                env=vec,
+                device=device,
+                buffer_size=buffer_size,
+                learning_starts=learning_starts,
+            )
+        else:
+            model = build_sac(learner, vec, buffer_size, seed, device, learning_starts)
+            if init is not None:
+                if learner != "encoder":
+                    raise ValueError(
+                        "a .pt init is the v4 clone for the first encoder round"
+                    )
+                state = torch.load(init, map_location="cpu", weights_only=True)
+                model.actor.features_extractor.load_state_dict(state["extractor"])
+                model.actor.mu.load_state_dict(state["mu"])
+                with torch.no_grad():
+                    model.actor.log_std.weight.zero_()
+                    model.actor.log_std.bias.fill_(-2.5)
+        if learner == "encoder":
+            stats = json.loads(Path(decoder).read_text())
+            set_dn_stats(model, stats["mean"], stats["scale"])
+        callbacks = CallbackList(
+            [
+                CheckpointCallback(
+                    save_freq=max(1, 50_000 // workers),
+                    save_path=str(out / "checkpoints"),
+                    name_prefix=learner,
+                ),
+                MetabolicLogger(),
+            ]
+        )
+        model.learn(
+            total_timesteps=frames, callback=callbacks, reset_num_timesteps=True
+        )
+        model.save(out / learner)
+        report = {
+            "learner": learner,
+            "frames": int(model.num_timesteps),
+            "decoder": decoder,
+            "encoder": encoder,
+            "init": str(init) if init is not None else None,
+            "workers": workers,
+            "seed": seed,
+            "buffer_size": buffer_size,
+        }
+        if learner == "encoder":
+            report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(
+                out / "encoder.pt"
+            )
+        elif learner == "decoder":
+            brain = BrainRuntime(encoder=encoder)
+            report["export_max_error"] = export_decoder(
+                model, brain, out / "decoder.json", ArenaSpec().limits
+            )
+            report["encoder_version"] = brain.encoder_version
+        (out / "round.json").write_text(json.dumps(report, indent=2))
+        return report
+    finally:
+        vec.close()
+
+
+def validate(
+    decoder, encoder, output, seeds=10, seed_base=9000, seconds=60, workers=6, level=3
+):
+    """End-of-round check on validation seeds: near-dodge (intact, ghost), foraging, E1-E2."""
+    from .distill import screen
+    from .roam_eval import encoder_checks
+
+    output = Path(output)
+    decoder = str(Path(decoder).resolve())
+    encoder = str(Path(encoder).resolve())
+    key = f"policy:{decoder}"
+    report = screen(
+        None,
+        output.with_suffix(".screen.json"),
+        seeds,
+        seconds,
+        level,
+        workers,
+        seed_base=seed_base,
+        combos=[(key, "none"), (key, "ghost")],
+        encoder=encoder,
+    )
+    checks = encoder_checks(
+        decoder,
+        output.with_suffix(".checks.json"),
+        encoder,
+        seeds,
+        seconds,
+        workers,
+        seed_base,
+        level,
+    )
+    none, ghost = report["results"][f"{key}|none"], report["results"][f"{key}|ghost"]
+    summary = {
+        "decoder": decoder,
+        "encoder": encoder,
+        "seeds": [seed_base, seed_base + seeds - 1],
+        "near_dodge_rate": none["near_dodge_rate"],
+        "balanced_dodge_rate": none["balanced_dodge_rate"],
+        "ghost_near_dodge_rate": ghost["near_dodge_rate"],
+        "beacons_per_min": none["beacons_per_min"],
+        "collisions_per_min": none["collisions_per_min"],
+        "E1": checks["E1"],
+        "E2": checks["E2"],
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(summary, indent=2))
+    return summary

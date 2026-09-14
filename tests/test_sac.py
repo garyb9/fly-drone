@@ -5,6 +5,7 @@ import mujoco
 import numpy as np
 import pytest
 import torch
+from fly_drone import distill
 from fly_drone.arena import ArenaSpec
 from fly_drone.brain import DATA, ENCODER_VERSION, BrainRuntime
 from fly_drone.encoder import LearnedEncoder
@@ -17,6 +18,8 @@ from fly_drone.sac import (
     build_sac,
     export_decoder,
     set_dn_stats,
+    train_round,
+    validate,
     visible_geometry,
     warm_start_decoder,
 )
@@ -181,4 +184,63 @@ def test_warm_start_decoder_learns_labels_and_shares_normalisation(tmp_path):
     assert torch.equal(model.critic.features_extractor.dn_norm.mean, actor_norm.mean)
     assert torch.equal(
         model.critic_target.features_extractor.dn_norm.scale, actor_norm.scale
+    )
+
+
+def test_rounds_for_every_learner_resume_export_and_validate(tmp_path):
+    decoder0 = zero_actor(tmp_path / "decoder0.json", BrainRuntime())
+    LearnedEncoder.fresh(seed=7).save(tmp_path / "clone.pt")
+    small = {"workers": 1, "buffer_size": 200, "device": "cpu", "learning_starts": 20}
+
+    enc = train_round(
+        "encoder",
+        tmp_path / "enc1",
+        40,
+        decoder=decoder0,
+        init=tmp_path / "clone.pt",
+        **small,
+    )
+    assert (
+        enc["encoder_version"]
+        == LearnedEncoder.load(tmp_path / "enc1" / "encoder.pt").version
+    )
+    assert enc["frames"] >= 40
+
+    again = train_round(
+        "encoder",
+        tmp_path / "enc2",
+        30,
+        decoder=decoder0,
+        init=tmp_path / "enc1" / "encoder.zip",
+        **small,
+    )
+    assert again["encoder_version"] != enc["encoder_version"]
+
+    encoder_pt = tmp_path / "enc1" / "encoder.pt"
+    dec = train_round("decoder", tmp_path / "dec1", 40, encoder=encoder_pt, **small)
+    assert dec["export_max_error"] <= 1e-4
+    BrainRuntime(encoder=encoder_pt).load_policy(tmp_path / "dec1" / "decoder.json")
+
+    train_round("bypass", tmp_path / "byp", 40, encoder=encoder_pt, **small)
+    job = (
+        f"bypass:{tmp_path / 'byp' / 'bypass.zip'}",
+        [3],
+        0.4,
+        3,
+        "none",
+        str(encoder_pt),
+    )
+    assert len(distill._screen_job(job)[2]) == 1
+
+    summary = validate(
+        tmp_path / "dec1" / "decoder.json",
+        encoder_pt,
+        tmp_path / "val.json",
+        seeds=1,
+        seconds=0.4,
+        workers=1,
+    )
+    assert {"near_dodge_rate", "beacons_per_min", "E1", "E2"} <= set(summary)
+    assert json.loads((tmp_path / "val.json").read_text())["encoder"] == str(
+        encoder_pt.resolve()
     )
