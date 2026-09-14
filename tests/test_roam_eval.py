@@ -74,6 +74,11 @@ def test_a_blind_forager_fails_the_dissociation():
     assert not report["passed"]
 
 
+def test_light_silencing_that_also_causes_crashes_is_not_a_dissociation():
+    crashes = summary(0.8, 1.0, [(1.0, True), (-1.0, True)])
+    assert not acceptance(results(light=crashes), POLICY)["A4"]["passed"]
+
+
 def test_one_sided_dodging_fails_balance_and_spinning_fails_a6():
     one_sided = summary(4.0, 0.2, [(1.0, True), (-1.0, False)])
     assert not acceptance(results(none=one_sided), POLICY)["A3"]["passed"]

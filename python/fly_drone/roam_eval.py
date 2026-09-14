@@ -117,7 +117,8 @@ def acceptance(results, policy):
     a4["passed"] = bool(
         rate["none"] > 0
         and a4["light_beacon_cut"] >= t["A4_light_min_beacon_cut"]
-        and light_collision_ci[0] <= t["A4_light_max_collision_increase_per_min"]
+        # Upper bound: light silencing must not plausibly add collisions.
+        and light_collision_ci[1] <= t["A4_light_max_collision_increase_per_min"]
         and crash["loom"] >= t["A4_loom_min_collision_ratio"] * max(crash["none"], 1e-9)
         and a4["loom_beacon_fraction"] >= t["A4_loom_min_beacon_fraction"]
     )
