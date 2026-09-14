@@ -127,6 +127,13 @@ def main():
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--buffer-size", type=int, default=100_000)
+    p.add_argument(
+        "--actor-warmup",
+        type=int,
+        default=None,
+        help="frames of critic-only training at the start of the round "
+        "(default sac.ACTOR_WARMUP_FRAMES = 50000; 0 disables)",
+    )
     p = sub.add_parser("sac-export")
     p.add_argument(
         "checkpoint",
@@ -192,6 +199,11 @@ def main():
                 workers=args.workers,
                 seed=args.seed,
                 buffer_size=args.buffer_size,
+                actor_warmup=(
+                    sac.ACTOR_WARMUP_FRAMES
+                    if args.actor_warmup is None
+                    else args.actor_warmup
+                ),
             )
         elif args.command == "sac-export":
             if args.repin_decoder:

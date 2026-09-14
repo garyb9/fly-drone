@@ -11,10 +11,12 @@ from fly_drone.brain import DATA, ENCODER_VERSION, BrainRuntime
 from fly_drone.encoder import LearnedEncoder
 from fly_drone.env import ConnectomeEnv
 from fly_drone.sac import (
+    ACTOR_WARMUP_FRAMES,
     GEOMETRY,
     AsymmetricSACPolicy,
     SacRoamEnv,
     SpacesOnlyEnv,
+    WarmupSAC,
     build_sac,
     export_checkpoint,
     export_decoder,
@@ -213,16 +215,22 @@ def test_rounds_for_every_learner_resume_export_and_validate(tmp_path):
         == LearnedEncoder.load(tmp_path / "enc1" / "encoder.pt").version
     )
     assert enc["frames"] >= 40
+    assert enc["actor_warmup"] == ACTOR_WARMUP_FRAMES
+    saved = json.loads((tmp_path / "enc1" / "round.json").read_text())
+    assert saved["actor_warmup"] == ACTOR_WARMUP_FRAMES
 
+    # A resumed round takes its warm-up from the argument, not the .zip.
     again = train_round(
         "encoder",
         tmp_path / "enc2",
         30,
         decoder=decoder0,
         init=tmp_path / "enc1" / "encoder.zip",
+        actor_warmup=0,
         **small,
     )
     assert again["encoder_version"] != enc["encoder_version"]
+    assert again["actor_warmup"] == 0
 
     encoder_pt = tmp_path / "enc1" / "encoder.pt"
     dec = train_round("decoder", tmp_path / "dec1", 40, encoder=encoder_pt, **small)
@@ -381,6 +389,96 @@ def test_resumed_round_uses_the_given_seed_not_the_saved_one(tmp_path, monkeypat
     first_b = seen[1]
 
     assert first_a == 101 and first_b == 202
+
+
+def small_warmup_model(actor_warmup):
+    from stable_baselines3.common.logger import Logger
+
+    env = SpacesOnlyEnv("decoder", n_features=16)
+    model = build_sac(
+        "decoder", env, buffer_size=64, device="cpu", actor_warmup=actor_warmup
+    )
+    model.set_logger(Logger(folder=None, output_formats=[]))
+    rng = np.random.default_rng(11)
+    space = env.observation_space
+    for _ in range(32):
+        obs = {
+            k: rng.uniform(0, 1, (1, *s.shape)).astype(s.dtype)
+            for k, s in space.items()
+        }
+        nxt = {
+            k: rng.uniform(0, 1, (1, *s.shape)).astype(s.dtype)
+            for k, s in space.items()
+        }
+        model.replay_buffer.add(
+            obs,
+            nxt,
+            rng.uniform(-1, 1, (1, 4)).astype(np.float32),
+            rng.normal(size=1).astype(np.float32),
+            np.zeros(1, dtype=bool),
+            [{}],
+        )
+    return model
+
+
+def snapshot(module):
+    return [p.detach().clone() for p in module.parameters()]
+
+
+def unchanged(module, before):
+    return all(
+        torch.equal(p, q) for p, q in zip(module.parameters(), before, strict=True)
+    )
+
+
+def test_warmup_trains_only_the_critic_then_normal_sac():
+    assert ACTOR_WARMUP_FRAMES == 50_000
+    model = small_warmup_model(actor_warmup=100)
+    model.num_timesteps = 60
+    actor, critic = snapshot(model.actor), snapshot(model.critic)
+    target = snapshot(model.critic_target)
+    alpha = model.log_ent_coef.detach().clone()
+    model.train(gradient_steps=4, batch_size=16)
+    assert unchanged(model.actor, actor)
+    assert torch.equal(model.log_ent_coef.detach(), alpha)
+    assert not model.actor.optimizer.state  # Adam moments untouched too
+    assert not unchanged(model.critic, critic)
+    assert not unchanged(model.critic_target, target)
+    assert "step" not in vars(model.actor.optimizer)  # patch removed
+
+    model.num_timesteps = 100  # warm-up over
+    model.train(gradient_steps=4, batch_size=16)
+    assert not unchanged(model.actor, actor)
+    assert not torch.equal(model.log_ent_coef.detach(), alpha)
+
+
+def test_zero_warmup_updates_the_actor_immediately():
+    model = small_warmup_model(actor_warmup=0)
+    model.num_timesteps = 0
+    actor = snapshot(model.actor)
+    model.train(gradient_steps=4, batch_size=16)
+    assert not unchanged(model.actor, actor)
+
+
+def test_warmup_survives_save_and_load(tmp_path):
+    model = small_warmup_model(actor_warmup=100)
+    model.num_timesteps = 70
+    model.save(tmp_path / "m")
+    loaded = WarmupSAC.load(tmp_path / "m.zip", device="cpu", buffer_size=1)
+    assert loaded.actor_warmup == 100 and loaded.num_timesteps == 70
+    assert loaded.actor_frozen
+    override = WarmupSAC.load(
+        tmp_path / "m.zip", device="cpu", buffer_size=1, actor_warmup=0
+    )
+    assert override.actor_warmup == 0 and not override.actor_frozen
+
+    from stable_baselines3 import SAC
+
+    plain = SAC("MlpPolicy", "Pendulum-v1", buffer_size=1, device="cpu")
+    plain.save(tmp_path / "plain")
+    # A .zip saved by plain SAC takes the warm-up from the load argument.
+    restored = WarmupSAC.load(tmp_path / "plain.zip", device="cpu", actor_warmup=7)
+    assert restored.actor_warmup == 7 and restored.actor_frozen
 
 
 def test_train_round_rejects_a_missing_frozen_partner_before_spawning(tmp_path):

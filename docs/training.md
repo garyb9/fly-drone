@@ -332,6 +332,13 @@ trains the full `--frames` you pass — it does not pick up where the crashed ru
 the _remaining_ frames (`--frames` minus the checkpoint's step count), not the original budget,
 or the round will overshoot. Use `sac-export` (below) to validate a checkpoint before deciding.
 
+**Critic-only warm-up.** The first `--actor-warmup` frames of every `sac-round` (default
+`ACTOR_WARMUP_FRAMES = 50000`, summed over workers) train only the critic; the actor and the
+entropy coefficient stay frozen, so an untrained critic cannot wreck the warm-started encoder or
+decoder (spec §4). The value is recorded in `round.json`; `--actor-warmup 0` disables it. Because
+frames count from 0 again on a resume, a crash resume repeats the warm-up — pass
+`--actor-warmup 0` when the checkpoint's critic is already past it.
+
 **`sac-export`: deployable artifacts from any `.zip`.** Turns a round's own output or a
 mid-round `CheckpointCallback` checkpoint into the same artifacts `train_round` writes, reusing
 `LearnedEncoder.from_actor(...).save`/`export_decoder` and the version pinning — nothing about

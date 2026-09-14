@@ -13,6 +13,7 @@ import mujoco
 import numpy as np
 import torch
 from gymnasium import spaces
+from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.sac.policies import MultiInputPolicy
@@ -34,6 +35,10 @@ GEOMETRY_SCALE = (1.0, 0.25, 0.25, 0.25, 1.0, 0.25, 0.25, 0.25)
 # Training only (spec §7): vary the wall bands' grey so the encoder cannot key on one
 # texture. Evaluation (ConnectomeEnv) keeps the arena's 0.03 band.
 BAND_GREY = (0.0, 0.15)
+# Critic-only warm-up (spec §4, §8.5): the actor and the entropy coefficient stay frozen for
+# the first frames of every round (SB3 `num_timesteps`, summed over workers), so an untrained
+# critic cannot wreck the warm-started actor (the v4 clone or the round-0 decoder).
+ACTOR_WARMUP_FRAMES = 50_000
 
 
 def visible_geometry(env):
@@ -228,14 +233,59 @@ class AsymmetricSACPolicy(MultiInputPolicy):
         return data
 
 
-def build_sac(
-    learner, env, buffer_size=100_000, seed=42, device="auto", learning_starts=5_000
-):
-    from stable_baselines3 import SAC
+class WarmupSAC(SAC):
+    """SAC that trains only the critic while `num_timesteps < actor_warmup`.
 
-    return SAC(
+    During warm-up the actor's and the entropy coefficient's optimizer steps are skipped, so
+    their parameters and Adam state stay bitwise untouched; the critic and its Polyak target
+    train as usual. Freezing alpha too matters: with the actor frozen, auto-alpha would chase
+    the target entropy for the whole warm-up and hand the unfrozen actor a runaway entropy
+    bonus. `actor_warmup` is saved in the `.zip`; `WarmupSAC.load(..., actor_warmup=n)`
+    overrides it (a `.zip` saved by plain SAC otherwise gets the default).
+    """
+
+    def __init__(self, *args, actor_warmup=ACTOR_WARMUP_FRAMES, **kwargs):
+        self.actor_warmup = int(actor_warmup)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def actor_frozen(self):
+        return self.num_timesteps < self.actor_warmup
+
+    def train(self, gradient_steps, batch_size=64):
+        frozen = self.actor_frozen
+        self.logger.record("train/actor_frozen", int(frozen))
+        if not frozen:
+            return super().train(gradient_steps, batch_size)
+        optimizers = [self.actor.optimizer]
+        if self.ent_coef_optimizer is not None:
+            optimizers.append(self.ent_coef_optimizer)
+        for optimizer in optimizers:
+            optimizer.step = _skip_step  # instance attribute shadows the class method
+        try:
+            return super().train(gradient_steps, batch_size)
+        finally:
+            for optimizer in optimizers:
+                del optimizer.step
+
+
+def _skip_step(closure=None):
+    return None
+
+
+def build_sac(
+    learner,
+    env,
+    buffer_size=100_000,
+    seed=42,
+    device="auto",
+    learning_starts=5_000,
+    actor_warmup=ACTOR_WARMUP_FRAMES,
+):
+    return WarmupSAC(
         AsymmetricSACPolicy,
         env,
+        actor_warmup=actor_warmup,
         buffer_size=buffer_size,
         batch_size=256,
         learning_starts=learning_starts,
@@ -544,9 +594,14 @@ def train_round(
     device="auto",
     level=3,
     learning_starts=5_000,
+    actor_warmup=ACTOR_WARMUP_FRAMES,
 ):
-    """One SAC round for one learner; the other half is frozen inside the environment."""
-    from stable_baselines3 import SAC
+    """One SAC round for one learner; the other half is frozen inside the environment.
+
+    The first `actor_warmup` frames train only the critic (`WarmupSAC`); 0 disables it.
+    `learn(reset_num_timesteps=True)` counts every round from frame 0, so a round resumed
+    from a checkpoint repeats the warm-up unless `actor_warmup=0` is passed.
+    """
     from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
@@ -575,16 +630,21 @@ def train_round(
     try:
         if init is not None and str(init).endswith(".zip"):
             # Fresh replay buffer each round: the frozen partner changed, old transitions are stale.
-            model = SAC.load(
+            # WarmupSAC.load (not SAC.load) keeps train() warm-up-aware; the argument, not
+            # the value saved in the .zip, sets this round's warm-up.
+            model = WarmupSAC.load(
                 init,
                 env=vec,
                 device=device,
                 buffer_size=buffer_size,
                 learning_starts=learning_starts,
                 seed=seed,
+                actor_warmup=int(actor_warmup),
             )
         else:
-            model = build_sac(learner, vec, buffer_size, seed, device, learning_starts)
+            model = build_sac(
+                learner, vec, buffer_size, seed, device, learning_starts, actor_warmup
+            )
             if init is not None:
                 if learner != "encoder":
                     raise ValueError(
@@ -622,6 +682,7 @@ def train_round(
             "workers": workers,
             "seed": seed,
             "buffer_size": buffer_size,
+            "actor_warmup": int(model.actor_warmup),
         }
         if learner == "encoder":
             report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(

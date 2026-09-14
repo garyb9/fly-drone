@@ -130,6 +130,20 @@ decoder learn to read loom-driven activity while the encoder learns to produce i
 never trained in the same round. Stage 1 stays on L2 because v4 loom cues on L3 would teach the
 decoder to escape from walls.
 
+**Critic-only warm-up.** Every round (encoder, decoder or bypass) starts with a fresh critic
+signal: the replay buffer is new and, in the first round, the critic itself is untrained. Its
+early gradients are noise, and a few thousand actor updates on noise can undo a warm start (the v4
+clone, the round-0 decoder) before the critic has learned anything. So for the first
+`ACTOR_WARMUP_FRAMES = 50_000` frames of each round (`sac.WarmupSAC`, SB3 `num_timesteps` summed
+over workers) only the critic and its target train; the actor's optimizer step is skipped, so its
+weights and Adam state stay bitwise unchanged. The entropy coefficient is frozen too: with a
+frozen, narrow actor, auto-alpha would climb towards the target entropy for the whole warm-up and
+hand the unfrozen actor a large entropy bonus. After the warm-up it is normal SAC. The actor still
+collects data during the warm-up, so the critic learns the value of the warm-started behaviour
+itself. `train_round(actor_warmup=...)` / `sac-round --actor-warmup` sets it (0 disables); it is
+recorded in `round.json`. Since every round counts frames from 0, a round resumed from a
+checkpoint repeats the warm-up unless `--actor-warmup 0` is passed.
+
 Stop rules: checkpoint every 50 k frames. At the end of each round, compute the near-dodge rate on
 a fixed validation set (10 seeds, disjoint from the 50 evaluation seeds) and E1 on those
 validation seeds. Stop early and report if the near-dodge rate has not improved for a whole round.
@@ -208,3 +222,6 @@ the loom channels must still mean "something is coming at me".
 2. Channels: **8 by cell type** (§3.1).
 3. Training order: **3 alternating encoder/decoder SAC rounds** instead of a single 2b → 3 (§4).
 4. E1–E2 definitions and bars as in §5; split metabolic cost λ_loom = 0.01, λ_light = 0.002 (§3.4).
+5. Critic-only warm-up: **actor and entropy coefficient frozen for the first 50 k frames of every
+   SAC round** (§4), so an untrained critic cannot wreck the warm-started actor (final review,
+   Important 3).
