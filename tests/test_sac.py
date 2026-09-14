@@ -1,17 +1,26 @@
+import hashlib
 import json
 
 import mujoco
 import numpy as np
 import pytest
 import torch
-from fly_drone.brain import ENCODER_VERSION, BrainRuntime
+from fly_drone.arena import ArenaSpec
+from fly_drone.brain import DATA, ENCODER_VERSION, BrainRuntime
+from fly_drone.encoder import LearnedEncoder
 from fly_drone.env import ConnectomeEnv
 from fly_drone.sac import (
     GEOMETRY,
     AsymmetricSACPolicy,
     SacRoamEnv,
+    SpacesOnlyEnv,
+    build_sac,
+    export_decoder,
+    set_dn_stats,
     visible_geometry,
+    warm_start_decoder,
 )
+from fly_drone.teacher import DRIVES
 from gymnasium import spaces
 
 
@@ -129,3 +138,47 @@ def test_actor_reads_only_its_key_and_critic_reads_all(actor_key):
         assert not torch.allclose(
             policy.critic(a, action)[0], policy.critic(b, action)[0]
         )
+
+
+def test_export_decoder_matches_rust_with_tanh_output_and_pins_the_encoder(tmp_path):
+    LearnedEncoder.fresh(seed=5).save(tmp_path / "e.pt")
+    brain = BrainRuntime(encoder=tmp_path / "e.pt")
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    rng = np.random.default_rng(0)
+    set_dn_stats(model, rng.uniform(0, 0.1, 2022), rng.uniform(0.5, 1.5, 2022))
+    error = export_decoder(model, brain, tmp_path / "d.json", ArenaSpec().limits)
+    assert error <= 1e-4
+    data = json.loads((tmp_path / "d.json").read_text())
+    assert data["output"] == "tanh" and data["encoder_version"] == brain.encoder_version
+    assert [len(layer["bias"]) for layer in data["layers"]] == [64, 64, 4]
+    with pytest.raises(ValueError, match="encoder"):
+        BrainRuntime().load_policy(tmp_path / "d.json")
+
+
+def test_warm_start_decoder_learns_labels_and_shares_normalisation(tmp_path):
+    rng = np.random.default_rng(1)
+    n = 400
+    x = rng.uniform(0, 1, (n, 2022)).astype(np.float32)
+    path = tmp_path / "dagger.npz"
+    np.savez(
+        path,
+        x=x.astype(np.float16),
+        y=(x[:, :4] * 1.6 - 0.8).astype(np.float32),
+        drive=rng.integers(0, len(DRIVES), n).astype(np.int8),
+        flight=np.repeat(np.arange(20), n // 20).astype(np.int32),
+        dataset_hash=hashlib.sha256((DATA / "graph.bin").read_bytes()).hexdigest(),
+        encoder_version=ENCODER_VERSION,
+        student="None",
+        beta=1.0,
+    )
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    digest = hashlib.sha256((DATA / "graph.bin").read_bytes()).hexdigest()
+    report = warm_start_decoder(model, [path], digest, steps=300)
+    assert report["held_out_flights"] == 2 and set(report["drives"]) == set(DRIVES)
+    assert report["loss_last"] < report["loss_first"]
+    actor_norm = model.actor.features_extractor
+    assert float(actor_norm.scale.min()) >= 0.003
+    assert torch.equal(model.critic.features_extractor.dn_norm.mean, actor_norm.mean)
+    assert torch.equal(
+        model.critic_target.features_extractor.dn_norm.scale, actor_norm.scale
+    )

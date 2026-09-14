@@ -187,6 +187,13 @@ def build_model(n_features, net_arch=(64, 64), env=None):
     )
 
 
+def class_weights(drive, mask):
+    """Threat frames are rare: weight every drive present in `mask` equally (mean 1)."""
+    counts = np.bincount(drive[mask], minlength=len(DRIVES)).astype(float)
+    weight = np.where(counts > 0, counts.sum() / np.maximum(counts, 1), 0.0)
+    return weight / weight[counts > 0].mean()
+
+
 def fit(paths, output, net_arch=(64, 64), steps=4000, holdout=0.1):
     """Class-balanced behaviour cloning of the teacher onto the decoder head."""
     import torch
@@ -203,10 +210,7 @@ def fit(paths, output, net_arch=(64, 64), steps=4000, holdout=0.1):
     unique = np.unique(flight)
     held = set(rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False))
     test = np.array([f in held for f in flight])
-    counts = np.bincount(drive[~test], minlength=len(DRIVES)).astype(float)
-    # Threat frames are rare; weight every drive equally in the loss.
-    class_weight = np.where(counts > 0, counts.sum() / np.maximum(counts, 1), 0.0)
-    class_weight /= class_weight[counts > 0].mean()
+    class_weight = class_weights(drive, ~test)
 
     model = build_model(x.shape[1], net_arch)
     norm = model.policy.features_extractor

@@ -262,3 +262,163 @@ def set_dn_stats(model, mean, scale):
             if isinstance(module, KeyNormalizer) and module.key == "dn":
                 module.mean.copy_(mean)
                 module.scale.copy_(scale)
+
+
+class SpacesOnlyEnv(gym.Env):
+    """Just the spaces SAC needs to build a model; no brain or renderer."""
+
+    metadata = {}
+
+    def __init__(self, learner, n_features=2022):
+        self.observation_space, self.action_space = learner_spaces(learner, n_features)
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+        obs = {
+            k: np.zeros(s.shape, s.dtype)
+            for k, s in self.observation_space.spaces.items()
+        }
+        return obs, {}
+
+    def step(self, action):
+        return self.reset()[0], 0.0, True, False, {}
+
+
+def export_decoder(model, brain, path, limits):
+    """SAC decoder actor -> Rust actor JSON (tanh hidden, tanh output) with a parity check."""
+    import json
+    from pathlib import Path
+
+    actor = model.actor
+    layers = []
+    for layer in list(actor.latent_pi) + [actor.mu]:
+        if isinstance(layer, nn.Linear):
+            layers.append(
+                {
+                    "weights": layer.weight.detach().cpu().tolist(),
+                    "bias": layer.bias.detach().cpu().tolist(),
+                }
+            )
+        elif not isinstance(layer, nn.Tanh):
+            raise ValueError("only tanh MLP export supported")
+    norm = actor.features_extractor
+    limits = np.asarray(limits, dtype=float)
+    payload = {
+        "version": 1,
+        "encoder_version": brain.encoder_version,
+        "dataset_hash": brain.dataset_hash,
+        "feature_ids": brain.feature_ids,
+        "mean": norm.mean.cpu().tolist(),
+        "scale": norm.scale.cpu().tolist(),
+        "layers": layers,
+        "action_limits": limits.tolist(),
+        "output": "tanh",
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload))
+    brain.load_policy(path)
+    rng = np.random.default_rng(123)
+    error = 0.0
+    for x in rng.uniform(0, 1, (32, len(brain.feature_ids))).astype(np.float32):
+        obs = {"dn": x, "geometry": np.zeros(GEOMETRY, np.float32)}
+        expected = model.predict(obs, deterministic=True)[0] * limits
+        error = max(error, float(np.max(np.abs(expected - brain.infer(x)))))
+    if error > 1e-4:
+        raise RuntimeError(f"Rust policy parity failed: {error}")
+    return error
+
+
+def warm_start_decoder(model, paths, dataset_hash, steps=4000, holdout=0.1, seed=72):
+    """Behaviour-clone stage-1 DAgger labels onto the SAC decoder's tanh head."""
+    from .distill import _load, class_weights
+    from .teacher import DRIVES
+
+    x, y, drive, flight = _load(paths, dataset_hash)
+    rng = np.random.default_rng(seed)
+    unique = np.unique(flight)
+    held = rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False)
+    test = np.isin(flight, held)
+    train = np.flatnonzero(~test)
+    set_dn_stats(model, x[train].mean(0), np.maximum(x[train].std(0), 0.003))
+    actor, device = model.actor, model.device
+    weight = class_weights(drive, ~test)[drive].astype(np.float32)
+    # tanh never reaches +-1: stop labels just short of saturation.
+    target = np.clip(y, -0.97, 0.97).astype(np.float32)
+    params = list(actor.latent_pi.parameters()) + list(actor.mu.parameters())
+    opt = torch.optim.Adam(params, lr=1e-3)
+    torch.manual_seed(seed)
+
+    def predict(ids):
+        obs = {"dn": torch.as_tensor(x[ids], device=device)}
+        return torch.tanh(actor.mu(actor.latent_pi(actor.features_extractor(obs))))
+
+    losses = []
+    for _ in range(steps):
+        ids = rng.choice(train, 256)
+        w = torch.as_tensor(weight[ids, None], device=device)
+        err = (predict(ids) - torch.as_tensor(target[ids], device=device)).square()
+        loss = (w * err).mean()
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        losses.append(float(loss))
+    report = {
+        "samples": int(len(x)),
+        "held_out_flights": int(len(held)),
+        "loss_first": losses[0],
+        "loss_last": float(np.mean(losses[-20:])),
+        "drives": {name: {} for name in DRIVES},
+    }
+    with torch.no_grad():
+        # Start SAC exploration narrow around the cloned behaviour.
+        actor.log_std.weight.zero_()
+        actor.log_std.bias.fill_(-2.5)
+        for split, mask in (("train", ~test), ("held_out", test)):
+            ids = np.flatnonzero(mask)
+            errs = [
+                (
+                    predict(ids[i : i + 4096])
+                    - torch.as_tensor(target[ids[i : i + 4096]], device=device)
+                )
+                .square()
+                .mean(1)
+                .cpu()
+                .numpy()
+                for i in range(0, len(ids), 4096)
+            ]
+            err = np.concatenate(errs) if errs else np.zeros(0)
+            for k, name in enumerate(DRIVES):
+                sel = drive[mask] == k
+                report["drives"][name][f"{split}_mse"] = (
+                    float(err[sel].mean()) if sel.any() else None
+                )
+    return report
+
+
+def init_decoder(paths, encoder, output, steps=4000, device="auto"):
+    """Round-0 decoder: DAgger labels on a tanh head, exported for the given encoder."""
+    import json
+    from pathlib import Path
+
+    from .arena import ArenaSpec
+
+    brain = BrainRuntime(encoder=encoder)
+    # buffer_size=1: this model is only cloned and saved; rounds reload it with a real buffer.
+    model = build_sac(
+        "decoder",
+        SpacesOnlyEnv("decoder", len(brain.feature_ids)),
+        buffer_size=1,
+        device=device,
+    )
+    report = warm_start_decoder(model, paths, brain.dataset_hash, steps)
+    out = Path(output)
+    out.mkdir(parents=True, exist_ok=True)
+    model.save(out / "decoder")
+    report["export_max_error"] = export_decoder(
+        model, brain, out / "decoder.json", ArenaSpec().limits
+    )
+    report["encoder_version"] = brain.encoder_version
+    report["paths"] = [str(p) for p in paths]
+    (out / "warm-start.json").write_text(json.dumps(report, indent=2))
+    return report
