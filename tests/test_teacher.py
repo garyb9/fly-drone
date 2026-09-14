@@ -15,6 +15,7 @@ def env():
 def place(env, pillars=(), beacon=(5.0, 0.0, 1.0), threat=None):
     env.plant.set_pillars(np.asarray(pillars, dtype=float).reshape(-1, 2))
     env.plant.teleport([0.0, 0.0, 1.0], 0.0)
+    env.roam["avoid"] = None
     env.plant.set_objects(target=beacon)
     if threat is None:
         env.roam["threat"] = None
@@ -66,6 +67,7 @@ def test_near_pillar_turns_away_and_slows(env):
 def test_near_wall_turns_along_it_on_either_side_of_the_room(env, position, yaw):
     env.plant.set_pillars(np.zeros((0, 2)))
     env.roam["threat"] = None
+    env.roam["avoid"] = None
     env.plant.teleport([position[0], position[1], 1.0], yaw)
     env.plant.set_objects(target=[-position[0] * 0.2, -position[1] * 0.2 + 3, 1.0])
     from fly_drone.teacher import nearest_obstacle
@@ -83,6 +85,31 @@ def test_far_pillar_is_ignored_until_loom_could_fire(env):
     place(env, pillars=[[3.5, 0.1]], beacon=(-4.0, 3.0, 1.0))
     _, drive = teacher_action(env)
     assert drive == "explore"
+
+
+def test_corner_avoid_turn_stays_committed_while_the_nearest_wall_alternates(env):
+    from fly_drone.teacher import nearest_obstacle
+
+    place(env, beacon=(-4.0, 3.0, 1.0))
+    env.plant.teleport([-7.0, 7.0, 1.0], 2.46)
+    first_wall = nearest_obstacle(env)
+    first, drive = teacher_action(env)
+    env.plant.teleport([-7.0, 7.0, 1.0], 2.26)
+    second_wall = nearest_obstacle(env)
+    second, _ = teacher_action(env)
+    assert drive == "avoid"
+    # Re-deciding from the nearest wall alone would flip the turn here.
+    assert np.sign(first_wall[1]) != np.sign(second_wall[1])
+    assert np.sign(second[3]) == np.sign(first[3])
+
+
+def test_no_threat_is_thrown_from_on_top_of_a_cornered_drone(env):
+    place(env, beacon=(-4.0, 3.0, 1.0))
+    env.plant.teleport([7.3, 7.3, 1.0], np.pi / 4)
+    assert not env.launch_threat()
+    env.plant.teleport([0.0, 0.0, 1.0], 0.0)
+    assert env.launch_threat()
+    env._finish_threat(hit=False)
 
 
 def test_threat_dodge_side_is_committed_once_per_threat(env):

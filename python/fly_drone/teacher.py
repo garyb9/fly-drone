@@ -17,6 +17,7 @@ WALL_LOOM_RANGE = 2.0
 THREAT_LOOM_RANGE = 2.0
 BEACON_RANGE = 12.0
 AVOID_CONE = 0.61  # +-35 deg
+AVOID_RELEASE = 0.05
 EXPLORE_FORWARD = 0.8
 # Bounds and pacing for the explore drive's yaw cast (see `_explore_action`): a fixed
 # constant here was cloned onto every decoder as a scripted forward-drift-plus-turn,
@@ -116,17 +117,23 @@ def teacher_action(env):
         drive = "beacon"
 
     distance, bearing, kind = nearest_obstacle(env)
+    weight = 0.0
     if kind is not None:
         reach = PILLAR_LOOM_RANGE if kind == "pillar" else WALL_LOOM_RANGE
         weight = _sigmoid((reach - distance) / 0.15)
-        if weight > 1e-3:
-            # Turn away from the side the obstacle is on (+yaw is left).
-            away = -1.0 if bearing > 0 else 1.0
-            forward = float(np.clip((distance - 0.45) / 0.8, -0.3, 0.6))
-            avoid = np.array([forward, 0.0, 0.0, away])
-            action = weight * avoid + (1 - weight) * action
-            if weight > 0.5:
-                drive = "avoid"
+    if weight > AVOID_RELEASE:
+        # Commit to one turn per avoidance (+yaw is left): heading into a corner, the
+        # nearest wall alternates every few degrees of yaw, and re-deciding each frame
+        # flipped the label +-1 until the drone pinned itself there (roam-screen 5001).
+        if roam.get("avoid") is None or roam["avoid"][0] != kind:
+            roam["avoid"] = (kind, -1.0 if bearing > 0 else 1.0)
+        forward = float(np.clip((distance - 0.45) / 0.8, -0.3, 0.6))
+        avoid = np.array([forward, 0.0, 0.0, roam["avoid"][1]])
+        action = weight * avoid + (1 - weight) * action
+        if weight > 0.5:
+            drive = "avoid"
+    else:
+        roam["avoid"] = None
 
     threat = roam["threat"] if roam else None
     if threat is not None:

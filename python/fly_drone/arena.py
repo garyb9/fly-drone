@@ -159,6 +159,11 @@ def next_beacon(rng, spec, pillars, pos, yaw, attempts=400):
     return fallback, bool(abs(bearing_to(pos, yaw, fallback)) > IN_VIEW)
 
 
+# Launch points are clamped inside the walls; near a wall that can put the origin on top
+# of the drone: an instant hit, or a 0.3 m "dodge" that tests nothing.
+MIN_LAUNCH_RANGE = 2.5
+
+
 def plan_threat(rng, spec, pos, yaw):
     """Launch from 3-4 m ahead (within +-30 deg of heading), aimed at the launch position.
 
