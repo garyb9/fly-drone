@@ -54,3 +54,16 @@ Screen on validation seeds 9000–9009, 60 s, level 2, intact:
 - **Task 12 runs from one driver script.** It chains clone → round-0 decoder → sanity screen → validation → v4 E1 baseline, and
   it stops automatically if the sanity gate fails (beacons/min < 0.8 × 2.2 = 1.76). The gate uses the Task 11 choice (it0) as its reference, as the plan
   specifies, not the teacher. Cost if wrong: none; the gate is an engineering check, not acceptance.
+- **Clone data check:** 48,000 frames from 32 distinct flights of 1,500 frames each (60 s at 25 Hz). No flight
+  was cut short, which settles the parked Task 4 concern about the reported flight count for this dataset.
+
+## Tasks 13–15: pipeline
+
+- **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
+  still finishes.
+- **Round 0 (clone encoder + round-0 decoder) is a candidate for the final pair.** Task 13 step 6 says "the round
+  with the best validation near-dodge rate", and the stop rule compares against "the best earlier round". Round 0 has
+  a validation file and belongs in the comparison. Cost if wrong: if round 0 wins, the "final" v5 has had no SAC,
+  and the results will say so.
+- **A near-dodge rate of `null` (no near threats) counts as −1 for comparisons**, so a round with no measurable dodging
+  can never count as an improvement.
