@@ -59,8 +59,9 @@ try {
   }
   passed.push("motor telemetry (actual/commanded RPM near hover)");
 
-  // Pause/Reset/target/obstacle controls now live in the drawer's "Controls" tab.
-  await page.getByRole("button", { name: "Controls", exact: true }).click();
+  // Pause/Reset/target/obstacle controls live in the drawer's "Signals" tab, alongside
+  // the sensory/neural/motor telemetry.
+  await page.getByRole("button", { name: "Signals", exact: true }).click();
   if (await page.getByRole("button", { name: "Pause", exact: true }).count()) {
     await page.getByRole("button", { name: "Pause", exact: true }).click();
   }

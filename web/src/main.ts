@@ -103,15 +103,20 @@ const HOLDING: Record<string, string> = {
 };
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
-<header><a class="brand" href="/">F<span>↗</span>D</a><div><h1>Fly / Drone</h1><p>CONNECTOME LABORATORY <span class="version">001</span></p></div><div class="connection"><i id="dot"></i><span id="status">Connecting to simulation</span></div></header>
 <main>
 <div class="world">
 <div id="world" class="viewport"></div>
-<div class="world-overlay"><div class="eyebrow">MALECNS → CF2X</div><h2>A different body.<br>The same wiring.</h2><p>166,700 neurons · 4 rotors · 2 eyes</p></div>
-<div class="world-bottom"><div><span>ALTITUDE</span><strong id="altitude">—<small> m</small></strong></div><div><span>SPEED</span><strong id="speed">—<small> m/s</small></strong></div><div><span>VX / VY / VZ</span><strong id="velocity-axes">—<small> m/s</small></strong></div><div><span>SIMULATION</span><strong id="simtime">0.00<small> s</small></strong></div><div><span>REAL TIME</span><strong id="rtf">—<small> ×</small></strong></div><button id="follow">Follow drone</button></div>
+<div class="connection"><i id="dot"></i><span id="status">Connecting to simulation</span></div>
+<div class="world-bottom"><div><span>ALTITUDE</span><strong id="altitude">—<small> m</small></strong></div><div><span>SPEED</span><strong id="speed">—<small> m/s</small></strong></div><div><span>VX / VY / VZ</span><strong id="velocity-axes">—<small> m/s</small></strong></div><div><span>SIMULATION</span><strong id="simtime">0.00<small> s</small></strong></div><div><span>REAL TIME</span><strong id="rtf">—<small> ×</small></strong></div><div class="camera-controls"><button id="cam-follow" title="Keep the camera target locked to the drone">Follow</button><button id="cam-recenter" title="Snap the camera target to the drone once">Recenter</button><button id="cam-reset" title="Restore the default orbit view">Reset view</button><button id="cam-fpv" title="Ride along in the drone's cockpit">1st person</button><button id="cam-tpv" title="Chase camera behind the drone">3rd person</button></div></div>
 <div class="world-frame"><i></i><i></i><i></i><i></i></div>
 <div class="world-dims" id="dims"></div>
 <div class="world-hint">DRAG TO ORBIT · SCROLL TO ZOOM</div>
+</div>
+<div class="hud-layer">
+<section class="hud-pinned" id="hud-pinned">
+<div class="brain-mini"><div class="brain-mini-head"><span id="mode">INITIALIZING</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>connections</span></div></div>
+<div class="fly-mini-panel" title="Same neural readouts, independent trajectory — illustrative fly dynamics, not calibrated biomechanics."><div class="fly-mini-head"><span>FLY BODY</span></div><div id="fly" class="viewport"></div></div>
+<div class="eyes-panel"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div></div>
 <div class="instruments">
 <div class="attitude-gauges">
 <div class="attitude-gauge"><div class="track"><i class="fill" id="roll-fill"></i><i class="needle" id="roll-needle"></i></div><span>ROLL</span><em id="roll-value">—</em></div>
@@ -128,30 +133,21 @@ app.innerHTML = `
 <span><i style="background:#5cb0ff"></i><span class="legend-label">world -Y</span></span>
 </div>
 </div>
-</div>
-<div class="hud-layer">
-<section class="hud-pinned" id="hud-pinned">
-<div class="brain-mini"><div class="brain-mini-head"><span id="mode">INITIALIZING</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>connections</span></div></div>
-<div class="eyes-panel"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div></div>
 </section>
 <div class="drawer" id="drawer">
 <div class="drawer-body">
-<section class="card replay" data-panel="replay"><div class="panel-head"><span><b class="index">05</b> TRIALS &amp; REPLAY</span><span id="trial">SEED 42 · VISUAL · INTACT</span></div><div class="replay-grid"><div><h3>RUN A TRIAL</h3><div class="replay-form"><label>Task<select id="task"></select></label><label>Brain<select id="ablation"><option value="none">Intact</option><option value="zero">Zeroed features</option><option value="sensory">Vision silenced</option><option value="shuffle">Shuffled features</option></select></label><label>Seed<input id="seed" type="number" value="1000" min="0" step="1"></label><button id="run" class="primary">Run trial</button></div><p id="outcome" class="outcome">Outcome: —</p></div><div><h3>REPLAY AN EVALUATION</h3><div class="replay-form"><label>Report<select id="report"><option value="">No reports loaded</option></select></label></div><p id="report-summary" class="outcome"></p><div id="seeds" class="seed-grid" aria-label="Evaluation seeds"></div></div></div></section>
-<section class="card brain-card" data-panel="brain" hidden><div class="panel-head"><span><b class="index">02</b> NEURON INSPECTOR</span></div><div class="inspect"><select id="neuron" aria-label="Neuron to inspect"><option>Loading neurons…</option></select><div class="button-row"><button data-op="pulse">Pulse</button><button data-op="hold">Hold</button><button data-op="silence">Silence</button><button data-op="restore">Restore</button></div></div></section>
-<section class="card fly-card" data-panel="fly" hidden><div class="panel-head"><span><b class="index">03</b> PARALLEL BODY</span><span>FLY</span></div><div id="fly" class="viewport"></div><p class="caption">Same neural readouts. Independent trajectory.<br>Illustrative fly dynamics; not calibrated biomechanics.</p></section>
-<section class="card roam-hud" id="roam-hud" data-panel="roam" hidden><div class="panel-head"><span><b class="index">06</b> FREE ROAM</span><span id="roam-level">LEVEL —</span></div><div class="roam-stats"><div><span>BEACONS / MIN</span><strong id="roam-beacons">—</strong></div><div><span>COLLISIONS / MIN</span><strong id="roam-collisions">—</strong></div><div><span>THREATS DODGED</span><strong id="roam-dodged">—</strong></div><div><span>THREATS HIT</span><strong id="roam-hit">—</strong></div><div><span>CELLS VISITED</span><strong id="roam-cells">—</strong></div></div><div class="roam-log" id="roam-log" aria-label="Free roam event log"></div></section>
-<section class="card signals" data-panel="signals" hidden><div class="panel-head"><span><b class="index">04</b> SENSORY → NEURAL → MOTION</span><span id="episode">EPISODE 0</span></div><div class="signal-grid"><div><h3>SENSORY CURRENT</h3><div id="cues" class="meters"></div></div><div><h3>NEURAL READOUT</h3><div id="readouts" class="meters"></div></div><div><h3>ACTUAL / COMMANDED RPM</h3><div id="motors" class="meters"></div></div></div></section>
-<section class="card controls" data-panel="controls" hidden><div><h3>EXPERIMENT CONTROLS</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section>
+<section class="card replay" data-panel="replay"><div class="panel-head"><span class="panel-title">Trials &amp; Replay</span><span class="panel-meta" id="trial">SEED 42 · VISUAL · INTACT</span></div><div class="replay-grid"><div><h3>RUN A TRIAL</h3><div class="replay-form"><label>Task<select id="task"></select></label><label>Brain<select id="ablation"><option value="none">Intact</option><option value="zero">Zeroed features</option><option value="sensory">Vision silenced</option><option value="shuffle">Shuffled features</option></select></label><label>Seed<input id="seed" type="number" value="1000" min="0" step="1"></label><button id="run" class="primary">Run trial</button></div><p id="outcome" class="outcome">Outcome: —</p></div><div><h3>REPLAY AN EVALUATION</h3><div class="replay-form"><label>Report<select id="report"><option value="">No reports loaded</option></select></label></div><p id="report-summary" class="outcome"></p><div id="seeds" class="seed-grid" aria-label="Evaluation seeds"></div></div></div></section>
+<section class="card brain-card" data-panel="brain" hidden><div class="panel-head"><span class="panel-title">Neuron Inspector</span></div><div class="inspect"><select id="neuron" aria-label="Neuron to inspect"><option>Loading neurons…</option></select><div class="button-row"><button data-op="pulse">Pulse</button><button data-op="hold">Hold</button><button data-op="silence">Silence</button><button data-op="restore">Restore</button></div></div></section>
+<section class="card roam-hud" id="roam-hud" data-panel="roam" hidden><div class="panel-head"><span class="panel-title">Free Roam</span><span class="panel-meta" id="roam-level">LEVEL —</span></div><div class="roam-stats"><div><span>BEACONS / MIN</span><strong id="roam-beacons">—</strong></div><div><span>COLLISIONS / MIN</span><strong id="roam-collisions">—</strong></div><div><span>THREATS DODGED</span><strong id="roam-dodged">—</strong></div><div><span>THREATS HIT</span><strong id="roam-hit">—</strong></div><div><span>CELLS VISITED</span><strong id="roam-cells">—</strong></div></div><div class="roam-log" id="roam-log" aria-label="Free roam event log"></div></section>
+<section class="card signals" data-panel="signals" hidden><div class="panel-head"><span class="panel-title">Signals &amp; Controls</span><span class="panel-meta" id="episode">EPISODE 0</span></div><div class="signal-grid"><div><h3>SENSORY CURRENT</h3><div id="cues" class="meters"></div></div><div><h3>NEURAL READOUT</h3><div id="readouts" class="meters"></div></div><div><h3>ACTUAL / COMMANDED RPM</h3><div id="motors" class="meters"></div></div></div><div class="controls"><div><h3>EXPERIMENT</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section>
 </div>
 </div>
 <div class="drawer-rail" id="drawer-rail">
-<button class="drawer-collapse" id="drawer-collapse" aria-label="Toggle panel drawer">▸</button>
+<button class="drawer-collapse" id="drawer-collapse" aria-label="Toggle panel drawer" title="Toggle panel"><i>‹</i></button>
 <button data-tab="replay" class="tab-btn active">Trials</button>
 <button data-tab="brain" class="tab-btn">Brain</button>
-<button data-tab="fly" class="tab-btn">Body</button>
 <button data-tab="roam" class="tab-btn" id="roam-tab" hidden>Roam</button>
 <button data-tab="signals" class="tab-btn">Signals</button>
-<button data-tab="controls" class="tab-btn">Controls</button>
 </div>
 </div>
 </main>
@@ -360,9 +356,11 @@ let metadata: Metadata | undefined,
   lines: THREE.LineSegments | undefined;
 let socket: WebSocket,
   following = false,
+  cameraMode: "orbit" | "fpv" | "tpv" = "orbit",
   reports: Report[] = [],
   replayPolicy: string | undefined,
   initialized = false;
+const WORLD_HOME = { position: [2.5, 2.2, 3.2], target: [0.3, 0.8, 0] };
 const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
 const vector = (v: number[]) => new THREE.Vector3(v[0], v[2], -v[1]);
 const quaternion = (v: number[]) => new THREE.Quaternion(v[1], v[2], v[3], v[0]);
@@ -635,13 +633,16 @@ function describeRoamEvent(e: FreeRoamEvent): string {
 function updateRoamHud(f: Frame) {
   const hud = el("roam-hud");
   const r = f.free_roam;
+  el("roam-tab").hidden = !r;
   if (!r) {
     hud.hidden = true;
-    el("roam-tab").hidden = true;
     return;
   }
-  hud.hidden = false;
-  el("roam-tab").hidden = false;
+  // Only the active tab's panel should be visible — updateRoamHud runs every frame
+  // regardless of which tab is selected, so it must defer to switchTab's choice
+  // instead of force-showing itself over whatever panel is actually open.
+  const activeTab = document.querySelector<HTMLButtonElement>(".tab-btn.active")?.dataset.tab;
+  hud.hidden = activeTab !== "roam";
   const minutes = Math.max(f.time / 60, 1 / 60);
   el("roam-level").textContent = `LEVEL ${r.level}`;
   el("roam-beacons").textContent = (r.beacons / minutes).toFixed(2);
@@ -672,7 +673,24 @@ function update(f: Frame) {
     const power = f.readouts[w.sign === 1 ? "power_l" : "power_r"] ?? 0;
     w.node.rotation.x = w.rest + w.sign * Math.sin(f.time * 2 * Math.PI * 8) * power * 0.6;
   }
-  if (following) {
+  if (cameraMode === "fpv") {
+    const eye = new THREE.Vector3(0.08, 0.02, 0)
+      .applyQuaternion(drone.quaternion)
+      .add(drone.position);
+    const ahead = new THREE.Vector3(1, 0, 0).applyQuaternion(drone.quaternion).add(eye);
+    world.camera.position.copy(eye);
+    world.camera.up.set(0, 1, 0);
+    world.camera.lookAt(ahead);
+    world.controls.target.copy(ahead);
+  } else if (cameraMode === "tpv") {
+    const chase = new THREE.Vector3(-0.7, 0.32, 0)
+      .applyQuaternion(drone.quaternion)
+      .add(drone.position);
+    world.camera.position.copy(chase);
+    world.camera.up.set(0, 1, 0);
+    world.camera.lookAt(drone.position);
+    world.controls.target.copy(drone.position);
+  } else if (following) {
     world.controls.target.copy(drone.position);
   }
   if (points && metadata) {
@@ -788,10 +806,30 @@ el("reset").onclick = () => runTrial();
 el("run").onclick = () => runTrial();
 select("report").onchange = () => renderSeeds();
 select("ablation").onchange = () => renderSeeds();
-el("follow").onclick = () => {
+function setCameraMode(mode: "orbit" | "fpv" | "tpv") {
+  cameraMode = cameraMode === mode ? "orbit" : mode;
+  world.controls.enabled = cameraMode === "orbit";
+  el("cam-fpv").classList.toggle("active", cameraMode === "fpv");
+  el("cam-tpv").classList.toggle("active", cameraMode === "tpv");
+}
+el("cam-follow").onclick = () => {
   following = !following;
-  el("follow").textContent = following ? "Free camera" : "Follow drone";
+  el("cam-follow").classList.toggle("active", following);
 };
+el("cam-recenter").onclick = () => world.controls.target.copy(drone.position);
+el("cam-reset").onclick = () => {
+  cameraMode = "orbit";
+  following = false;
+  el("cam-follow").classList.remove("active");
+  el("cam-fpv").classList.remove("active");
+  el("cam-tpv").classList.remove("active");
+  world.controls.enabled = true;
+  world.camera.position.fromArray(WORLD_HOME.position);
+  world.controls.target.fromArray(WORLD_HOME.target);
+  world.controls.update();
+};
+el("cam-fpv").onclick = () => setCameraMode("fpv");
+el("cam-tpv").onclick = () => setCameraMode("tpv");
 document
   .querySelectorAll<HTMLButtonElement>("[data-op]")
   .forEach(
@@ -812,11 +850,9 @@ el("loom").onclick = () => {
   send({ op: "objects", obstacle: [Math.min(3.5, p[0] + 0.65), p[1], Math.max(0.3, p[2])] });
 };
 el("clear").onclick = () => send({ op: "objects", obstacle: [2, -2, 1] });
-// The pinned brain/eyes stack docks against whichever the drawer currently is — the full
-// panel when expanded, just the rail when collapsed — so it never leaves a stray gap.
 function setDrawerCollapsed(collapsed: boolean) {
   el("drawer").classList.toggle("collapsed", collapsed);
-  el("hud-pinned").classList.toggle("rail-only", collapsed);
+  el("drawer-collapse").querySelector("i")!.textContent = collapsed ? "›" : "‹";
 }
 function switchTab(name: string) {
   document

@@ -172,15 +172,33 @@ class Session:
             targets = np.frombuffer(
                 raw, dtype="<u4", count=edges, offset=32 + 4 * (n + 1)
             )
+            # Round-robin one edge per source neuron per pass, instead of draining each
+            # source's edges before moving to the next: iterating `ids` in ascending order
+            # and stopping at the first 1000 links meant only the first few dozen
+            # (lowest-index) neurons ever contributed an edge, leaving every other rendered
+            # neuron looking synapse-less regardless of where it actually sits in the brain.
+            LINK_BUDGET = 1000
+            edge_iters = {
+                src: iter(
+                    int(dst)
+                    for dst in targets[offsets[src] : offsets[src + 1]]
+                    if int(dst) in idx
+                )
+                for src in ids
+            }
             links = []
-            for src in ids:
-                for dst in targets[offsets[src] : offsets[src + 1]]:
-                    if int(dst) in idx:
-                        links.append([idx[src], idx[int(dst)]])
-                    if len(links) >= 1000:
+            active = list(edge_iters)
+            while active and len(links) < LINK_BUDGET:
+                still_active = []
+                for src in active:
+                    dst = next(edge_iters[src], None)
+                    if dst is None:
+                        continue
+                    links.append([idx[src], idx[dst]])
+                    still_active.append(src)
+                    if len(links) >= LINK_BUDGET:
                         break
-                if len(links) >= 1000:
-                    break
+                active = still_active
             self.metadata = {
                 "ids": ids,
                 "cells": [cells[i] for i in ids],
