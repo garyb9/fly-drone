@@ -1,0 +1,19 @@
+{
+  "navyDeep": "#071b26",
+  "navySurface": "#0d222c",
+  "navyBorder": "#1c3947",
+  "cyanGrid": "#92cce0",
+  "cyanLine": "#cfeaf0",
+  "inkBright": "#eaf6f9",
+  "inkDim": "#7fa8b3",
+  "amber": "#ffb15c",
+  "obstacleFill": "#0f3747",
+  "obstacleStroke": "#6fa9bd",
+  "velocity": "#6fe2ff",
+  "command": "#ff6fd8",
+  "axisX": "#ff5c5c",
+  "axisY": "#5cff7a",
+  "axisZ": "#5cb0ff",
+  "gridMinor": "#4d7f93",
+  "targetEmissive": "#a16b15"
+}

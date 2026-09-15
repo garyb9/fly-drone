@@ -2,8 +2,11 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import "./style.css";
+import { applyCssTokens } from "./theme/apply-css-tokens";
 import { THEME } from "./scene/theme";
 import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
+
+applyCssTokens();
 
 type Cell = { id: string; type: string; side: string; position: number[]; measured: boolean };
 type Metadata = {

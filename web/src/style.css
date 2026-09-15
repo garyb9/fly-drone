@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
-/* Blueprint/schematic theme tokens. Keep web/src/scene/theme.ts's THEME object in sync
-   with these values — one is CSS-side chrome, the other is Three.js scene materials. */
+/* Fallback values only — the source of truth is web/src/theme/palette.json,
+   applied at runtime by applyCssTokens() (web/src/theme/apply-css-tokens.ts).
+   These are also what architecture.html's dark-mode block copies by hand;
+   scripts/check-doc-tokens.mjs (Task 3) guards that copy against drift. */
 :root {
   --bp-bg: #071b26;
   --bp-surface: #0d222c;
