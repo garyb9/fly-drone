@@ -361,6 +361,26 @@ asks SAC for loom selectivity that v4 never had.
 - **Code added along the way:** Tasks 12b–12d (collection under a learned encoder, pre-tanh warm start, difference-aware and mirror-symmetric clone fit), each reviewed.
 - **Next:** the 6-worker smoke test, then Tasks 13–15.
 
+### Smoke test and launch of Tasks 13–15
+
+- **Smoke encoder round** (9,000 frames, warm-up 6,000, 6 workers): exited cleanly in 117 s at **81 fps**. `round.json` is consistent.
+  Loom and light metabolic costs are both logged (0.0091 / 0.0019).
+- **Time estimate from that throughput:**
+  - Encoder round, 350k frames: ≈ 72 min. Decoder round, 150k frames: ≈ 31 min. Validation: ~15 min. That is **~2 h per round**, ~6 h for 3 rounds.
+  - Bypass (450k frames): ≈ 95 min, plus the E3 screen. Final evaluation: ~3 h.
+  - **Total ~11–12 h.**
+- **Ruling: the smoke check's warm-up log test only requires the flag to be logged and to end at 0.** SB3 writes its log at episode ends, and a smoke
+  run is a single 1,500-frame episode per worker, so a 1→0 flip cannot be seen. The freeze itself is covered by the reviewed unit tests, and
+  learning after the warm-up is proven by comparing actor weights before and after. Cost if wrong: a warm-up regression on the 6-worker path would only show up in round 1's logs.
+- **Ruling: a gatekeeper script launches Tasks 13–15 automatically**, and only if every smoke check passes:
+  - encoder version matches `round.json`;
+  - export parity;
+  - encoder and decoder actor weights moved after the warm-up;
+  - warm-up and metabolic-cost logging present;
+  - RAM headroom.
+
+  Otherwise it stops and logs why. Cost if wrong: none. A failed check blocks the multi-hour run.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
