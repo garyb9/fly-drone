@@ -319,6 +319,25 @@ actually runs with. That is DAgger's and SAC's job, not the clone's. Stopped and
   gate override in the results. Round 0 avoids obstacles and forages at about 62% of v4, and SAC trains in closed loop under the real
   encoder, which is what is missing. Cost if wrong: hours of SAC compute from a weaker start, reported honestly.
 
+### Gate PASSED after one DAgger iteration under the clone
+
+DAgger iteration 1: the teacher-only round-0 decoder flew half the time (beta 0.5) under the mirror-symmetric clone, on 128 flights, seeds 1200–1327.
+The decoder was then refit on both clone-recorded files: export error 3.5e-6, held-out avoid mse 0.181 (student-flown states make harder labels).
+Screen: level 2, seeds 9000–9029, 60 s. Gate: 1.55.
+
+| system                              | beacons/min (SEM) | collisions/min | visited cells | zero-beacon seeds | paired vs v4    |
+| ----------------------------------- | ----------------- | -------------- | ------------- | ----------------- | --------------- |
+| v4 it0 (reference)                  | 1.93 ± 0.20       | 1.07           | 33.8          | 3                 | —               |
+| round 0, teacher-only, mirror clone | 1.20 ± 0.22       | 0.80           | 33.5          | 10                | −0.73 ± 0.24    |
+| **round 0, DAgger it1, mirror clone** | **2.13 ± 0.27** | **0.53**       | **36.5**      | 5                 | **+0.20 ± 0.25** |
+
+- **Passed without an override.** DAgger iteration 2 was not needed.
+- The installed `runs/v5/round0` is `round0-dagger1`, recorded in `gate.json`.
+- The v5 system (learned encoder, frozen connectome, SAC-style decoder) now forages as well as v4, statistically, with half the collisions.
+- **Lesson:** the gap was the decoder never having flown under the encoder it runs with. Clone fidelity was not the missing piece. Training in closed loop under the
+  real encoder closed the gap in one iteration.
+- Next, automatically: validation, the v4 E1 baseline, the 6-worker smoke test, then Tasks 13–15.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
