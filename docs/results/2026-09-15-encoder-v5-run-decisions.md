@@ -95,6 +95,20 @@ Diagnostics (a few minutes of compute each, no training runs):
 
 The fix is the user's call (see the report). The Tasks 13–15 pipeline was never launched.
 
+### User decision: refit under the clone and loosen the tanh fit (Task 12b, new)
+
+- **`roam-collect --encoder`:** the round-0 decoder is fitted on activity recorded while the clone drives the
+  brain. The teacher labels are unchanged (simulator geometry gated by visibility).
+- **Ruling: data loading enforces the encoder version.** `_load` refuses files recorded under a different
+  encoder than the decoder will run with. This is the check whose absence let the mismatch through. Cost if wrong:
+  the v4 DAgger files can no longer seed a learned decoder, which is the point.
+- **Ruling: the warm start fits the pre-tanh output** against `atanh(clip(y, ±0.97))`, so saturated avoid turns keep
+  their gradient. Held-out errors are still reported in action space. Cost if wrong: explore/beacon labels
+  could fit slightly worse. The screen will show it.
+- **Ruling: teacher-only collection first** (128 flights, level 2, the same seeds 200–327 as v4 it0), with no DAgger
+  iterations under the clone. Under v4, iterations 1–3 did not beat it0. A DAgger iteration under the clone is
+  added only if the gate fails again. Cost if wrong: one more collection round (~20 min).
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
