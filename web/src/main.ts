@@ -18,6 +18,31 @@ type Metadata = {
   ablations: string[];
   room: Room;
 };
+type FreeRoamEvent = {
+  type: string;
+  time: number;
+  side?: number;
+  count?: number;
+  kinds?: Record<string, number>;
+  min_distance?: number;
+  hit?: boolean;
+  dodged?: boolean;
+};
+type FreeRoam = {
+  level: number;
+  beacons: number;
+  collisions: number;
+  collision_kinds: Record<string, number>;
+  threats_finished: number;
+  threats_dodged: number;
+  threats_hit: number;
+  visited_cells: number;
+  beacon_visible: boolean;
+  clearance: number;
+  ghost: boolean;
+  silenced: string[];
+  events: FreeRoamEvent[];
+};
 type Outcome = {
   bearing: number;
   obstacle_distance: number;
@@ -65,6 +90,7 @@ type Frame = {
   active_policy: string | null;
   policy_status?: "none" | "loaded" | "limits mismatch";
   outcome: Outcome;
+  free_roam: FreeRoam | null;
 };
 // Without a flying decoder every motion command is zero: say so instead of looking stuck.
 const HOLDING: Record<string, string> = {
@@ -79,6 +105,7 @@ app.innerHTML = `
 <section class="card brain-card"><div class="panel-head"><span><b class="index">02</b> LIVING GRAPH</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>selected anatomical connections</span></div><div class="inspect"><select id="neuron" aria-label="Neuron to inspect"><option>Loading neurons…</option></select><div class="button-row"><button data-op="pulse">Pulse</button><button data-op="hold">Hold</button><button data-op="silence">Silence</button><button data-op="restore">Restore</button></div></div></section>
 <section class="card fly-card"><div class="panel-head"><span><b class="index">03</b> PARALLEL BODY</span><span>FLY</span></div><div id="fly" class="viewport"></div><p class="caption">Same neural readouts. Independent trajectory.<br>Illustrative fly dynamics; not calibrated biomechanics.</p></section>
 <section class="card signals"><div class="panel-head"><span><b class="index">04</b> SENSORY → NEURAL → MOTION</span><span id="episode">EPISODE 0</span></div><div class="signal-grid"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div><div><h3>SENSORY CURRENT</h3><div id="cues" class="meters"></div></div><div><h3>NEURAL READOUT</h3><div id="readouts" class="meters"></div></div><div><h3>ACTUAL / COMMANDED RPM</h3><div id="motors" class="meters"></div></div></div></section>
+<section class="card roam-hud" id="roam-hud" hidden><div class="panel-head"><span><b class="index">06</b> FREE ROAM</span><span id="roam-level">LEVEL —</span></div><div class="roam-stats"><div><span>BEACONS / MIN</span><strong id="roam-beacons">—</strong></div><div><span>COLLISIONS / MIN</span><strong id="roam-collisions">—</strong></div><div><span>THREATS DODGED</span><strong id="roam-dodged">—</strong></div><div><span>THREATS HIT</span><strong id="roam-hit">—</strong></div><div><span>CELLS VISITED</span><strong id="roam-cells">—</strong></div></div><div class="roam-log" id="roam-log" aria-label="Free roam event log"></div></section>
 <section class="card controls"><div><h3>EXPERIMENT CONTROLS</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section>
 </main><footer><span>ANATOMICAL WIRING · MODELED NEURONS · LEARNED DECODING</span><span>MaleCNS v1.0 · FlyEM / Cambridge / MRC LMB / Google Research · CC-BY 4.0</span></footer>`;
 const el = (id: string) => document.getElementById(id)!;
@@ -481,6 +508,44 @@ function updateDebugVectors(f: Frame) {
   ];
   setArrow(commandArrow, pos, vector(worldCmd), Math.hypot(...worldCmd));
 }
+function describeRoamEvent(e: FreeRoamEvent): string {
+  const t = e.time.toFixed(1);
+  switch (e.type) {
+    case "beacon_collected":
+      return `<p class="roam-log-entry ok">${t}s · beacon collected (${e.count})</p>`;
+    case "collision":
+      return `<p class="roam-log-entry warn">${t}s · collision: ${Object.keys(e.kinds ?? {}).join(", ") || "?"}</p>`;
+    case "threat_launched":
+      return `<p class="roam-log-entry warn">${t}s · threat launched (${(e.side ?? 0) > 0 ? "left" : "right"})</p>`;
+    case "threat_hit":
+      return `<p class="roam-log-entry warn">${t}s · threat hit</p>`;
+    case "threat_passed":
+      return `<p class="roam-log-entry ok">${t}s · threat dodged</p>`;
+    default:
+      return `<p class="roam-log-entry">${t}s · ${e.type}</p>`;
+  }
+}
+function updateRoamHud(f: Frame) {
+  const hud = el("roam-hud");
+  const r = f.free_roam;
+  if (!r) {
+    hud.hidden = true;
+    return;
+  }
+  hud.hidden = false;
+  const minutes = Math.max(f.time / 60, 1 / 60);
+  el("roam-level").textContent = `LEVEL ${r.level}`;
+  el("roam-beacons").textContent = (r.beacons / minutes).toFixed(2);
+  el("roam-collisions").textContent = (r.collisions / minutes).toFixed(2);
+  el("roam-dodged").textContent = String(r.threats_dodged);
+  el("roam-hit").textContent = String(r.threats_hit);
+  el("roam-cells").textContent = String(r.visited_cells);
+  el("roam-log").innerHTML = r.events
+    .slice()
+    .reverse()
+    .map(describeRoamEvent)
+    .join("");
+}
 function update(f: Frame) {
   latest = f;
   el("status").textContent = f.paused ? "Simulation paused" : "Local simulation connected";
@@ -555,6 +620,7 @@ function update(f: Frame) {
   );
   el("command").textContent =
     `Motion [m/s, rad/s]: ${f.command.map((v) => v.toFixed(2)).join(" · ")}`;
+  updateRoamHud(f);
   el("error").textContent =
     f.error ??
     `${f.missed_deadlines} missed frame deadlines · Full graph running · Fly panel uses modeled dynamics`;
