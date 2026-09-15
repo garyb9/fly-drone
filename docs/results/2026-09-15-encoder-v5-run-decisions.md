@@ -121,6 +121,34 @@ The fix is the user's call (see the report). The Tasks 13–15 pipeline was neve
   The offline error is slightly higher, but in flight the linear head's foraging comes back with fewer collisions.
   Cost if wrong: none seen at level 2.
 
+### Sanity gate FAILED again (re-run with clone-recorded data)
+
+The round-0 decoder was refit on 128 teacher flights recorded with the clone driving the brain. The export error was
+1.1e-5, and held-out avoid mse fell to 0.098, the best of all fits. Screen: level 2, seeds 9000–9009. Values per minute.
+
+| system                                   | beacons | collisions | visited cells |
+| ---------------------------------------- | ------- | ---------- | ------------- |
+| diag B′: v4 encoder, same warm start     | 2.2     | 0.5        | 35.0          |
+| round 0 v2: clone encoder, clone data    | **1.0** | 0.6        | 34.9          |
+
+Obstacle avoidance and exploration are back. Only beacon seeking is lost.
+
+**Cause: the clone blurs the left–right light difference.** On the clone's held-out frames:
+
+| pathway     | per-channel r | left−right difference r | difference gain (clone / v4) |
+| ----------- | ------------- | ----------------------- | ---------------------------- |
+| light (Mi1) | 0.99          | 0.85                    | 0.85                         |
+| light (Tm3) | 0.99          | 0.85                    | 0.85                         |
+| loom (LC4)  | 0.95          | 0.94                    | 0.92                         |
+
+In v4 the light difference is exactly 0 in 67% of frames. The clone adds side noise there and shrinks the real
+side signal. Steering toward a beacon depends on that side signal.
+
+- **Ruling: skip the announced DAgger iteration under the clone.** DAgger fixes decoder covariate shift, but this is the encoder's
+  fidelity. Cost if wrong: one ~25 min iteration postponed.
+- **Ruling: run a cheap test (clone refit with 60k steps instead of 20k), then stop and report**, as the Task 12 gate instruction
+  says. Any encoder fix changes the encoder version, so the round-0 data must be re-collected. The user chooses.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
