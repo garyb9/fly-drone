@@ -812,6 +812,12 @@ el("loom").onclick = () => {
   send({ op: "objects", obstacle: [Math.min(3.5, p[0] + 0.65), p[1], Math.max(0.3, p[2])] });
 };
 el("clear").onclick = () => send({ op: "objects", obstacle: [2, -2, 1] });
+// The pinned brain/eyes stack docks against whichever the drawer currently is — the full
+// panel when expanded, just the rail when collapsed — so it never leaves a stray gap.
+function setDrawerCollapsed(collapsed: boolean) {
+  el("drawer").classList.toggle("collapsed", collapsed);
+  el("hud-pinned").classList.toggle("rail-only", collapsed);
+}
 function switchTab(name: string) {
   document
     .querySelectorAll<HTMLElement>(".drawer-body [data-panel]")
@@ -819,15 +825,17 @@ function switchTab(name: string) {
   document
     .querySelectorAll<HTMLButtonElement>(".tab-btn")
     .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === name));
-  el("drawer").classList.remove("collapsed");
+  setDrawerCollapsed(false);
 }
 document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((btn) => {
   btn.onclick = () => {
-    if (btn.classList.contains("active")) el("drawer").classList.toggle("collapsed");
+    if (btn.classList.contains("active"))
+      setDrawerCollapsed(!el("drawer").classList.contains("collapsed"));
     else switchTab(btn.dataset.tab!);
   };
 });
-el("drawer-collapse").onclick = () => el("drawer").classList.toggle("collapsed");
+el("drawer-collapse").onclick = () =>
+  setDrawerCollapsed(!el("drawer").classList.contains("collapsed"));
 function render() {
   requestAnimationFrame(render);
   for (const v of [world, brain, flyview]) {
