@@ -46,6 +46,40 @@ def test_layout_deterministic_spaced_clear_and_connected(seed):
     assert arena.connected(arena.free_mask(spec, a)[2])
 
 
+@pytest.mark.parametrize("seed", range(5))
+def test_layout_with_varied_pillar_radii_stays_spaced_clear_and_connected(seed):
+    spec = ArenaSpec(pillar_radii=arena.VARIED_PILLAR_RADII)
+    a = arena.generate_layout(np.random.default_rng(seed), spec, 3)
+    b = arena.generate_layout(np.random.default_rng(seed), spec, 3)
+    np.testing.assert_array_equal(a, b)
+    assert len(a) == 16
+    radii = [arena.pillar_radius(spec, i) for i in range(len(a))]
+    assert len(set(radii)) > 1
+    gaps = [
+        np.linalg.norm(p - q) - radii[i] - radii[j]
+        for i, p in enumerate(a)
+        for j, q in enumerate(a[i + 1 :], start=i + 1)
+    ]
+    assert min(gaps) >= spec.pillar_spacing - 1e-9
+    for i, p in enumerate(a):
+        assert np.linalg.norm(p) >= spec.spawn_clear + radii[i]
+    assert np.abs(a).max() <= spec.half_size - 1.0
+    assert arena.connected(arena.free_mask(spec, a)[2])
+
+
+def test_varied_pillar_radii_render_at_their_own_size():
+    spec = ArenaSpec(pillar_radii=arena.VARIED_PILLAR_RADII)
+    plant = DronePlant(vision=False, arena=spec)
+    try:
+        plant.set_pillars([[1.0, 0.0], [2.0, 0.0], [3.0, 0.0]])
+        room = plant.room()
+        radii = [p["radius"] for p in room["pillars"]]
+        assert radii == [arena.pillar_radius(spec, i) for i in range(3)]
+        assert len(set(radii)) > 1
+    finally:
+        plant.close()
+
+
 def test_half_of_beacons_spawn_out_of_view():
     spec = ArenaSpec()
     rng = np.random.default_rng(0)

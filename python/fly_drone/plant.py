@@ -12,6 +12,7 @@ from multi_drone_mujoco.control.pid_control import PIDControl
 from multi_drone_mujoco.envs.base_aviary import BaseAviary, _generate_aviary_xml
 from multi_drone_mujoco.utils.enums import DroneModel
 
+from . import arena
 from .arena import PARK_Z
 
 LIMITS = np.array([0.4, 0.4, 0.2, 0.8])
@@ -226,13 +227,14 @@ class DronePlant(BaseAviary):
                 mocap="true",
                 pos=f"0 0 {PARK_Z}",
             )
+            r = arena.pillar_radius(spec, i)
             dark = "0.03 0.03 0.04 1"
             ET.SubElement(
                 pillar,
                 "geom",
                 name=f"pillar_{i}",
                 type="cylinder",
-                size=f"{spec.pillar_radius} {spec.pillar_height / 2}",
+                size=f"{r} {spec.pillar_height / 2}",
                 rgba=dark if spec.pillar_ring is None else _grey(spec.pillar_luma),
             )
             if spec.pillar_ring is not None:
@@ -243,7 +245,7 @@ class DronePlant(BaseAviary):
                     name=f"pillar_{i}_ring",
                     type="cylinder",
                     pos=f"0 0 {1.0 - spec.pillar_height / 2}",
-                    size=f"{spec.pillar_radius + 0.005} {spec.pillar_ring / 2}",
+                    size=f"{r + 0.005} {spec.pillar_ring / 2}",
                     rgba=dark,
                     contype="0",
                     conaffinity="0",

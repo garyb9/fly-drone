@@ -23,6 +23,10 @@ class ArenaSpec:
     floor_luma: float = 0.35
     pillar_slots: int = 16
     pillar_radius: float = 0.3
+    # Per-slot override, e.g. for visual variety; length must be >= pillar_slots.
+    # None (default): every pillar uses `pillar_radius`, unchanged from before this field
+    # existed — training/eval callers that never pass this keep identical geometry.
+    pillar_radii: tuple | None = None
     # None: whole pillar near-black. A height: grey pillar with a dark ring at eye level,
     # so distant pillars sweeping past during turns stay below the loom threshold.
     # Measured under flat lighting (roam-feasibility): a fully dark pillar fires loom in
@@ -58,10 +62,23 @@ class ArenaSpec:
 # level -> (pillar count, threats enabled)
 LEVELS = {0: (0, False), 1: (6, False), 2: (16, False), 3: (16, True)}
 
+# Opt-in visual variety (e.g. for the live viewer): a repeating thin/medium/thick cycle
+# around the default 0.3 m, never varying enough to change how much of the connectivity
+# margin generate_layout needs. Not used by training/eval, which keep ArenaSpec()'s
+# uniform pillar_radius unless they explicitly ask for this.
+VARIED_PILLAR_RADII = tuple(round(0.22 + 0.08 * (i % 3), 2) for i in range(16))
+
 
 def bearing_to(pos, yaw, point):
     angle = np.arctan2(point[1] - pos[1], point[0] - pos[0]) - yaw
     return float(np.arctan2(np.sin(angle), np.cos(angle)))
+
+
+def pillar_radius(spec, slot):
+    """Radius of the pillar placed at position `slot` (0-indexed, placement order)."""
+    return (
+        spec.pillar_radii[slot] if spec.pillar_radii is not None else spec.pillar_radius
+    )
 
 
 def clearance(spec, pillars, xy):
@@ -70,7 +87,8 @@ def clearance(spec, pillars, xy):
     walls = spec.half_size - float(np.max(np.abs(xy)))
     if len(pillars) == 0:
         return walls
-    d = np.linalg.norm(np.asarray(pillars) - xy, axis=1) - spec.pillar_radius
+    radii = np.array([pillar_radius(spec, i) for i in range(len(pillars))])
+    d = np.linalg.norm(np.asarray(pillars) - xy, axis=1) - radii
     return float(min(walls, d.min()))
 
 
@@ -82,8 +100,8 @@ def _grid(spec, step=0.25):
 def free_mask(spec, pillars, margin=DRONE_RADIUS + 0.15, step=0.25):
     ticks, cells = _grid(spec, step)
     mask = np.ones(cells.shape[:2], dtype=bool)
-    for p in pillars:
-        mask &= np.linalg.norm(cells - p, axis=-1) > spec.pillar_radius + margin
+    for i, p in enumerate(pillars):
+        mask &= np.linalg.norm(cells - p, axis=-1) > pillar_radius(spec, i) + margin
     return ticks, cells, mask
 
 
@@ -115,17 +133,22 @@ def generate_layout(rng, spec=None, level=3, spawn=(0.0, 0.0), attempts=200):
     spec = spec or ArenaSpec()
     count = LEVELS[level][0]
     spawn = np.asarray(spawn, dtype=float)
-    limit = spec.half_size - 1.0 - spec.pillar_radius
-    centre_gap = spec.pillar_spacing + 2 * spec.pillar_radius
+    radii = [pillar_radius(spec, i) for i in range(count)]
+    max_radius = max(radii) if radii else spec.pillar_radius
+    limit = spec.half_size - 1.0 - max_radius
     for _ in range(attempts):
         pillars = []
         for _ in range(count * 60):
             if len(pillars) == count:
                 break
             p = rng.uniform(-limit, limit, 2)
-            if np.linalg.norm(p - spawn) < spec.spawn_clear + spec.pillar_radius:
+            ri = radii[len(pillars)]
+            if np.linalg.norm(p - spawn) < spec.spawn_clear + ri:
                 continue
-            if any(np.linalg.norm(p - q) < centre_gap for q in pillars):
+            if any(
+                np.linalg.norm(p - q) < spec.pillar_spacing + ri + radii[j]
+                for j, q in enumerate(pillars)
+            ):
                 continue
             pillars.append(p)
         if len(pillars) < count:
