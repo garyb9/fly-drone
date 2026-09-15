@@ -108,6 +108,18 @@ The fix is the user's call (see the report). The Tasks 13–15 pipeline was neve
 - **Ruling: teacher-only collection first** (128 flights, level 2, the same seeds 200–327 as v4 it0), with no DAgger
   iterations under the clone. Under v4, iterations 1–3 did not beat it0. A DAgger iteration under the clone is
   added only if the gate fails again. Cost if wrong: one more collection round (~20 min).
+- **Task 12b** landed as e285dd2 (124 tests). The review approved it with 5 minors, which are parked.
+- **Ruling: keep the pre-tanh warm start.** The implementer questioned it: it beat the old loss only in short fits on
+  toy data. So it was checked on real data before the collection. Screen: level 2, seeds 9000–9009. Values per minute.
+
+  | decoder on v4, it0 data   | held-out avoid mse (action space) | beacons | collisions | visited cells |
+  | ------------------------- | --------------------------------- | ------- | ---------- | ------------- |
+  | linear head (DAgger it0)  | 0.106                             | 2.2     | 1.0        | 35.0          |
+  | tanh head, old loss       | 0.113                             | 1.8     | 1.8        | 32.1          |
+  | tanh head, pre-tanh loss  | 0.124                             | **2.2** | **0.5**    | 35.0          |
+
+  The offline error is slightly higher, but in flight the linear head's foraging comes back with fewer collisions.
+  Cost if wrong: none seen at level 2.
 
 ## Tasks 13–15: pipeline
 
