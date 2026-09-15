@@ -385,13 +385,22 @@ collisions/min) and record it in `runs/v5/dagger/choice.json`.
 
 ```bash
 env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data.npz --flights 32 --seconds 60 --workers 6 --seed-base 600
-env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 60000
+env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data2.npz --flights 32 --seconds 60 --workers 6 --seed-base 632
+env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz runs/v5/clone/data2.npz --output runs/v5/clone --steps 60000
 env -u PYTHONPATH .venv/bin/fly-drone roam-collect --output runs/v5/round0-data/it0.npz --flights 128 --seconds 60 --levels 2 --workers 6 --seed-base 200 --encoder runs/v5/clone/encoder.pt
 env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/round0-data/it0.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
 env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --level 2 --seeds 10 --seed-base 9000 --workers 6 --output runs/v5/round0/l2-screen.json
 env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --output runs/v5/round0/validation.json
 env -u PYTHONPATH .venv/bin/fly-drone encoder-checks --policy runs/v5/dagger/it<chosen>/warm-actor.json --output runs/v5/e1-v4-baseline.json
 ```
+
+The clone fit mirrors a random half of every training batch (`MIRROR_PROB = 0.5`): the left eye's
+stack becomes the right eye's flipped on width and vice versa, and every `_l`/`_r` target pair is
+swapped. v4 pools each eye over all pixels, so it is exactly mirror-symmetric (measured: 0 error on
+rendered free-roam frames), and the augmentation asks only for the fly's bilateral symmetry. It was
+added, with the second collection (seeds 632–663), after the 30-seed gate failure of 2026-09-15
+(1.27 vs 1.93 beacons/min, |yaw bias| 0.106 vs 0.077). `clone.json` reports `held_out_mirror`,
+the clone's own symmetry per pathway (1.0 = exact); held-out evaluation is not augmented.
 
 Round-0 data must be collected with `roam-collect --encoder <clone>`: the stage-1 DAgger files were
 flown with v4, and the clone produces different DN/motor traces for the same flights, so

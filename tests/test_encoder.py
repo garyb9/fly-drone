@@ -4,7 +4,9 @@ import numpy as np
 import torch
 from fly_drone import encoder
 from fly_drone.brain import ENCODER_VERSION, BrainRuntime
+from fly_drone.distill import _roam_env
 from fly_drone.encoder import LearnedEncoder, v4_targets
+from fly_drone.teacher import teacher_action
 
 
 def test_v4_targets_copy_light_to_mi1_tm3_and_loom_to_lc4_lplc2():
@@ -75,6 +77,10 @@ def test_fit_clone_writes_a_loadable_encoder_and_per_channel_report(tmp_path):
     for stats in diffs.values():
         assert set(stats) == {"r", "rmse", "gain"}
         assert all(np.isfinite(v) for v in stats.values())
+    mirror = saved["held_out_mirror"]
+    assert set(mirror) == {"mi1", "tm3", "lc4", "lplc2"}
+    for stats in mirror.values():
+        assert set(stats) == {"r"} and -1 <= stats["r"] <= 1
 
 
 def test_clone_batches_draw_a_third_each_uniform_loom_and_light_side_frames():
@@ -113,3 +119,47 @@ def test_clone_loss_includes_the_left_right_difference_term(monkeypatch):
     monkeypatch.setattr(encoder, "DIFF_WEIGHT", 1.0)
     with_diff = encoder.clone_loss(pred, target).item()
     assert without > 0 and with_diff > without
+
+
+def test_mirror_batch_swaps_flipped_eyes_and_left_right_targets():
+    rng = np.random.default_rng(0)
+    stacks = rng.integers(0, 256, (3, 6, 48, 64), dtype=np.uint8)
+    targets = rng.uniform(0, 2, (3, 8)).astype(np.float32)
+    mask = np.array([True, False, True])
+    out_stacks, out_targets = encoder.mirror_batch(stacks, targets, mask)
+    for i in (0, 2):
+        np.testing.assert_array_equal(out_stacks[i, :3], stacks[i, 3:, :, ::-1])
+        np.testing.assert_array_equal(out_stacks[i, 3:], stacks[i, :3, :, ::-1])
+        np.testing.assert_array_equal(
+            out_targets[i], targets[i, [1, 0, 3, 2, 5, 4, 7, 6]]
+        )
+    np.testing.assert_array_equal(out_stacks[1], stacks[1])
+    np.testing.assert_array_equal(out_targets[1], targets[1])
+    twice = encoder.mirror_batch(out_stacks, out_targets, mask)
+    np.testing.assert_array_equal(twice[0], stacks)
+    np.testing.assert_array_equal(twice[1], targets)
+
+
+def test_v4_encoder_is_mirror_symmetric_on_rendered_free_roam_frames():
+    """Mirrored eyes (left := flipped right, right := flipped left) swap every v4 cue.
+
+    v4 pools each eye over all pixels, so only float32 summation order can differ: 1e-5.
+    """
+    env = _roam_env(2, BrainRuntime())
+    frames = []
+    try:
+        env.reset(seed=1000)
+        for _ in range(40):
+            env.step(np.clip(teacher_action(env)[0], -1, 1))
+            frames.append(env.plant.camera().copy())
+    finally:
+        env.close()
+    brain, mirrored = BrainRuntime(), BrainRuntime()
+    cues = np.array([brain.sense(f).copy() for f in frames])
+    swapped = np.array(
+        [mirrored.sense(np.ascontiguousarray(f[::-1, :, ::-1])).copy() for f in frames]
+    )
+    # The sequence must exercise both sides differently, or the check is vacuous.
+    assert np.abs(cues[:, 0] - cues[:, 1]).max() > 0.1
+    assert cues[:, 2:].max() > 0
+    np.testing.assert_allclose(swapped, cues[:, [1, 0, 3, 2]], rtol=0, atol=1e-5)

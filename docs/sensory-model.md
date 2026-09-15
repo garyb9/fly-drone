@@ -260,6 +260,16 @@ the difference only at r 0.85, and the round-0 decoder collected half v4's beaco
 gate failure, 2026-09-15). `clone.json` reports `held_out_differences` (`r`, `rmse`, `gain` =
 std(pred diff)/std(target diff)) per pathway.
 
+**Mirror augmentation.** Each training sample is, with probability `MIRROR_PROB = 0.5`, replaced by
+its mirror: new left stack = right stack flipped on width, new right = left flipped, and each
+pathway's `_l`/`_r` targets swapped. v4 sums each eye over all pixels, so a mirrored pair gives
+exactly swapped cues (verified on rendered free-roam frames, `test_encoder.py`). Why: after the
+difference-aware fit the round-0 decoder still collected 1.27 vs 1.93 beacons/min on 30 L2 seeds
+with |yaw bias| 0.106 vs 0.077 (2026-09-15): the shared `EyeNet` mirrors the right eye, but the
+linear head was free to treat the eyes asymmetrically. `clone.json` reports `held_out_mirror`: per
+pathway, the r between predictions on mirrored held-out frames and the swapped predictions on the
+originals (1.0 = perfectly symmetric clone).
+
 **Sensing order.** Currents applied at step `t` come from the stack ending with the frame
 rendered at the _end_ of step `t − 1` (`env.py`: `push_frame` after `step`, `encode_stack` at the
 start of the next `_sense`). On `reset`, the drone pushes the first frame and then settles for 40

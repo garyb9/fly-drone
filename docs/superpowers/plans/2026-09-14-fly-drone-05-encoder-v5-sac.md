@@ -2513,12 +2513,15 @@ env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/dagger/it$k/warm-actor
 
 ```bash
 env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data.npz --flights 32 --seconds 60 --workers 6 --seed-base 600
-env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 60000
+env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data2.npz --flights 32 --seconds 60 --workers 6 --seed-base 632
+env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz runs/v5/clone/data2.npz --output runs/v5/clone --steps 60000
 ```
+
+Why (amended by Task 12d after the 30-seed Task 12 gate failure of 2026-09-15: 1.27 vs 1.93 beacons/min on L2 seeds 9000–9029, with avoidance intact but |yaw bias| 0.106 vs 0.077 and 8 vs 3 zero-beacon seeds): the clone steered asymmetrically, so the fit now mirrors a random half of every batch (eyes swapped and flipped, `_l`/`_r` targets swapped; v4 is exactly mirror-symmetric) and trains on a second collection (seeds 632–663); `clone.json` adds `held_out_mirror`.
 
 Why (amended by Task 12c after the second Task 12 gate failure of 2026-09-15): the clone copied each light channel at r 0.99 but the left−right light difference only at r 0.85, the side signal the brain steers to beacons with; the fit now also matches pathway differences, oversamples light-side frames, and runs 60k steps.
 
-Report the held-out `mse` and `r` per channel, and `r`, `rmse`, `gain` per pathway difference (`held_out_differences`), from `runs/v5/clone/clone.json`.
+Report the held-out `mse` and `r` per channel, and `r`, `rmse`, `gain` per pathway difference (`held_out_differences`), and `r` per pathway from `held_out_mirror`, from `runs/v5/clone/clone.json`.
 
 - [ ] **Step 3: Round-0 decoder on the clone, from data collected under the clone**
 

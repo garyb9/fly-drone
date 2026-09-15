@@ -36,6 +36,13 @@ PAIRS = tuple(
     for i, name in enumerate(V5_CHANNELS)
     if name.endswith("_l")
 )
+# Chance that a training sample is replaced by its mirror (the fly's bilateral symmetry).
+MIRROR_PROB = 0.5
+# V5_CHANNELS permutation that swaps every _l/_r pair.
+MIRROR_CHANNELS = [
+    V5_CHANNELS.index(name[:-2] + ("_r" if name.endswith("_l") else "_l"))
+    for name in V5_CHANNELS
+]
 
 
 def eyes_space(frames=STACK_FRAMES):
@@ -234,6 +241,17 @@ def clone_loss(pred, target):
     return (pred - target).square().mean() + DIFF_WEIGHT * diff.square().mean()
 
 
+def mirror_batch(stacks, targets, mask):
+    """Mirror the masked samples: left := right flipped on width, right := left flipped,
+    and swap each pathway's left and right targets. v4 is exactly mirror-symmetric."""
+    stacks, targets, mask = np.array(stacks), np.array(targets), np.asarray(mask)
+    f = stacks.shape[1] // 2
+    flipped = stacks[mask, :, :, ::-1]
+    stacks[mask] = np.concatenate([flipped[:, f:], flipped[:, :f]], axis=1)
+    targets[mask] = targets[mask][:, MIRROR_CHANNELS]
+    return stacks, targets
+
+
 def _r(p, t):
     return float(np.corrcoef(p, t)[0, 1]) if p.std() > 1e-9 and t.std() > 1e-9 else None
 
@@ -263,25 +281,35 @@ def fit_clone(paths, output, steps=20000, batch=256, holdout=0.1, device=None, s
     net = nn.ModuleDict({"extractor": enc.extractor, "mu": enc.mu}).to(device).train()
     opt = torch.optim.Adam(net.parameters(), lr=3e-4)
 
-    def predict(ids):
-        x = torch.as_tensor(stacks[ids], dtype=torch.float32, device=device) / 255.0
+    def predict(eyes):
+        x = torch.as_tensor(eyes, dtype=torch.float32, device=device) / 255.0
         return torch.tanh(net["mu"](net["extractor"]({"eyes": x}))) + 1.0
 
     for _ in range(steps):
         ids = clone_batch_ids(rng, train_ids, pools, batch)
-        loss = clone_loss(predict(ids), torch.as_tensor(targets[ids], device=device))
+        # A mirrored world must give mirrored currents: mirror a random half of the batch.
+        mask = rng.random(len(ids)) < MIRROR_PROB
+        eyes, target = mirror_batch(stacks[ids], targets[ids], mask)
+        loss = clone_loss(predict(eyes), torch.as_tensor(target, device=device))
         opt.zero_grad()
         loss.backward()
         opt.step()
 
     net.eval()
+
+    def predict_held_out(mirror):
+        chunks = []
+        for i in range(0, len(test_ids), 1024):
+            ids = test_ids[i : i + 1024]
+            eyes = stacks[ids]
+            if mirror:
+                eyes = mirror_batch(eyes, targets[ids], np.ones(len(ids), bool))[0]
+            chunks.append(predict(eyes).cpu().numpy())
+        return np.concatenate(chunks)
+
     with torch.no_grad():
-        pred = np.concatenate(
-            [
-                predict(test_ids[i : i + 1024]).cpu().numpy()
-                for i in range(0, len(test_ids), 1024)
-            ]
-        )
+        pred = predict_held_out(mirror=False)
+        pred_mirrored = predict_held_out(mirror=True)
     truth = targets[test_ids]
     report = {
         "frames": int(len(stacks)),
@@ -300,6 +328,14 @@ def fit_clone(paths, output, steps=20000, batch=256, holdout=0.1, device=None, s
             "gain": float(dp.std() / dt.std())
             if dp.std() > 1e-9 and dt.std() > 1e-9
             else None,
+        }
+    # The clone's own symmetry: prediction on mirrored frames vs swapped prediction (1.0 = exact).
+    report["held_out_mirror"] = {}
+    swapped = pred[:, MIRROR_CHANNELS]
+    for pathway, left, right in PAIRS:
+        channels = [left, right]
+        report["held_out_mirror"][pathway] = {
+            "r": _r(pred_mirrored[:, channels].ravel(), swapped[:, channels].ravel())
         }
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
