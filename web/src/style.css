@@ -476,6 +476,8 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-border) var(--bp-surface);
 }
 .roam-log-entry {
   margin: 0;
@@ -487,6 +489,19 @@ footer {
 }
 .roam-log-entry.ok {
   color: var(--bp-success);
+}
+.roam-log::-webkit-scrollbar,
+.drawer-body::-webkit-scrollbar {
+  width: 8px;
+}
+.roam-log::-webkit-scrollbar-track,
+.drawer-body::-webkit-scrollbar-track {
+  background: var(--bp-surface);
+}
+.roam-log::-webkit-scrollbar-thumb,
+.drawer-body::-webkit-scrollbar-thumb {
+  background: var(--bp-border);
+  border-radius: 4px;
 }
 
 /* Layout: the flight view (.world) is a fullscreen base layer filling <main>; every other
@@ -636,6 +651,8 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-border) var(--bp-surface);
 }
 .instruments {
   width: 100%;
