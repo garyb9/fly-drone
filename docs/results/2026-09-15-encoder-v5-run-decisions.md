@@ -391,6 +391,13 @@ asks SAC for loom selectivity that v4 never had.
 - **RAM caveat:** the replay buffer fills lazily, so the smoke run held 9k transitions. A full round holds 100k (~5.3 GB), which should leave about 8 GB free.
   A memory watch runs during round 1.
 - **Tasks 13–15 launched automatically at 18:43** (`runs/v5/pipeline13-15.log`), starting with the round 1 encoder SAC.
+- **The critic-only warm-up works on the real 6-worker path.** In round 1's log, `actor_frozen` is 1 at every dump from 18k to 45k frames. It flips to 0 at the
+  50k boundary and stays 0. This closes the parked warm-up item and makes the relaxed smoke check moot.
+- **Round 1 encoder at 29 min:** 99k of 350k frames, no errors, 8.6 GB RAM available and stable once the replay buffer filled, project 12 GB.
+- **Throughput with gradient steps is 60 fps**, not the smoke test's 81. Revised timing:
+  - Per round: encoder ~97 min, decoder ~42 min, validation ~15 min, so **~2.6 h**.
+  - All 3 rounds: ~7.8 h. Bypass and E3: ~2.5 h. Final evaluation: ~3 h.
+  - **Tasks 13–15 should finish around 08:00–09:00 on 2026-09-16.**
 
 ## Tasks 13–15: pipeline
 
