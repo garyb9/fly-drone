@@ -5,30 +5,30 @@ Start HEAD: 7ec6af8
 
 ## Pre-flight scan
 
-| Tasks    | Produces → consumes                                                                    | Finding                   |
-| -------- | -------------------------------------------------------------------------------------- | ------------------------- |
-| T1 ↔ T5  | v4 replay goldens → env refactor must keep them                                        | consistent                |
-| T2 ↔ T3  | Rust `learned-v5:` prefix → `LEARNED_PREFIX`/`LEARNED_EXTERNAL`                        | same string               |
-| T2 ↔ T7  | Rust `output: tanh` → `export_decoder` payload `"output": "tanh"`                      | consistent                |
-| T3 ↔ T4  | brain constants/FrameStack → encoder.py; brain imports encoder lazily                  | no import cycle           |
-| T3 ↔ T5  | `learned`, `push_frame`, `encode_stack`, `set_currents` → env                          | consistent                |
-| T4 ↔ T6  | `EyesExtractor`, `FEATURES`, `eyes_space` → sac.py; `from_actor` needs pi=[] linear mu | build_sac encoder pi=[] ✓ |
-| T6 ↔ T7  | `learner_spaces`, `build_sac`, `set_dn_stats` → SpacesOnlyEnv, warm start              | consistent                |
-| T6 ↔ T8  | `LIGHT`/`LOOM`, test helper `zero_actor` → roam_eval, test_roam_eval                   | consistent                |
-| T7 ↔ T9  | `export_decoder`, `init_decoder` → train_round, CLI                                    | consistent                |
-| T8 ↔ T9  | `screen(encoder=)`, `encoder_checks` positional order → validate                       | consistent                |
-| T4 ↔ T9  | `collect_clone`/`fit_clone` positional args → CLI                                      | consistent                |
-| T5 ↔ T8  | both edit roam_eval.py (`_probe_setup` vs `_probe_job`)                                | distinct functions        |
-| T1 self  | fill-me then paste digests                                                             | intended two-step         |
-| T2 self  | tests vs code (clip [1,1,0,-1], tanh×limits)                                           | agree                     |
-| T3 self  | role counts 886/887/1017/1037/71/55/94/91 match data; `encode_stack() is cues`         | agree                     |
-| T4 self  | 0.2 s job → 5 frames; fit report keys                                                  | agree                     |
-| T5 self  | newest stack frames [2,5] vs `luma_u8(plant.images)`                                   | agree                     |
-| T6 self  | band test needs `import mujoco` (added); launch_threat at level 0                      | agree                     |
-| T7 self  | warm start uses graph.bin sha as dataset hash                                          | agree                     |
-| T8 self  | synthetic non-selective loom fails E1 and E2 margin                                    | agree                     |
-| T9 self  | resume from .zip with buffer kwargs; bypass screen                                     | agree                     |
-| T10 self | docs only                                                                              | agree                     |
+| Tasks | Produces → consumes | Finding |
+| --- | --- | --- |
+| T1 ↔ T5 | v4 replay goldens → env refactor must keep them | consistent |
+| T2 ↔ T3 | Rust `learned-v5:` prefix → `LEARNED_PREFIX`/`LEARNED_EXTERNAL` | same string |
+| T2 ↔ T7 | Rust `output: tanh` → `export_decoder` payload `"output": "tanh"` | consistent |
+| T3 ↔ T4 | brain constants/FrameStack → encoder.py; brain imports encoder lazily | no import cycle |
+| T3 ↔ T5 | `learned`, `push_frame`, `encode_stack`, `set_currents` → env | consistent |
+| T4 ↔ T6 | `EyesExtractor`, `FEATURES`, `eyes_space` → sac.py; `from_actor` needs pi=[] linear mu | build_sac encoder pi=[] ✓ |
+| T6 ↔ T7 | `learner_spaces`, `build_sac`, `set_dn_stats` → SpacesOnlyEnv, warm start | consistent |
+| T6 ↔ T8 | `LIGHT`/`LOOM`, test helper `zero_actor` → roam_eval, test_roam_eval | consistent |
+| T7 ↔ T9 | `export_decoder`, `init_decoder` → train_round, CLI | consistent |
+| T8 ↔ T9 | `screen(encoder=)`, `encoder_checks` positional order → validate | consistent |
+| T4 ↔ T9 | `collect_clone`/`fit_clone` positional args → CLI | consistent |
+| T5 ↔ T8 | both edit roam_eval.py (`_probe_setup` vs `_probe_job`) | distinct functions |
+| T1 self | fill-me then paste digests | intended two-step |
+| T2 self | tests vs code (clip [1,1,0,-1], tanh×limits) | agree |
+| T3 self | role counts 886/887/1017/1037/71/55/94/91 match data; `encode_stack() is cues` | agree |
+| T4 self | 0.2 s job → 5 frames; fit report keys | agree |
+| T5 self | newest stack frames [2,5] vs `luma_u8(plant.images)` | agree |
+| T6 self | band test needs `import mujoco` (added); launch_threat at level 0 | agree |
+| T7 self | warm start uses graph.bin sha as dataset hash | agree |
+| T8 self | synthetic non-selective loom fails E1 and E2 margin | agree |
+| T9 self | resume from .zip with buffer kwargs; bypass screen | agree |
+| T10 self | docs only | agree |
 
 Scan clean apart from the environment issues below.
 
@@ -233,3 +233,4 @@ Scan clean apart from the environment issues below.
 - Round 1 done: encoder SAC 20:22 (learned-v5:b9722d66acced4f1, ep_rew −151), decoder SAC 20:56 (ep_rew flat ≈ −690 after unfreeze), validation 21:05: near_dodge 0.93, balanced 0.91, ghost 0.81, beacons 0.0, collisions 6.1, E1 0.48 fail, E2 fail. DEGENERATE (erratic flight scores as dodging; not causal). Stop rule (near-dodge only) accepted it; round 2 encoder SAC started 21:05 from round 1 (ep_rew ≈ −2480 at 252k).
 - Attempted kill -STOP of pipeline group was denied by the permission classifier; pipeline still running. Reported to user with recommendation: stop, keep round 0, add selection guard (beacons ≥ ½ round 0, ghost ≤ 0.3), investigate decoder SAC collapse. User replied "isn't spastic how a fly flies?"; answered (jerky OK, non-causal + no foraging not). PENDING USER DECISION: stop vs let round 2 finish (validation ≈ 23:40).
 - Backup 22:50: ledger, handoff, run scripts, diag scripts and small run JSONs copied to docs/results/encoder-v5/ (subfolder run-records/, since .gitignore `runs/` matches any dir named runs); decisions doc gained "Round 1: result and where we stand". Untracked docs/superpowers/specs/2026-09-15-training-improvements.md belongs to another session — not staged.
+- Checkpoint 23:20 (user asked, usage may run out): round 2 encoder SAC 315k/350k, ep_rew ≈ −2500; pipeline pid 788490 still running; user decision (stop vs finish) still pending. Resume doc: docs/results/encoder-v5/CHECKPOINT-2026-09-15-2320.md. Project 12 G (6.3 G w/o .venv), RAM 9 G free.
