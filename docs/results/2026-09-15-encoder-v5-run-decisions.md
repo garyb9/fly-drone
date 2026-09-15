@@ -380,6 +380,17 @@ asks SAC for loom selectivity that v4 never had.
   - RAM headroom.
 
   Otherwise it stops and logs why. Cost if wrong: none. A failed check blocks the multi-hour run.
+- **Smoke decoder round** (9,000 frames, 6 workers): exited cleanly in 103 s. Peak RAM used was 10.8 GB, with at least 13.3 GB still available.
+- **Smoke check: all 12 passed (18:43).**
+  - The encoder version matches `round.json`.
+  - The encoder actor moved after the warm-up (max |Δw| 0.082 against the clone), and so did the decoder actor (0.074 against round 0).
+  - The decoder is pinned to the new encoder, and export parity is 1.3e-5.
+  - The warm-up flag and the metabolic cost are logged. The decoder's cost is 0 by design, because only encoder rounds pay the
+    metabolic cost (`sac.py` step).
+  - There are no tracebacks, and RAM headroom is fine.
+- **RAM caveat:** the replay buffer fills lazily, so the smoke run held 9k transitions. A full round holds 100k (~5.3 GB), which should leave about 8 GB free.
+  A memory watch runs during round 1.
+- **Tasks 13–15 launched automatically at 18:43** (`runs/v5/pipeline13-15.log`), starting with the round 1 encoder SAC.
 
 ## Tasks 13–15: pipeline
 
