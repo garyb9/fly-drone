@@ -243,6 +243,12 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
   Cost if wrong: none.
 - The clone is fit on both data files at 60k steps. Round 0 is then re-collected and refit, and the 30-seed gate is re-run.
   If it passes, execution continues autonomously.
+- **v4 is mirror-symmetric, bit for bit.** On 180 real free-roam frames, the mirrored eye images gave exactly the swapped
+  cues (maximum error 0.0 on all four). The augmentation is therefore an honest copy of v4's own symmetry.
+- **Task 12d** landed as 4097de5. It changes only its own 5 files; another session's uncommitted viewer edits were left out.
+- **The extra clone data** is 32 flights, seeds 632–663, 1,500 frames each.
+- **Ruling: the re-run started alongside the 12d review**, as for 12c. It would have been stopped if the review had found a serious
+  problem in the mirror or clone fit. Cost if wrong: the compute already spent.
 
 ## Tasks 13–15: pipeline
 
