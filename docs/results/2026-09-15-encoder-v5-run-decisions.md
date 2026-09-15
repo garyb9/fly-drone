@@ -449,3 +449,22 @@ around −650 to −700 to the end (−688 at 144k). The entropy coefficient dro
   - Model weights and datasets stay in `runs/v5/` (git-ignored, ~5 GB).
 - **To resume in a new session:** read `AGENTS.md`, this document, then `docs/results/encoder-v5/ledger.md` (lines 214 onward cover Tasks 13–15).
   Check the pipeline (`ps -p 788490`, `tail runs/v5/pipeline13-15.log`) and ask the user for the pending decision above before anything else.
+
+### Round 2 result (2026-09-16, 00:52)
+
+| Round | near_dodge | balanced | ghost | beacons/min | collisions/min | E1 AUC | E2 margins (light / loom) |
+| ----- | ---------- | -------- | ----- | ----------- | -------------- | ------ | ------------------------- |
+| 0     | 0.269      | 0.182    | 0.296 | 1.9         | 2.7            | 0.686  | 0.50 / 0.26 (pass)        |
+| 1     | 0.926      | 0.909    | 0.815 | 0.0         | 6.1            | 0.480  | −0.041 / −0.047 (fail)    |
+| 2     | 1.000      | 1.000    | 1.000 | 0.0         | 10.3           | 0.554  | +0.016 / +0.037 (fail)    |
+
+Round 2 is more degenerate than round 1:
+
+- The blind (ghost) condition dodges 100% of the time.
+- Collisions rose to 10.3/min.
+- Beacons stayed at zero.
+- Loom and light remain at chance.
+
+The stop rule looks at near_dodge alone, so it accepted round 2 (1.0 > 0.926) and started round 3's encoder SAC at 00:52. Round 3's validation is expected around 04:30.
+
+With the current rule, Step 6 will select round 2 or round 3, which means Tasks 14–15 would evaluate a degenerate, non-causal actor. The recommendation is unchanged: stop, keep round 0, add the selection guard, and diagnose the SAC collapse. The stop is still waiting on the user's decision.
