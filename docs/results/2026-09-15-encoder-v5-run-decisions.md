@@ -180,6 +180,17 @@ off to one side, not in the frames with no light difference. Training longer alo
   directly in the committed code and are correct.
 - **Ruling: the re-run started alongside the review**, to save about 30 min. It would have been stopped if the review had
   found a serious problem in the clone fit. Cost if wrong: only the compute already spent.
+- **Difference-aware clone** (`learned-v5:c273d625abe368d1`, 60k steps). Held-out frames:
+
+  | metric                        | plain 20k | plain 60k | difference-aware 60k |
+  | ----------------------------- | --------- | --------- | -------------------- |
+  | light left−right difference r  | 0.851     | 0.878     | **0.890**            |
+  | light difference rmse          | 0.149     | 0.141     | **0.136**            |
+  | light difference gain          | 0.86      | 1.00      | 1.04                 |
+  | loom left−right difference r   | 0.940     | 0.959     | 0.955                |
+  | per-channel r (light / loom)  | 0.99/0.95 | 0.99/0.97 | 0.99/0.96            |
+
+  This is a modest gain over longer training alone. The sanity gate on the re-collected round 0 decides whether it is enough.
 
 ## Tasks 13–15: pipeline
 
