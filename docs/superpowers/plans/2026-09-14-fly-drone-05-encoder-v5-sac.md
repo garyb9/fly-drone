@@ -2518,11 +2518,14 @@ env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --out
 
 Report the held-out `mse` and `r` per channel from `runs/v5/clone/clone.json`.
 
-- [ ] **Step 3: Round-0 decoder on the clone, from all DAgger data**
+- [ ] **Step 3: Round-0 decoder on the clone, from data collected under the clone**
 
 ```bash
-env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/dagger/it*.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
+env -u PYTHONPATH .venv/bin/fly-drone roam-collect --output runs/v5/round0-data/it0.npz --flights 128 --seconds 60 --levels 2 --workers 6 --seed-base 200 --encoder runs/v5/clone/encoder.pt
+env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/round0-data/it0.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
 ```
+
+Why (amended by Task 12b after the Task 12 gate failure of 2026-09-15): the stage-1 DAgger files were flown with v4, and the clone gives different DN/motor traces for the same flights, so the decoder must be fitted on traces recorded under the clone (`sac-init-decoder` now rejects v4 files for a learned encoder); the warm start fits pre-tanh so saturated labels are not underfit.
 
 Expected: `export_max_error ≤ 1e-4` in `runs/v5/round0/warm-start.json`.
 

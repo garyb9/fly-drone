@@ -386,14 +386,20 @@ collisions/min) and record it in `runs/v5/dagger/choice.json`.
 ```bash
 env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data.npz --flights 32 --seconds 60 --workers 6 --seed-base 600
 env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 20000
-env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/dagger/it*.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
+env -u PYTHONPATH .venv/bin/fly-drone roam-collect --output runs/v5/round0-data/it0.npz --flights 128 --seconds 60 --levels 2 --workers 6 --seed-base 200 --encoder runs/v5/clone/encoder.pt
+env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/round0-data/it0.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
 env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --level 2 --seeds 10 --seed-base 9000 --workers 6 --output runs/v5/round0/l2-screen.json
 env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --output runs/v5/round0/validation.json
 env -u PYTHONPATH .venv/bin/fly-drone encoder-checks --policy runs/v5/dagger/it<chosen>/warm-actor.json --output runs/v5/e1-v4-baseline.json
 ```
 
-`sac-init-decoder` warm-starts the round-0 decoder from all DAgger data through the frozen clone
-encoder; expect `export_max_error ≤ 1e-4` in `runs/v5/round0/warm-start.json`. The L2 screen is an
+Round-0 data must be collected with `roam-collect --encoder <clone>`: the stage-1 DAgger files were
+flown with v4, and the clone produces different DN/motor traces for the same flights, so
+`sac-init-decoder` rejects files whose `encoder_version` differs from the encoder it is given (this
+changed after the Task 12 gate failure of 2026-09-15). `sac-init-decoder` warm-starts the round-0
+decoder on those traces. It fits the pre-tanh mean against `atanh(clip(label, ±0.97))`, so
+saturated labels keep a gradient; the per-drive MSE in the report stays in tanh (action) space.
+Expect `export_max_error ≤ 1e-4` in `runs/v5/round0/warm-start.json`. The L2 screen is an
 engineering sanity check (not acceptance): if beacons/min is below 0.8× the chosen DAgger actor's,
 the clone or the tanh head lost the skill and SAC would start from a broken system. `encoder-checks`
 with no `--encoder` measures v4 on the 50 evaluation seeds — the "v4 baseline reported alongside" E1.

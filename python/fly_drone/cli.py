@@ -80,6 +80,9 @@ def main():
     p.add_argument(
         "--levels", type=int, nargs="+", help="arena levels to collect (default: all)"
     )
+    p.add_argument(
+        "--encoder", help="learned encoder .pt driving the brain (default: v4)"
+    )
     p = sub.add_parser("roam-fit")
     p.add_argument("data", nargs="+")
     p.add_argument("--output", required=True)
@@ -254,6 +257,7 @@ def main():
                 workers=args.workers,
                 seed_base=args.seed_base,
                 levels=args.levels,
+                encoder=args.encoder,
             )
         elif args.command == "roam-fit":
             result = distill.fit(args.data, args.output, args.net_arch, args.steps)

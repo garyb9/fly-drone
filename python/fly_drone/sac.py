@@ -382,12 +382,19 @@ def export_decoder(model, brain, path, limits):
     return error
 
 
-def warm_start_decoder(model, paths, dataset_hash, steps=4000, holdout=0.1, seed=72):
-    """Behaviour-clone stage-1 DAgger labels onto the SAC decoder's tanh head."""
+def warm_start_decoder(
+    model, paths, dataset_hash, encoder_version, steps=4000, holdout=0.1, seed=72
+):
+    """Behaviour-clone teacher labels onto the SAC decoder's tanh head.
+
+    The loss is on the pre-tanh mean against atanh of the clipped labels, so saturated
+    labels keep a gradient; the reported per-drive MSE stays in tanh (action) space.
+    `paths` must have been collected with `encoder_version`.
+    """
     from .distill import _load, class_weights
     from .teacher import DRIVES
 
-    x, y, drive, flight = _load(paths, dataset_hash)
+    x, y, drive, flight = _load(paths, dataset_hash, encoder_version)
     rng = np.random.default_rng(seed)
     unique = np.unique(flight)
     held = rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False)
@@ -398,19 +405,21 @@ def warm_start_decoder(model, paths, dataset_hash, steps=4000, holdout=0.1, seed
     weight = class_weights(drive, ~test)[drive].astype(np.float32)
     # tanh never reaches +-1: stop labels just short of saturation.
     target = np.clip(y, -0.97, 0.97).astype(np.float32)
+    pre_tanh_target = np.arctanh(target)
     params = list(actor.latent_pi.parameters()) + list(actor.mu.parameters())
     opt = torch.optim.Adam(params, lr=1e-3)
     torch.manual_seed(seed)
 
-    def predict(ids):
+    def pre_tanh(ids):
         obs = {"dn": torch.as_tensor(x[ids], device=device)}
-        return torch.tanh(actor.mu(actor.latent_pi(actor.features_extractor(obs))))
+        return actor.mu(actor.latent_pi(actor.features_extractor(obs)))
 
     losses = []
     for _ in range(steps):
         ids = rng.choice(train, 256)
         w = torch.as_tensor(weight[ids, None], device=device)
-        err = (predict(ids) - torch.as_tensor(target[ids], device=device)).square()
+        z_target = torch.as_tensor(pre_tanh_target[ids], device=device)
+        err = (pre_tanh(ids) - z_target).square()
         loss = (w * err).mean()
         opt.zero_grad()
         loss.backward()
@@ -431,7 +440,7 @@ def warm_start_decoder(model, paths, dataset_hash, steps=4000, holdout=0.1, seed
             ids = np.flatnonzero(mask)
             errs = [
                 (
-                    predict(ids[i : i + 4096])
+                    torch.tanh(pre_tanh(ids[i : i + 4096]))
                     - torch.as_tensor(target[ids[i : i + 4096]], device=device)
                 )
                 .square()
@@ -461,7 +470,9 @@ def init_decoder(paths, encoder, output, steps=4000, device="auto"):
         buffer_size=1,
         device=device,
     )
-    report = warm_start_decoder(model, paths, brain.dataset_hash, steps)
+    report = warm_start_decoder(
+        model, paths, brain.dataset_hash, brain.encoder_version, steps
+    )
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
     model.save(out / "decoder")

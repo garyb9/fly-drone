@@ -27,8 +27,8 @@ def _collect_job(job):
     from .brain import BrainRuntime
     from .teacher import teacher_action
 
-    seeds, seconds, level, student, beta, noise, stride = job
-    brain = BrainRuntime()
+    seeds, seconds, level, student, beta, noise, stride, *rest = job
+    brain = BrainRuntime(encoder=rest[0] if rest else None)
     if student:
         brain.load_policy(student)
     env = _roam_env(level, brain)
@@ -66,13 +66,29 @@ def collect(
     workers=16,
     seed_base=200,
     levels=None,
+    encoder=None,
 ):
-    """Teacher-labelled features; beta < 1 flies the student that often (DAgger)."""
+    """Teacher-labelled features; beta < 1 flies the student that often (DAgger).
+
+    `encoder` is a learned encoder `.pt` driving the brain (None: v4). A student must be
+    pinned to the same encoder.
+    """
     import multiprocessing
     from concurrent.futures import ProcessPoolExecutor
 
     from .arena import LEVELS
 
+    if encoder is None:
+        encoder_version = ENCODER_VERSION
+    elif str(encoder) == "external":
+        raise ValueError(
+            'encoder="external" cannot collect: pass a saved learned encoder .pt path'
+        )
+    else:
+        from .encoder import LearnedEncoder
+
+        encoder = str(Path(encoder).resolve())
+        encoder_version = LearnedEncoder.load(encoder).version
     seeds = np.arange(seed_base, seed_base + flights)
     levels = sorted(levels if levels is not None else LEVELS)
     if not levels or any(level not in LEVELS for level in levels):
@@ -91,6 +107,7 @@ def collect(
                         beta,
                         noise,
                         stride,
+                        encoder,
                     )
                 )
     xs, ys, drives, flight_ids = [], [], [], []
@@ -112,7 +129,7 @@ def collect(
         drive=np.asarray(drives, dtype=np.int8),
         flight=np.asarray(flight_ids, dtype=np.int32),
         dataset_hash=dataset_hash,
-        encoder_version=ENCODER_VERSION,
+        encoder_version=encoder_version,
         student=str(student),
         beta=beta,
     )
@@ -123,14 +140,17 @@ def collect(
     }
 
 
-def _load(paths, dataset_hash):
+def _load(paths, dataset_hash, encoder_version=ENCODER_VERSION):
     xs, ys, drives, flights = [], [], [], []
     for i, path in enumerate(paths):
         d = np.load(path)
         if str(d["dataset_hash"]) != dataset_hash:
             raise ValueError(f"{path}: collected on a different connectome")
-        if str(d["encoder_version"]) != ENCODER_VERSION:
-            raise ValueError(f"{path}: collected with a different camera/encoder")
+        if str(d["encoder_version"]) != encoder_version:
+            raise ValueError(
+                f"{path}: collected with encoder {d['encoder_version']}, "
+                f"expected {encoder_version}"
+            )
         xs.append(d["x"].astype(np.float32))
         ys.append(d["y"])
         drives.append(d["drive"].astype(int))

@@ -186,7 +186,7 @@ def test_warm_start_decoder_learns_labels_and_shares_normalisation(tmp_path):
     )
     model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
     digest = hashlib.sha256((DATA / "graph.bin").read_bytes()).hexdigest()
-    report = warm_start_decoder(model, [path], digest, steps=300)
+    report = warm_start_decoder(model, [path], digest, ENCODER_VERSION, steps=300)
     assert report["held_out_flights"] == 2 and set(report["drives"]) == set(DRIVES)
     assert report["loss_last"] < report["loss_first"]
     actor_norm = model.actor.features_extractor
@@ -195,6 +195,35 @@ def test_warm_start_decoder_learns_labels_and_shares_normalisation(tmp_path):
     assert torch.equal(
         model.critic_target.features_extractor.dn_norm.scale, actor_norm.scale
     )
+
+
+def test_warm_start_decoder_fits_saturated_labels_through_the_pre_tanh_mean(tmp_path):
+    rng = np.random.default_rng(1)
+    n = 400
+    x = rng.uniform(0, 1, (n, 2022)).astype(np.float32)
+    y = np.clip((x[:, :4] * 2 - 1) * 4, -1, 1).astype(np.float32)
+    saturated = np.abs(y) >= 0.97
+    assert saturated.mean() > 0.5
+    digest = hashlib.sha256((DATA / "graph.bin").read_bytes()).hexdigest()
+    path = tmp_path / "saturated.npz"
+    np.savez(
+        path,
+        x=x.astype(np.float16),
+        y=y,
+        drive=rng.integers(0, len(DRIVES), n).astype(np.int8),
+        flight=np.repeat(np.arange(20), n // 20).astype(np.int32),
+        dataset_hash=digest,
+        encoder_version=ENCODER_VERSION,
+        student="None",
+        beta=1.0,
+    )
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    # 50 steps: the old tanh-space loss left 0.57 here (vanishing gradient near +-1).
+    warm_start_decoder(model, [path], digest, ENCODER_VERSION, steps=50)
+    with torch.no_grad():
+        action = model.actor({"dn": torch.as_tensor(x)}, deterministic=True).numpy()
+    err = (action - np.clip(y, -0.97, 0.97)) ** 2
+    assert err[saturated].mean() < 0.3
 
 
 def test_rounds_for_every_learner_resume_export_and_validate(tmp_path):
