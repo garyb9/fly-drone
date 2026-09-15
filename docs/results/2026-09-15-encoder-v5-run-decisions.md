@@ -350,6 +350,17 @@ Screen: level 2, seeds 9000–9029, 60 s. Gate: 1.55.
 Round 0 was trained only on threat-free level 2. It forages on level 3 but does not dodge causally yet: intact near-dodge 0.27 against 0.30
 for the ghost condition, and threat hits inflate collisions. Raising near-dodge, and the loom selectivity that E1 measures, is what the Task 13 SAC rounds are for.
 
+**v4 E1 baseline** (`runs/v5/e1-v4-baseline.json`, 50 evaluation seeds, reported alongside E1): loom AUC **0.687** (fails the 0.8 bar),
+E2 passes (light margin 0.49, loom margin 0.27). The hand-built v4 encoder does not meet E1 either; round-0 v5 is at the same 0.686. E1 therefore
+asks SAC for loom selectivity that v4 never had.
+
+**Task 12 complete** (18:39).
+- **Encoder:** the mirror-symmetric clone `learned-v5:1681bff17b4eda85`.
+- **Round 0:** DAgger iteration 1 under that clone (`runs/v5/round0`, gate passed).
+- **Also written:** validation and the v4 E1 baseline.
+- **Code added along the way:** Tasks 12b–12d (collection under a learned encoder, pre-tanh warm start, difference-aware and mirror-symmetric clone fit), each reviewed.
+- **Next:** the 6-worker smoke test, then Tasks 13–15.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
