@@ -51,3 +51,31 @@
   22 (2021). <https://jmlr.org/papers/v22/20-1364.html>
 - E. B. Wilson, "Probable inference, the law of succession, and statistical inference", _JASA_
   22 (1927): the binomial interval used in [`training.md`](training.md) §6.
+
+## Connectome mining and navigation circuit (external)
+
+Connectome-mining findings on central-complex navigation, and the sibling whole-brain emulators.
+These are **not** validated biology; each source page labels its claims as published, measured in
+wiring, simulated, or proposed and untested. See
+[`connectome-navigation-findings.md`](connectome-navigation-findings.md) for the relevance filter
+and what, if anything, this project adopts from them.
+
+- **Fly circuit exploration** (pwang724), MaleCNS v1.0 + hemibrain navigation screen, September 2026. <https://github.com/pwang724/fly-circuit-exploration>.
+  - Findings index: <https://pwang724.github.io/fly-circuit-exploration/findings/index.html>.
+  - Panoramic circuit view: <https://pwang724.github.io/fly-circuit-exploration/circuit.html>.
+  - Finding 1, synaptic store at hΔH/hΔI:
+    <https://pwang724.github.io/fly-circuit-exploration/findings/01-synaptic-store.html>.
+  - Finding 2, hΔM/hΔI return inverters:
+    <https://pwang724.github.io/fly-circuit-exploration/findings/02-return-inverter.html>.
+  - Finding 3, unnamed velocity inputs (PS196_b, FB3A):
+    <https://pwang724.github.io/fly-circuit-exploration/findings/03-velocity-sources.html>.
+  - Finding 4, EPG→PEN compass brake:
+    <https://pwang724.github.io/fly-circuit-exploration/findings/04-compass-brake.html>.
+- **fly-brain** (eonsystemspbc): MaleCNS/FlyWire whole-brain LIF emulation across Brian2,
+  Brian2CUDA, PyTorch, NEST GPU and GeNN. <https://github.com/eonsystemspbc/fly-brain>.
+- **flycoinrh** (fruitflydev): MaleCNS connectome driving a browser; the one place it lets a weight
+  move is dopamine-gated Kenyon-cell→MBON depression.
+  <https://github.com/fruitflydev/flycoinrh>.
+- **fly-brain-spectacles** (PtPavloTkachenko): MaleCNS on Snap Spectacles, with a bit-exact Metal
+  GPU brain kernel and an explicit "real vs. engineered" decisions log.
+  <https://github.com/PtPavloTkachenko/fly-brain-spectacles>.

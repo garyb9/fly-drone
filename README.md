@@ -106,20 +106,21 @@ drone mesh is drawn 6× larger than its physical size.
 
 ## Documentation
 
-| Doc                                                          | Contents                                                                                                          |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| [`docs/overview/`](docs/overview/)                           | **start here**: the cyborg goal, architecture diagrams (HTML), math, training, evidence, roadmap                  |
-| [`docs/architecture.md`](docs/architecture.md)               | system overview, process boundaries, contracts                                                                    |
-| [`docs/neuron-model.md`](docs/neuron-model.md)               | LIF equations, weights and signs, tonic fixed point, activity trace, CSR format, determinism, Rust actor          |
-| [`docs/sensory-model.md`](docs/sensory-model.md)             | camera geometry, encoder equations, looming math, splay dead-zone experiment, causal assay                        |
-| [`docs/control-and-physics.md`](docs/control-and-physics.md) | frames, CF2X constants, rotor wrench, drag, motor lag, cascaded PID and mixer, clock identities                   |
-| [`docs/training.md`](docs/training.md)                       | MDP, reward shaping, PPO/GAE, warm-start turn gain, export parity, evaluation statistics                          |
-| [`docs/data-pipeline.md`](docs/data-pipeline.md)             | MaleCNS provenance, selection and transforms, dataset hash                                                        |
-| [`docs/validation.md`](docs/validation.md)                   | acceptance table with measured results and performance                                                            |
-| [`docs/free-roam.md`](docs/free-roam.md)                     | free-roam arena, sensory tuning evidence, composite teacher, distillation, pre-registered acceptance, live probes |
-| [`docs/manual-checklist.md`](docs/manual-checklist.md)       | automated and human verification items                                                                            |
-| [`docs/references.md`](docs/references.md)                   | papers, datasets and upstream code                                                                                |
-| [`docs/superpowers/plans/`](docs/superpowers/plans/)         | milestone plans                                                                                                   |
+| Doc                                                                                | Contents                                                                                                          |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`docs/overview/`](docs/overview/)                                                 | **start here**: the cyborg goal, architecture diagrams (HTML), math, training, evidence, roadmap                  |
+| [`docs/architecture.md`](docs/architecture.md)                                     | system overview, process boundaries, contracts                                                                    |
+| [`docs/neuron-model.md`](docs/neuron-model.md)                                     | LIF equations, weights and signs, tonic fixed point, activity trace, CSR format, determinism, Rust actor          |
+| [`docs/sensory-model.md`](docs/sensory-model.md)                                   | camera geometry, encoder equations, looming math, splay dead-zone experiment, causal assay                        |
+| [`docs/control-and-physics.md`](docs/control-and-physics.md)                       | frames, CF2X constants, rotor wrench, drag, motor lag, cascaded PID and mixer, clock identities                   |
+| [`docs/training.md`](docs/training.md)                                             | MDP, reward shaping, PPO/GAE, warm-start turn gain, export parity, evaluation statistics                          |
+| [`docs/data-pipeline.md`](docs/data-pipeline.md)                                   | MaleCNS provenance, selection and transforms, dataset hash                                                        |
+| [`docs/validation.md`](docs/validation.md)                                         | acceptance table with measured results and performance                                                            |
+| [`docs/free-roam.md`](docs/free-roam.md)                                           | free-roam arena, sensory tuning evidence, composite teacher, distillation, pre-registered acceptance, live probes |
+| [`docs/manual-checklist.md`](docs/manual-checklist.md)                             | automated and human verification items                                                                            |
+| [`docs/connectome-navigation-findings.md`](docs/connectome-navigation-findings.md) | external navigation-connectome findings, relevance filter, model gaps, future path-integration milestone          |
+| [`docs/references.md`](docs/references.md)                                         | papers, datasets and upstream code                                                                                |
+| [`docs/superpowers/plans/`](docs/superpowers/plans/)                               | milestone plans                                                                                                   |
 
 ## Status and limits
 

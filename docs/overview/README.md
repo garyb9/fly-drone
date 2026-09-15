@@ -10,7 +10,8 @@ written companion: architecture, math, training, evidence and roadmap. The deep 
 [`../architecture.md`](../architecture.md), [`../sensory-model.md`](../sensory-model.md),
 [`../neuron-model.md`](../neuron-model.md), [`../control-and-physics.md`](../control-and-physics.md),
 [`../training.md`](../training.md), [`../free-roam.md`](../free-roam.md) and
-[`../validation.md`](../validation.md).
+[`../validation.md`](../validation.md). External navigation-connectome findings, and what this
+project does with them, are in [`../connectome-navigation-findings.md`](../connectome-navigation-findings.md).
 
 ## 1. The goal, stated as a contract
 
@@ -358,4 +359,6 @@ better than it is, and the ghost condition is what catches that.
 5. Full evaluation (A1–A7), accepted actor to `docs/results/accepted-policies.json`, viewer probe and attribution panels.
 6. Later, proposed: ascending/proprioceptive feedback from the body into the connectome; senses beyond two
    luminance statistics; onboard compute that runs the full graph (estimate:
-   [`../hardware-estimate.md`](../hardware-estimate.md)).
+   [`../hardware-estimate.md`](../hardware-estimate.md)). A state-in-synapses (path-integration)
+   milestone that would require opt-in plasticity is scoped, and deliberately not scheduled, in
+   [`../connectome-navigation-findings.md`](../connectome-navigation-findings.md) §6.
