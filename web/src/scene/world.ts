@@ -169,9 +169,9 @@ function createAxisLabel(text: string, color: number): THREE.Sprite {
 export function createAxisGizmo(size = 0.6): THREE.Group {
   const group = new THREE.Group();
   const axes: [THREE.Vector3, number, string][] = [
-    [new THREE.Vector3(1, 0, 0), 0xff5c5c, "X"],
-    [new THREE.Vector3(0, 1, 0), 0x5cff7a, "Z↑"],
-    [new THREE.Vector3(0, 0, 1), 0x5cb0ff, "-Y"],
+    [new THREE.Vector3(1, 0, 0), THEME.axisX, "X"],
+    [new THREE.Vector3(0, 1, 0), THEME.axisY, "Z↑"],
+    [new THREE.Vector3(0, 0, 1), THEME.axisZ, "-Y"],
   ];
   for (const [dir, color, label] of axes) {
     group.add(

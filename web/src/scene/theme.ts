@@ -13,4 +13,9 @@ export const THEME = {
   obstacleFill: 0x0f3747,
   obstacleStroke: 0x6fa9bd,
   targetEmissive: 0xa16b15,
+  velocity: 0x6fe2ff,
+  command: 0xff6fd8,
+  axisX: 0xff5c5c,
+  axisY: 0x5cff7a,
+  axisZ: 0x5cb0ff,
 } as const;

@@ -444,6 +444,9 @@ class DronePlant(BaseAviary):
             "position": self.pos[0].tolist(),
             "quaternion": self.quat[0].tolist(),
             "velocity": self.vel[0].tolist(),
+            # World-frame rad/s (qvel[3:6] of the drone's free joint; base_aviary.py
+            # converts it back to body frame elsewhere, so it's stored world-frame here).
+            "angular_velocity": self.ang_v[0].tolist(),
             "commanded_rpm": self.commanded.tolist(),
             "actual_rpm": self.actual.tolist(),
             "rotor_phase": self.phase.tolist(),

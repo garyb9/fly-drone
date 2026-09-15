@@ -59,6 +59,8 @@ try {
   }
   passed.push("motor telemetry (actual/commanded RPM near hover)");
 
+  // Pause/Reset/target/obstacle controls now live in the drawer's "Controls" tab.
+  await page.getByRole("button", { name: "Controls", exact: true }).click();
   if (await page.getByRole("button", { name: "Pause", exact: true }).count()) {
     await page.getByRole("button", { name: "Pause", exact: true }).click();
   }
@@ -93,9 +95,12 @@ try {
   await page.getByRole("button", { name: "Move aside" }).click();
   passed.push("target and obstacle placement");
 
+  // Neuron intervention buttons live in the drawer's "Brain" tab.
+  await page.getByRole("button", { name: "Brain", exact: true }).click();
   for (const op of ["Pulse", "Hold", "Silence", "Restore"]) {
     await page.getByRole("button", { name: op, exact: true }).click();
   }
+  await page.getByRole("button", { name: "Trials", exact: true }).click();
   passed.push("neuron interventions");
 
   const episode = await text(page, "#episode");
