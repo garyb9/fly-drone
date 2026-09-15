@@ -193,6 +193,10 @@ class Session:
                 "levels": sorted(LEVELS),
                 "dataset_hash": env.brain.dataset_hash,
                 "room": env.plant.room(),
+                "task_policy_status": {
+                    task: "loaded" if path else "none"
+                    for task, path in self.task_policies.items()
+                },
             }
             self.publish_room(self.metadata["room"])
             episode = 0

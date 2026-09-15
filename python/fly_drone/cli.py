@@ -26,6 +26,12 @@ def main():
         action="store_true",
         help="load accepted policies from docs/results/accepted-policies.json",
     )
+    p.add_argument(
+        "--current",
+        action="store_true",
+        help="load best-available (not necessarily accepted) policies from "
+        "docs/results/current-policies.json",
+    )
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
     p = sub.add_parser("baseline")
@@ -326,6 +332,22 @@ def main():
             policy = policy or present.pop("visual", None)
             looming_policy = looming_policy or present.pop("looming", None)
             for task, path in present.items():
+                task_policies.setdefault(task, path)
+        if args.current:
+            from . import current_pointer
+
+            present, missing = current_pointer.current_policies()
+            for task, path in missing.items():
+                print(f"current {task} policy not found locally: {path}", flush=True)
+            for task, path in present.items():
+                entry = current_pointer.current_entry(task)
+                if entry and entry.get("encoder"):
+                    print(
+                        f"current {task} policy needs a learned-encoder pairing "
+                        "`serve` does not support yet; skipping",
+                        flush=True,
+                    )
+                    continue
                 task_policies.setdefault(task, path)
         uvicorn.run(
             make_app(policy, looming_policy, task_policies, args.port),

@@ -5,7 +5,7 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "setup": "./scripts/setup.sh",
-    "dev": "scripts/venv.sh fly-drone serve --accepted",
+    "dev": "scripts/venv.sh fly-drone serve --accepted --current",
     "predev": "yarn py:build && yarn build",
     "dev:policy": "scripts/venv.sh fly-drone serve --policy",
     "web:dev": "vite web --host 127.0.0.1",

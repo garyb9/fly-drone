@@ -66,6 +66,24 @@ def test_accepted_policy_manifest_splits_present_and_missing(tmp_path):
     assert set(committed[0]) | set(committed[1]) <= set(TASKS)
 
 
+def test_metadata_reports_task_policy_status(tmp_path):
+    import json
+
+    actor = tmp_path / "actor.json"
+    actor.write_text(
+        json.dumps({"encoder_version": "x", "action_limits": [1, 1, 1, 1]})
+    )
+    with TestClient(make_app(task_policies={"free_roam": str(actor)})) as client:
+        deadline = time.monotonic() + 30
+        while not client.get("/health").json()["ready"]:
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        with client.websocket_connect("/ws") as ws:
+            metadata = ws.receive_json()
+            assert metadata["task_policy_status"]["free_roam"] == "loaded"
+            assert metadata["task_policy_status"]["visual"] == "none"
+
+
 def test_service_rejects_unrelated_origin():
     from starlette.websockets import WebSocketDisconnect
 

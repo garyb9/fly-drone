@@ -17,6 +17,7 @@ type Metadata = {
   tasks: string[];
   ablations: string[];
   room: Room;
+  task_policy_status: Record<string, "loaded" | "none">;
 };
 type FreeRoamEvent = {
   type: string;
@@ -293,7 +294,8 @@ let metadata: Metadata | undefined,
 let socket: WebSocket,
   following = false,
   reports: Report[] = [],
-  replayPolicy: string | undefined;
+  replayPolicy: string | undefined,
+  initialized = false;
 const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
 const vector = (v: number[]) => new THREE.Vector3(v[0], v[2], -v[1]);
 const quaternion = (v: number[]) => new THREE.Quaternion(v[1], v[2], v[3], v[0]);
@@ -369,6 +371,13 @@ function setupBrain(m: Metadata) {
     option.textContent = TASK_LABELS[t] ?? t;
     taskSelect.append(option);
   });
+  // Land on free roam by default when a decoder is actually loaded for it (otherwise the
+  // drone would just hold still there); only on first connect, not on every reconnect.
+  if (!initialized && m.task_policy_status?.free_roam === "loaded") {
+    taskSelect.value = "free_roam";
+    runTrial();
+  }
+  initialized = true;
   el("mode").textContent =
     m.policy === "trained" ? "CONNECTOME POLICY" : "PID BASELINE · BRAIN OBSERVING";
   updateRoom(m.room);
