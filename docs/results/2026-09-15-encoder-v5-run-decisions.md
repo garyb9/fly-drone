@@ -175,6 +175,11 @@ off to one side, not in the frames with no light difference. Training longer alo
   gates. This costs about 1.3 GB of disk.
 - **The v4 teacher labels, the connectome and the thresholds are unchanged.** The clone target is still v4's own currents, so this is
   still an honest copy of v4, only one weighted toward the signal the brain steers with.
+- **Task 12c** landed as 6ff5c85 (127 tests). The review approved it, with 4 minor test-strength items, which are parked. The two gaps
+  that could have hidden a live bug are the left/right pairing and the absolute value in the side-frame pool. Both were checked
+  directly in the committed code and are correct.
+- **Ruling: the re-run started alongside the review**, to save about 30 min. It would have been stopped if the review had
+  found a serious problem in the clone fit. Cost if wrong: only the compute already spent.
 
 ## Tasks 13–15: pipeline
 
