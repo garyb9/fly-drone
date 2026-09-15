@@ -19,6 +19,8 @@ const CSS_VAR_MAP: Record<string, string> = {
   "--bp-axis-x": "axisX",
   "--bp-axis-y": "axisY",
   "--bp-axis-z": "axisZ",
+  "--bp-success": "successTeal",
+  "--bp-card": "card",
 };
 
 export function applyCssTokens(root: HTMLElement = document.documentElement): void {

@@ -15,5 +15,7 @@
   "axisY": "#5cff7a",
   "axisZ": "#5cb0ff",
   "gridMinor": "#4d7f93",
-  "targetEmissive": "#a16b15"
+  "targetEmissive": "#a16b15",
+  "successTeal": "#8be6d5",
+  "card": "#101c23"
 }

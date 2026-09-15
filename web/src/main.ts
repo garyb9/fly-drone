@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import "./style.css";
 import { applyCssTokens } from "./theme/apply-css-tokens";
+import { PALETTE, hexToInt } from "./theme/tokens";
 import { THEME } from "./scene/theme";
 import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
 
@@ -156,10 +157,10 @@ app.innerHTML = `
 </main>
 <footer><span>ANATOMICAL WIRING · MODELED NEURONS · LEARNED DECODING</span><span>MaleCNS v1.0 · FlyEM / Cambridge / MRC LMB / Google Research · CC-BY 4.0</span></footer>`;
 const el = (id: string) => document.getElementById(id)!;
-// Colors outside the blueprint-schematic scope: the brain graph's activity pulse and
-// the fly viewport's background/grid keep their original values (fly stays untouched).
-const ACTIVITY_HOT = 0x8be6d5;
-const LEGACY_VIEWPORT_BG = 0x101c23;
+// The brain-activity pulse and the fly viewport's background share the site's
+// existing accent/surface tokens rather than introducing new colors.
+const ACTIVITY_HOT = hexToInt(PALETTE.successTeal);
+const LEGACY_VIEWPORT_BG = hexToInt(PALETTE.card);
 function view(id: string, position: number[], target: number[]) {
   const host = el(id),
     scene = new THREE.Scene();

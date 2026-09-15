@@ -19,6 +19,8 @@
   --bp-axis-x: #ff5c5c;
   --bp-axis-y: #5cff7a;
   --bp-axis-z: #5cb0ff;
+  --bp-success: #8be6d5;
+  --bp-card: #101c23;
 }
 :root {
   font-family: "DM Sans", sans-serif;
@@ -58,7 +60,7 @@ body {
 .card {
   border: 1px solid #293b44;
   border-radius: 12px;
-  background: #101c23;
+  background: var(--bp-card);
   overflow: hidden;
 }
 .panel-head {
@@ -148,9 +150,9 @@ body {
   padding: 8px 10px;
 }
 .camera-controls button.active {
-  background: #8be6d5;
+  background: var(--bp-success);
   color: #112c2c;
-  border-color: #8be6d5;
+  border-color: var(--bp-success);
 }
 .world-hint {
   position: absolute;
@@ -173,7 +175,7 @@ body {
   display: inline-block;
   width: 4px;
   height: 4px;
-  background: #8be6d5;
+  background: var(--bp-success);
   border-radius: 50%;
   margin-right: 4px;
 }
@@ -215,9 +217,9 @@ button:hover {
   color: #e9f4ef;
 }
 button.primary {
-  background: #8be6d5;
+  background: var(--bp-success);
   color: #112c2c;
-  border-color: #8be6d5;
+  border-color: var(--bp-success);
 }
 .button-row {
   display: flex;
@@ -409,7 +411,7 @@ select:focus-visible {
   overflow-wrap: anywhere;
 }
 .outcome.pass {
-  color: #8be6d5;
+  color: var(--bp-success);
 }
 .outcome.fail {
   color: #ffa16c;
@@ -426,8 +428,8 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 .seed-grid .seed.pass {
-  border-color: #8be6d5;
-  color: #8be6d5;
+  border-color: var(--bp-success);
+  color: var(--bp-success);
 }
 .seed-grid .seed.fail {
   border-color: #ffa16c;
@@ -473,7 +475,7 @@ select:focus-visible {
   color: var(--bp-amber);
 }
 .roam-log-entry.ok {
-  color: #8be6d5;
+  color: var(--bp-success);
 }
 
 /* Layout: the flight view (.world) is a fullscreen base layer filling <main>; every other
@@ -511,7 +513,7 @@ main {
 .hud-pinned .brain-mini {
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   overflow: hidden;
   width: 100%;
 }
@@ -535,7 +537,7 @@ main {
 .fly-mini-panel {
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   overflow: hidden;
   width: 100%;
 }
@@ -555,7 +557,7 @@ main {
 .eyes-panel {
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   padding: 12px;
   width: 100%;
 }
@@ -586,9 +588,9 @@ main {
   text-align: center;
 }
 .drawer-rail button.active {
-  background: #8be6d5;
+  background: var(--bp-success);
   color: #112c2c;
-  border-color: #8be6d5;
+  border-color: var(--bp-success);
 }
 .drawer-collapse {
   flex: none;
@@ -628,7 +630,7 @@ main {
   width: 100%;
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   padding: 12px;
 }
 .attitude-gauges {
