@@ -5,9 +5,9 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "setup": "./scripts/setup.sh",
-    "dev": "scripts/venv.sh fly-drone serve --accepted --current",
+    "dev": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 scripts/venv.sh fly-drone serve --accepted --current",
     "predev": "yarn py:build && yarn build",
-    "dev:policy": "scripts/venv.sh fly-drone serve --policy",
+    "dev:policy": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 scripts/venv.sh fly-drone serve --policy",
     "web:dev": "vite web --host 127.0.0.1",
     "build": "vite build web",
     "typecheck": "tsc --noEmit -p web",
