@@ -284,6 +284,41 @@ level 2, seeds 9000–9029, 60 s. Gate: 0.8 × 1.93 = 1.55.
   screened on the same 30 seeds. If it also misses 1.55, the remaining loss is in the SAC decoder head or its warm start, not the encoder.
   That points to a different fix.
 
+### Diagnosis: the clone strategy is exhausted
+
+**The decoder is cleared.** Diag B′ (pre-tanh warm start, v4 it0 data, v4 encoder) on seeds 9000–9029 scores **1.90 ± 0.18** beacons/min
+(0.67 collisions/min, 2 zero-beacon seeds). That matches the linear it0 actor: paired −0.03 ± 0.18. It passes 1.55.
+The same decoder method under the mirror clone loses **0.70 ± 0.21** beacons/min, paired. The whole loss comes from running under the clone.
+
+**The brain amplifies tiny input differences.** Open-loop replay of held-out flight 600 (500 frames) through the frozen
+connectome. The features are the 2,022 descending/motor traces the decoder reads.
+
+| currents fed to the brain            | currents vs v4, r | features vs v4, median r | features with r < 0.9 |
+| ------------------------------------ | ----------------- | ------------------------ | --------------------- |
+| clone v1                             | 0.94–0.99         | 0.835                    | 74%                   |
+| mirror-symmetric clone               | 0.96–1.00         | 0.866                    | 64%                   |
+| exact v4 + noise σ = 0.01            | ≈ 1.000           | 0.921                    | 44%                   |
+| exact v4 + noise σ = 0.03            | 0.995–1.000       | 0.919                    | 44%                   |
+
+Even imperceptible noise on the exact v4 currents decorrelates almost half of the fine traces. An encoder that is not
+bit-identical to v4 will never reproduce v4's brain activity. A better clone therefore cannot close the gap, and after the first
+fixes the attempts stopped improving (30 seeds: 1.27 → 1.20). What remains is decoder robustness in closed loop under the encoder it
+actually runs with. That is DAgger's and SAC's job, not the clone's. Stopped and reported. The user chooses the strategy.
+
+### User decision: DAgger under the clone, then SAC
+
+- **The clone is frozen** as the mirror-symmetric `learned-v5:1681bff17b4eda85`. No more clone work.
+- **Ruling: the DAgger iterations follow the v4 Stage-1 scheme.**
+  - Iteration 1: the student is the current round-0 decoder, flying half the time (beta 0.5), on seeds 1200–1327.
+  - Iteration 2, only if iteration 1 fails the gate: the student is the iteration-1 decoder, beta 0.25, on seeds 2200–2327.
+  - Each refit uses all flights recorded under the clone so far. The teacher labels are unchanged.
+  - Cost if wrong: ~30 min per iteration.
+- **Ruling: pick the best round 0.** It is the highest 30-seed beacons/min among teacher-only (1.20), DAgger 1 and DAgger 2, with ties going to fewer collisions.
+  It is installed as `runs/v5/round0`, with `gate.json` recording whether it passed or is an override.
+- **If no candidate passes after 2 iterations, SAC (Tasks 13–15) starts from the best round 0 anyway**, as the user decided. This is recorded as a
+  gate override in the results. Round 0 avoids obstacles and forages at about 62% of v4, and SAC trains in closed loop under the real
+  encoder, which is what is missing. Cost if wrong: hours of SAC compute from a weaker start, reported honestly.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
