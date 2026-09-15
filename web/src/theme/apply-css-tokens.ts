@@ -3,7 +3,7 @@ import { PALETTE } from "./tokens";
 // Maps each CSS custom property to its palette.json key. Add a mapping here
 // whenever a new --bp-* variable is introduced instead of hardcoding it in
 // style.css's :root block, which now only holds fallback values.
-const CSS_VAR_MAP: Record<string, string> = {
+const CSS_VAR_MAP: Record<string, keyof typeof PALETTE> = {
   "--bp-bg": "navyDeep",
   "--bp-surface": "navySurface",
   "--bp-border": "navyBorder",

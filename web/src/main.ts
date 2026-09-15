@@ -120,11 +120,23 @@ ${renderDrawer()}
 </main>
 ${renderFooter()}`;
 function runBootSequence(): void {
-  const sequence = [".world-frame", "#hud-pinned", "#drawer"];
-  sequence.forEach((selector, i) => {
-    const el = document.querySelector<HTMLElement>(selector);
-    if (!el) return;
-    setTimeout(() => el.classList.add("bp-boot-run"), i * 120);
+  // Derived from the DOM (every .bp-boot element, in document order) rather than a
+  // hardcoded selector list, so adding bp-boot to a new element can't silently leave
+  // it out of the sequence (and stuck invisible) the way .instruments once did.
+  const targets = Array.from(document.querySelectorAll<HTMLElement>(".bp-boot"));
+  targets.forEach((target, i) => {
+    setTimeout(() => {
+      target.classList.add("bp-boot-run");
+      // The boot animation sets transform:translateY(...) with animation-fill-mode:
+      // forwards, which outranks any later author-set transform (e.g. the drawer's
+      // open/collapsed state) in the cascade. Drop both classes once it finishes so
+      // the animation's transform stops shadowing the element's real state.
+      target.addEventListener(
+        "animationend",
+        () => target.classList.remove("bp-boot", "bp-boot-run"),
+        { once: true },
+      );
+    }, i * 120);
   });
 }
 runBootSequence();
