@@ -194,12 +194,16 @@ canvas {
 select {
   font-family: inherit;
   font-size: 9px;
-  background: #13232c;
+  background-color: #13232c;
   color: #a7bdc6;
   border: 1px solid #2f444e;
   border-radius: 4px;
   width: 100%;
-  padding: 4px;
+  padding: 4px 20px 4px 6px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M0 0 L8 0 L4 6 Z' fill='%2392cce0'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
 }
 button {
   font-family: inherit;
@@ -389,7 +393,7 @@ footer {
 .replay-form input {
   min-width: 0;
   max-width: 100%;
-  background: #0d171e;
+  background-color: #0d171e;
   color: inherit;
   border: 1px solid #2c4550;
   border-radius: 6px;
@@ -397,6 +401,14 @@ footer {
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
+}
+.replay-form input[type="number"] {
+  appearance: textfield;
+}
+.replay-form input[type="number"]::-webkit-inner-spin-button,
+.replay-form input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
 }
 .replay-form select:focus-visible,
 .replay-form input:focus-visible,
