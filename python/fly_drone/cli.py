@@ -159,6 +159,9 @@ def main():
     p.add_argument("--seed-base", type=int, default=9000)
     p.add_argument("--seconds", type=float, default=60)
     p.add_argument("--workers", type=int, default=6)
+    p = sub.add_parser("current-pointer")
+    p.add_argument("--task", default="free_roam", choices=["free_roam"])
+    p.add_argument("--dry-run", action="store_true")
     p = sub.add_parser("encoder-checks")
     p.add_argument("--policy", required=True)
     p.add_argument("--encoder", help="omit for the v4 baseline")
@@ -286,6 +289,11 @@ def main():
                 for k, r in report["results"].items()
             }
         print(json.dumps(result, indent=2))
+    elif args.command == "current-pointer":
+        from . import current_pointer
+
+        payload = current_pointer.update(args.task, dry_run=args.dry_run)
+        print(json.dumps(payload, indent=2))
     elif args.command == "roam-feasibility":
         from .feasibility import run
 

@@ -1,0 +1,14 @@
+{
+  "note": "Best available v5 free-roam pair, NOT vetted against roam_eval.ACCEPTANCE. Never read by --accepted; regenerate with `fly-drone current-pointer --task free_roam`.",
+  "policies": {
+    "free_roam": {
+      "status": "interim",
+      "encoder": null,
+      "encoder_version": "bright-contrast-400-splay075-noaa-loom150-v4",
+      "decoder": "runs/v5/dagger/it0/warm-actor.json",
+      "source_run": "runs/v5/dagger/it0",
+      "gate_report": null,
+      "generated_at": "2026-09-15T08:36:15+03:00"
+    }
+  }
+}
