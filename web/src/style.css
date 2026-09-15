@@ -18,7 +18,7 @@
   --bp-axis-y:#5cff7a;
   --bp-axis-z:#5cb0ff;
 }
-:root{font-family:'DM Sans',sans-serif;color:#dbe6e8;background:#0b141a;font-synthesis:none;font-size:13px}*{box-sizing:border-box}body{margin:0}header{height:48px;padding:0 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #23343d}.brand{font-family:'Space Grotesk',sans-serif;font-size:27px;color:#e7f5ef;text-decoration:none;letter-spacing:-4px;border:1px solid #3d565e;padding:8px 16px 8px 12px;border-radius:12px}.brand span{color:#89dfcf;font-size:23px;margin:0 3px}h1{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:23px;letter-spacing:-1px;margin:0}header p{font-size:9px;color:#7c929c;letter-spacing:2px;margin:7px 0 0}.version{margin-left:15px;color:#8ce1d0}.connection{margin-left:auto;display:flex;gap:9px;align-items:center;color:#91a7b1;font-size:11px}#dot{height:6px;width:6px;background:#cb9167;border-radius:50%}#dot.live{background:#90e0c2;box-shadow:0 0 12px #7cc6b277}.card{border:1px solid #293b44;border-radius:12px;background:#101c23;overflow:hidden}.panel-head{height:42px;padding:0 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #263841;font-size:9px;letter-spacing:1.4px;color:#94aab5}.panel-head>span:last-child{font-size:8px;color:#6e8994}.index{color:#80cbbb;margin-right:10px;font-weight:400}.world{position:absolute;inset:0;z-index:0}.world .viewport{position:absolute;inset:0}.world-overlay{position:absolute;left:26px;top:190px;pointer-events:none;max-width:400px}.eyebrow{font-size:9px;letter-spacing:2px;color:#8be6d5}h2{font-family:'Space Grotesk',sans-serif;font-size:32px;line-height:1.15;font-weight:400;letter-spacing:-1.3px;margin:14px 0}.world-overlay p{font-size:11px;color:#738f9a}.world-bottom{position:absolute;bottom:39px;left:26px;right:64px;display:flex;flex-wrap:wrap;align-items:end;gap:28px;pointer-events:none;z-index:1}.world-bottom>div>span{display:block;font-size:8px;letter-spacing:1.7px;color:#88a0ac}.world-bottom strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:23px;font-weight:400;margin-top:8px}.world-bottom small{font-size:10px;color:#78929e}.world-bottom button{margin-left:auto;pointer-events:auto}.world-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:1.8px;color:#4f707e;z-index:1}aside{display:grid;gap:16px;grid-template-rows:360px 236px}.brain-card #brain{height:223px}.brain-legend{display:flex;justify-content:space-between;font-size:7px;color:#78939e;padding:0 14px 10px}.brain-legend i{display:inline-block;width:4px;height:4px;background:#8be6d5;border-radius:50%;margin-right:4px}.inspect{border-top:1px solid #233741;padding:9px 12px}.inspect .button-row{margin-top:7px}.fly-card #fly{height:147px}.caption{font-size:8px;line-height:1.6;color:#76919c;margin:5px 15px}canvas{display:block;width:100%;height:100%}select{font-family:inherit;font-size:9px;background:#13232c;color:#a7bdc6;border:1px solid #2f444e;border-radius:4px;width:100%;padding:4px}button{font-family:inherit;font-size:10px;color:#acbdc5;border:1px solid #344952;background:#172730;padding:8px 12px;border-radius:5px;cursor:pointer;transition:background .2s}button:hover{background:#2b434b;color:#e9f4ef}button.primary{background:#8be6d5;color:#112c2c;border-color:#8be6d5}.button-row{display:flex;gap:6px}.inspect button{font-size:8px;padding:5px 9px;flex:1}.signal-grid{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:20px;padding:16px 18px}.eyes{display:flex;gap:8px;align-items:center}.eyes figure{margin:0;width:64px}.eyes img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#0c141a;border-radius:5px;border:1px solid #2b414b;image-rendering:pixelated}.eyes figcaption{font-size:7px;letter-spacing:1.2px;color:#6b8794;margin-top:4px}h3{font-weight:400;font-size:8px;letter-spacing:1.5px;color:#809ba7;margin:0 0 14px}.meter{display:grid;grid-template-columns:52px 1fr 37px;align-items:center;gap:7px;margin:9px 0;font-size:8px;color:#89a4af}.meter>div{height:3px;background:#233942}.meter i{height:3px;display:block;background:#84ccbc}.meter em{font-style:normal;font-variant-numeric:tabular-nums;text-align:right;font-size:8px;color:#acc5ce}#motors .meter{grid-template-columns:20px 1fr 92px}#motors .meter i{background:#d9a373}.controls{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start;padding:16px 18px}.controls h3{margin-bottom:10px}.notes{display:flex;flex-direction:column;gap:8px;font-size:9px;color:#758f9b;max-width:100%;line-height:1.5}footer{padding:0 29px 24px;display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;color:#486470}@media(max-width:1000px){.signal-grid{grid-template-columns:1fr 1fr}.notes{margin-left:0}.world-bottom{gap:15px}.world-bottom button{display:none}footer{gap:20px}}@media(max-width:700px){.world-overlay h2{font-size:26px}.signal-grid{gap:18px;padding:15px}footer{flex-direction:column}.world-bottom{gap:16px}}
+:root{font-family:'DM Sans',sans-serif;color:#dbe6e8;background:#0b141a;font-synthesis:none;font-size:13px}*{box-sizing:border-box}body{margin:0}header{height:48px;padding:0 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #23343d}.brand{font-family:'Space Grotesk',sans-serif;font-size:27px;color:#e7f5ef;text-decoration:none;letter-spacing:-4px;border:1px solid #3d565e;padding:8px 16px 8px 12px;border-radius:12px}.brand span{color:#89dfcf;font-size:23px;margin:0 3px}h1{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:23px;letter-spacing:-1px;margin:0}header p{font-size:9px;color:#7c929c;letter-spacing:2px;margin:7px 0 0}.version{margin-left:15px;color:#8ce1d0}.connection{margin-left:auto;display:flex;gap:9px;align-items:center;color:#91a7b1;font-size:11px}#dot{height:6px;width:6px;background:#cb9167;border-radius:50%}#dot.live{background:#90e0c2;box-shadow:0 0 12px #7cc6b277}.card{border:1px solid #293b44;border-radius:12px;background:#101c23;overflow:hidden}.panel-head{height:42px;padding:0 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #263841;font-size:9px;letter-spacing:1.4px;color:#94aab5}.panel-head>span:last-child{font-size:8px;color:#6e8994}.index{color:#80cbbb;margin-right:10px;font-weight:400}.world{position:absolute;inset:0;z-index:0}.world .viewport{position:absolute;inset:0}.world-overlay{position:absolute;left:26px;top:190px;pointer-events:none;max-width:400px}.eyebrow{font-size:9px;letter-spacing:2px;color:#8be6d5}h2{font-family:'Space Grotesk',sans-serif;font-size:32px;line-height:1.15;font-weight:400;letter-spacing:-1.3px;margin:14px 0}.world-overlay p{font-size:11px;color:#738f9a}.world-bottom{position:absolute;bottom:39px;left:26px;right:64px;display:flex;flex-wrap:wrap;align-items:end;gap:28px;pointer-events:none;z-index:1}.world-bottom>div>span{display:block;font-size:8px;letter-spacing:1.7px;color:#88a0ac}.world-bottom strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:23px;font-weight:400;margin-top:8px}.world-bottom small{font-size:10px;color:#78929e}.world-bottom button{margin-left:auto;pointer-events:auto}.world-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:1.8px;color:#4f707e;z-index:1}aside{display:grid;gap:16px;grid-template-rows:360px 236px}.brain-card #brain{height:223px}.brain-legend{display:flex;justify-content:space-between;font-size:7px;color:#78939e;padding:0 14px 10px}.brain-legend i{display:inline-block;width:4px;height:4px;background:#8be6d5;border-radius:50%;margin-right:4px}.inspect{border-top:1px solid #233741;padding:9px 12px}.inspect .button-row{margin-top:7px}.fly-card #fly{height:147px}.caption{font-size:8px;line-height:1.6;color:#76919c;margin:5px 15px}canvas{display:block;width:100%;height:100%}select{font-family:inherit;font-size:9px;background:#13232c;color:#a7bdc6;border:1px solid #2f444e;border-radius:4px;width:100%;padding:4px}button{font-family:inherit;font-size:10px;color:#acbdc5;border:1px solid #344952;background:#172730;padding:8px 12px;border-radius:5px;cursor:pointer;transition:background .2s}button:hover{background:#2b434b;color:#e9f4ef}button.primary{background:#8be6d5;color:#112c2c;border-color:#8be6d5}.button-row{display:flex;gap:6px}.inspect button{font-size:8px;padding:5px 9px;flex:1}.signal-grid{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:20px;padding:16px 18px}.eyes{display:flex;gap:10px;align-items:center}.eyes figure{margin:0;width:115px}.eyes img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#0c141a;border-radius:5px;border:1px solid #2b414b;image-rendering:pixelated}.eyes figcaption{font-size:7px;letter-spacing:1.2px;color:#6b8794;margin-top:4px;text-align:center}h3{font-weight:400;font-size:8px;letter-spacing:1.5px;color:#809ba7;margin:0 0 14px}.meter{display:grid;grid-template-columns:52px 1fr 37px;align-items:center;gap:7px;margin:9px 0;font-size:8px;color:#89a4af}.meter>div{height:3px;background:#233942}.meter i{height:3px;display:block;background:#84ccbc}.meter em{font-style:normal;font-variant-numeric:tabular-nums;text-align:right;font-size:8px;color:#acc5ce}#motors .meter{grid-template-columns:20px 1fr 92px}#motors .meter i{background:#d9a373}.controls{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start;padding:16px 18px}.controls h3{margin-bottom:10px}.notes{display:flex;flex-direction:column;gap:8px;font-size:9px;color:#758f9b;max-width:100%;line-height:1.5}footer{padding:0 29px 24px;display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;color:#486470}@media(max-width:1000px){.signal-grid{grid-template-columns:1fr 1fr}.notes{margin-left:0}.world-bottom{gap:15px}.world-bottom button{display:none}footer{gap:20px}}@media(max-width:700px){.world-overlay h2{font-size:26px}.signal-grid{gap:18px;padding:15px}footer{flex-direction:column}.world-bottom{gap:16px}}
 
 .card {
   transition: border-color 0.2s;
@@ -155,31 +155,32 @@ main {
   z-index: 10;
   pointer-events: none;
 }
+/* Right-side dock: a fixed 46px tab rail always sits at the screen edge, outside the
+   sliding drawer, so it stays reachable however the drawer is transformed — collapsing
+   used to move the tabs off-screen with the panel they controlled, leaving no way back
+   in. The brain + eyes stack is pinned further left, clear of the drawer at any width or
+   collapse state, since it must always stay visible. */
 .hud-pinned {
   position: absolute;
   top: 0;
-  left: 0;
-  right: 356px;
+  right: 382px;
+  width: 260px;
   z-index: 15;
   display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  padding: 12px 64px 12px 16px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0 0;
   pointer-events: auto;
-  background: linear-gradient(to bottom, rgba(7, 27, 38, 0.88), rgba(7, 27, 38, 0));
-}
-.hud-pinned .eyes {
-  padding-top: 4px;
 }
 .hud-pinned .brain-mini {
   border: 1px solid #293b44;
   border-radius: 10px;
   background: #101c23;
   overflow: hidden;
-  width: 190px;
+  width: 100%;
 }
 .brain-mini-head {
-  height: 24px;
+  height: 26px;
   padding: 0 10px;
   display: flex;
   align-items: center;
@@ -190,38 +191,37 @@ main {
   border-bottom: 1px solid #263841;
 }
 .hud-pinned #brain {
-  height: 96px;
+  height: 200px;
 }
 .hud-pinned .brain-legend {
-  padding: 4px 10px 6px;
+  padding: 5px 10px 8px;
 }
-.drawer {
+.eyes-panel {
+  border: 1px solid #293b44;
+  border-radius: 10px;
+  background: #101c23;
+  padding: 12px;
+  width: 100%;
+}
+.eyes-panel .eyes {
+  justify-content: center;
+}
+.drawer-rail {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 340px;
-  max-width: calc(100vw - 32px);
-  display: flex;
-  z-index: 10;
-  pointer-events: auto;
-  transform: translateX(0);
-  transition: transform 0.25s ease;
-}
-.drawer.collapsed {
-  transform: translateX(calc(100% - 46px));
-}
-.drawer-tabs {
   width: 46px;
-  flex: none;
+  z-index: 11;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 8px 6px;
   background: #0d171e;
   border-left: 1px solid #1c3947;
+  pointer-events: auto;
 }
-.drawer-tabs button {
+.drawer-rail button {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   font-size: 9px;
@@ -229,14 +229,34 @@ main {
   padding: 10px 5px;
   flex: none;
 }
-.drawer-tabs button.active {
+.drawer-rail button.active {
   background: #8be6d5;
   color: #112c2c;
   border-color: #8be6d5;
 }
+.drawer-collapse {
+  flex: none;
+  font-size: 12px;
+  padding: 6px 4px;
+  margin-bottom: 4px;
+}
+.drawer {
+  position: absolute;
+  top: 0;
+  right: 46px;
+  bottom: 0;
+  width: 320px;
+  max-width: calc(100vw - 62px);
+  z-index: 10;
+  pointer-events: auto;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
+}
+.drawer.collapsed {
+  transform: translateX(100%);
+}
 .drawer-body {
-  flex: 1;
-  min-width: 0;
+  height: 100%;
   overflow-y: auto;
   background: #071b26;
   border-left: 1px solid #1c3947;
@@ -244,12 +264,6 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-.drawer-collapse {
-  flex: none;
-  font-size: 12px;
-  padding: 6px 4px;
-  margin-bottom: 4px;
 }
 .instruments {
   position: absolute;
@@ -347,64 +361,73 @@ main {
 }
 @media (max-width: 1000px) {
   .drawer {
-    width: 290px;
+    width: 260px;
+    max-width: calc(100vw - 62px);
   }
   .hud-pinned {
-    right: 306px;
-  }
-  .hud-pinned .brain-mini {
-    width: 140px;
+    right: 322px;
+    width: 210px;
   }
   .hud-pinned #brain {
-    height: 70px;
+    height: 150px;
   }
 }
 @media (max-width: 700px) {
+  /* The drawer becomes a bottom sheet; the rail becomes its always-visible top edge,
+     so the right side is free and the pinned brain/eyes stack can hug the corner. */
   .hud-pinned {
-    right: 0;
-    padding: 8px 8px 8px 8px;
+    right: 8px;
+    width: 130px;
     gap: 8px;
-  }
-  .hud-pinned .brain-mini {
-    width: 90px;
+    padding-top: 8px;
   }
   .hud-pinned #brain {
-    height: 56px;
+    height: 90px;
   }
   .brain-mini-head span:last-child {
     display: none;
   }
-  .drawer {
+  .eyes-panel {
+    padding: 8px;
+  }
+  .eyes-panel .eyes figure {
+    width: 50px;
+  }
+  .drawer-rail {
     top: auto;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
-    max-width: none;
-    height: 55vh;
-    flex-direction: column-reverse;
-    transform: translateY(0);
-  }
-  .drawer.collapsed {
-    transform: translateY(calc(100% - 42px));
-  }
-  .drawer-tabs {
-    width: 100%;
+    height: 42px;
     flex-direction: row;
     overflow-x: auto;
     border-left: none;
     border-top: 1px solid #1c3947;
   }
-  .drawer-tabs button {
+  .drawer-rail button {
     writing-mode: horizontal-tb;
-  }
-  .drawer-body {
-    border-left: none;
-    border-top: 1px solid #1c3947;
   }
   .drawer-collapse {
     margin-bottom: 0;
     margin-right: 4px;
+  }
+  .drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 42px;
+    width: 100%;
+    max-width: none;
+    height: 55vh;
+    transform: translateY(0);
+  }
+  .drawer.collapsed {
+    transform: translateY(100%);
+  }
+  .drawer-body {
+    border-left: none;
+    border-top: 1px solid #1c3947;
   }
   .instruments {
     bottom: 96px;
@@ -459,7 +482,7 @@ main {
 .world-dims {
   position: absolute;
   top: 16px;
-  right: 372px;
+  right: 654px;
   font-family: "Space Grotesk", sans-serif;
   font-size: 9px;
   letter-spacing: 1.5px;
@@ -469,7 +492,7 @@ main {
 }
 @media (max-width: 1000px) {
   .world-dims {
-    right: 322px;
+    right: 544px;
   }
 }
 @media (max-width: 700px) {

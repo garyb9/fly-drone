@@ -131,8 +131,8 @@ app.innerHTML = `
 </div>
 <div class="hud-layer">
 <section class="hud-pinned" id="hud-pinned">
-<div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div>
 <div class="brain-mini"><div class="brain-mini-head"><span id="mode">INITIALIZING</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>connections</span></div></div>
+<div class="eyes-panel"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div></div>
 </section>
 <div class="drawer" id="drawer">
 <div class="drawer-body">
@@ -143,7 +143,8 @@ app.innerHTML = `
 <section class="card signals" data-panel="signals" hidden><div class="panel-head"><span><b class="index">04</b> SENSORY → NEURAL → MOTION</span><span id="episode">EPISODE 0</span></div><div class="signal-grid"><div><h3>SENSORY CURRENT</h3><div id="cues" class="meters"></div></div><div><h3>NEURAL READOUT</h3><div id="readouts" class="meters"></div></div><div><h3>ACTUAL / COMMANDED RPM</h3><div id="motors" class="meters"></div></div></div></section>
 <section class="card controls" data-panel="controls" hidden><div><h3>EXPERIMENT CONTROLS</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section>
 </div>
-<div class="drawer-tabs">
+</div>
+<div class="drawer-rail" id="drawer-rail">
 <button class="drawer-collapse" id="drawer-collapse" aria-label="Toggle panel drawer">▸</button>
 <button data-tab="replay" class="tab-btn active">Trials</button>
 <button data-tab="brain" class="tab-btn">Brain</button>
@@ -151,7 +152,6 @@ app.innerHTML = `
 <button data-tab="roam" class="tab-btn" id="roam-tab" hidden>Roam</button>
 <button data-tab="signals" class="tab-btn">Signals</button>
 <button data-tab="controls" class="tab-btn">Controls</button>
-</div>
 </div>
 </div>
 </main>
