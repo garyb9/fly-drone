@@ -778,12 +778,19 @@ main {
   .eyes-panel .eyes figure {
     width: 50px;
   }
-  /* Only the brain graph and eyes are load-bearing per AGENTS.md ("brain-activity graph
-     and eyes stay pinned and always visible"); the fly body and attitude gauges are
-     supplementary and get dropped so the pinned stack doesn't grow tall enough to run
-     into the bottom-sheet drawer on a phone screen. */
+  /* The fly body panel shrinks instead of disappearing — AGENTS.md only requires
+     the brain-activity graph and eyes stay pinned and visible; giving the fly
+     panel a real compact size (rather than display:none) keeps the pinned stack
+     from feeling like a smaller, degraded version of the desktop layout. */
   .fly-mini-panel {
-    display: none;
+    width: 100%;
+  }
+  .fly-mini-panel #fly {
+    height: 54px;
+  }
+  .fly-mini-head {
+    height: 18px;
+    font-size: 6px;
   }
   .instruments {
     padding: 8px 10px;
@@ -794,8 +801,17 @@ main {
   .attitude-gauge .track {
     height: 34px;
   }
-  .turn-rate,
+  .turn-rate {
+    margin-top: 5px;
+    font-size: 6px;
+  }
   .vector-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-top: 6px;
+  }
+  .vector-legend .legend-label {
     display: none;
   }
   .drawer-rail {
@@ -833,9 +849,6 @@ main {
   .drawer-body {
     border-right: none;
     border-top: 1px solid #1c3947;
-  }
-  .vector-legend .legend-label {
-    display: none;
   }
   .connection {
     display: none;
