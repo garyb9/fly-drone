@@ -72,9 +72,9 @@ Screen on validation seeds 9000–9009, 60 s, level 2, intact:
 
 Screen: level 2, seeds 9000–9009, 60 s. Values per minute.
 
-| system                                            | beacons | collisions | visited cells |
-| ------------------------------------------------- | ------- | ---------- | ------------- |
-| it0 warm actor (v4, linear head), reference       | 2.2     | 1.0        | 35.0          |
+| system                                                     | beacons | collisions | visited cells |
+| ---------------------------------------------------------- | ------- | ---------- | ------------- |
+| it0 warm actor (v4, linear head), reference                | 2.2     | 1.0        | 35.0          |
 | **round 0: clone encoder + tanh decoder, all DAgger data** | **0.9** | 2.0        | 24.1          |
 | diag A: clone encoder + tanh decoder, it0 data only        | 1.1     | 2.8        | 25.6          |
 | diag B: v4 encoder + tanh decoder, it0 data only           | 1.8     | 1.8        | 32.1          |
@@ -112,11 +112,11 @@ The fix is the user's call (see the report). The Tasks 13–15 pipeline was neve
 - **Ruling: keep the pre-tanh warm start.** The implementer questioned it: it beat the old loss only in short fits on
   toy data. So it was checked on real data before the collection. Screen: level 2, seeds 9000–9009. Values per minute.
 
-  | decoder on v4, it0 data   | held-out avoid mse (action space) | beacons | collisions | visited cells |
-  | ------------------------- | --------------------------------- | ------- | ---------- | ------------- |
-  | linear head (DAgger it0)  | 0.106                             | 2.2     | 1.0        | 35.0          |
-  | tanh head, old loss       | 0.113                             | 1.8     | 1.8        | 32.1          |
-  | tanh head, pre-tanh loss  | 0.124                             | **2.2** | **0.5**    | 35.0          |
+  | decoder on v4, it0 data  | held-out avoid mse (action space) | beacons | collisions | visited cells |
+  | ------------------------ | --------------------------------- | ------- | ---------- | ------------- |
+  | linear head (DAgger it0) | 0.106                             | 2.2     | 1.0        | 35.0          |
+  | tanh head, old loss      | 0.113                             | 1.8     | 1.8        | 32.1          |
+  | tanh head, pre-tanh loss | 0.124                             | **2.2** | **0.5**    | 35.0          |
 
   The offline error is slightly higher, but in flight the linear head's foraging comes back with fewer collisions.
   Cost if wrong: none seen at level 2.
@@ -126,10 +126,10 @@ The fix is the user's call (see the report). The Tasks 13–15 pipeline was neve
 The round-0 decoder was refit on 128 teacher flights recorded with the clone driving the brain. The export error was
 1.1e-5, and held-out avoid mse fell to 0.098, the best of all fits. Screen: level 2, seeds 9000–9009. Values per minute.
 
-| system                                   | beacons | collisions | visited cells |
-| ---------------------------------------- | ------- | ---------- | ------------- |
-| diag B′: v4 encoder, same warm start     | 2.2     | 0.5        | 35.0          |
-| round 0 v2: clone encoder, clone data    | **1.0** | 0.6        | 34.9          |
+| system                                | beacons | collisions | visited cells |
+| ------------------------------------- | ------- | ---------- | ------------- |
+| diag B′: v4 encoder, same warm start  | 2.2     | 0.5        | 35.0          |
+| round 0 v2: clone encoder, clone data | **1.0** | 0.6        | 34.9          |
 
 Obstacle avoidance and exploration are back. Only beacon seeking is lost.
 
@@ -151,12 +151,12 @@ side signal. Steering toward a beacon depends on that side signal.
 
 Test result: the same clone data, refit for 60k steps instead of 20k. Held-out frames.
 
-| metric                                        | 20k steps | 60k steps |
-| --------------------------------------------- | --------- | --------- |
+| metric                                         | 20k steps | 60k steps |
+| ---------------------------------------------- | --------- | --------- |
 | light left−right difference r                  | 0.85      | 0.88      |
-| light difference gain (clone / v4)            | 0.86      | 1.00      |
+| light difference gain (clone / v4)             | 0.86      | 1.00      |
 | light difference rmse (v4 difference std 0.28) | 0.149     | 0.141     |
-| clone difference where v4's is exactly 0      | 0.021     | 0.018     |
+| clone difference where v4's is exactly 0       | 0.021     | 0.018     |
 | loom left−right difference r                   | 0.94      | 0.96      |
 
 More training removes the shrinkage but leaves most of the error. That error sits in the frames where the beacon is
@@ -184,13 +184,38 @@ off to one side, not in the frames with no light difference. Training longer alo
 
   | metric                        | plain 20k | plain 60k | difference-aware 60k |
   | ----------------------------- | --------- | --------- | -------------------- |
-  | light left−right difference r  | 0.851     | 0.878     | **0.890**            |
-  | light difference rmse          | 0.149     | 0.141     | **0.136**            |
-  | light difference gain          | 0.86      | 1.00      | 1.04                 |
-  | loom left−right difference r   | 0.940     | 0.959     | 0.955                |
+  | light left−right difference r | 0.851     | 0.878     | **0.890**            |
+  | light difference rmse         | 0.149     | 0.141     | **0.136**            |
+  | light difference gain         | 0.86      | 1.00      | 1.04                 |
+  | loom left−right difference r  | 0.940     | 0.959     | 0.955                |
   | per-channel r (light / loom)  | 0.99/0.95 | 0.99/0.97 | 0.99/0.96            |
 
   This is a modest gain over longer training alone. The sanity gate on the re-collected round 0 decides whether it is enough.
+
+### Sanity gate FAILED a third time, narrowly
+
+Round 0 was refit on 128 flights recorded under the difference-aware clone. Export error 3.2e-6; held-out avoid mse 0.148.
+Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10 seeds.
+
+| system                                  | beacons/min (SEM)   | collisions/min | visited cells |
+| --------------------------------------- | ------------------- | -------------- | ------------- |
+| it0 warm actor (v4, linear), reference  | 2.2 (±0.29)         | 1.0            | 35.0          |
+| diag B′: v4, pre-tanh warm start        | 2.2 (±0.25)         | 0.5            | 35.0          |
+| round 0 v2: clone v1, clone data        | 1.0 (±0.33)         | 0.6            | 34.9          |
+| **round 0 v3: difference-aware clone**  | **1.6 (±0.34)**     | 0.6            | 35.7          |
+
+- **Gate: 1.76. Failed.** As instructed, I stopped and report. The threshold was not relaxed.
+- The difference-aware clone recovered most of the lost foraging (1.0 → 1.6). Avoidance and exploration match v4.
+- On 10 seeds the screen's standard error is about ±0.3 beacons/min. So the 0.16 shortfall below the gate, and the gap
+  to v4, are both within noise. This 10-seed screen cannot separate this system from one that passes.
+
+### User decision: re-screen the gate on 30 seeds
+
+- Both the v4 it0 reference and round 0 are screened on seeds 9000–9029. The same rule applies to the 30-seed means:
+  round 0 must reach at least 0.8 × the reference. Only the sample size changes; the ratio and the pre-registered `ACCEPTANCE` stay as they were.
+- **Ruling: the reference is re-measured on the same 30 seeds** rather than reusing the 10-seed 2.2, so the ratio
+  compares like with like. Cost if wrong: none.
+- If it passes, execution continues autonomously: validation, the v4 E1 baseline, the smoke test, then Tasks 13–15. If it fails, I stop and report.
 
 ## Tasks 13–15: pipeline
 
