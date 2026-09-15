@@ -295,10 +295,13 @@ connectome. The features are the 2,022 descending/motor traces the decoder reads
 
 | currents fed to the brain            | currents vs v4, r | features vs v4, median r | features with r < 0.9 |
 | ------------------------------------ | ----------------- | ------------------------ | --------------------- |
-| clone v1                             | 0.94–0.99         | 0.835                    | 74%                   |
-| mirror-symmetric clone               | 0.96–1.00         | 0.866                    | 64%                   |
-| exact v4 + noise σ = 0.01            | ≈ 1.000           | 0.921                    | 44%                   |
-| exact v4 + noise σ = 0.03            | 0.995–1.000       | 0.919                    | 44%                   |
+| clone v1                             | 0.94–0.99         | 0.858                    | 66%                   |
+| mirror-symmetric clone               | 0.96–1.00         | 0.880                    | 58%                   |
+| exact v4 + noise σ = 0.01            | ≈ 1.000           | 0.902                    | 49%                   |
+| exact v4 + noise σ = 0.03            | 0.995–1.000       | 0.894                    | 53%                   |
+
+**Correction:** these are the numbers at the environment's real timing, 8 brain ticks (40 ms) per camera frame. My first replay
+stepped 40 ticks (200 ms) per frame and reported 0.835 / 0.866 / 0.921 / 0.919. The conclusion is unchanged and slightly stronger.
 
 Even imperceptible noise on the exact v4 currents decorrelates almost half of the fine traces. An encoder that is not
 bit-identical to v4 will never reproduce v4's brain activity. A better clone therefore cannot close the gap, and after the first
