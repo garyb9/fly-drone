@@ -38,6 +38,14 @@ try {
 
   await page.goto(url);
   await connected(page);
+  // The server may default to free_roam (continuous, auto-respawning) when a decoder is
+  // loaded for it. The checks below assume a finite trial that pauses on completion, so
+  // pin a known starting task regardless of what the server landed on.
+  await page.selectOption("#task", "visual");
+  await page.getByRole("button", { name: "Run trial" }).click();
+  await page.waitForFunction(() =>
+    (document.querySelector("#trial")?.textContent ?? "").includes("STEER TO TARGET"),
+  );
   await page.waitForFunction(() => document.querySelectorAll("#motors .meter").length === 4);
   await page.screenshot({ path: join(tmpdir(), "fly-drone-desktop.png") });
   passed.push("connect + render");
