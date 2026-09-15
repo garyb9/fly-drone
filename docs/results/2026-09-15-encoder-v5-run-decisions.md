@@ -217,6 +217,33 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
   compares like with like. Cost if wrong: none.
 - If it passes, execution continues autonomously: validation, the v4 E1 baseline, the smoke test, then Tasks 13–15. If it fails, I stop and report.
 
+**Result: FAILED, clearly.** Level 2, seeds 9000–9029, 60 s. The ± value is the standard error over the 30 seeds.
+
+| system                            | beacons/min      | collisions/min | visited cells | seeds with 0 beacons | mean yaw bias |
+| --------------------------------- | ---------------- | -------------- | ------------- | -------------------- | ------------- |
+| v4 it0 (reference)                | 1.93 ± 0.20      | 1.07           | 33.8          | 3                    | 0.077         |
+| round 0, difference-aware clone   | **1.27 ± 0.19**  | 0.57           | 34.6          | 8                    | 0.106         |
+
+- **Gate: 0.8 × 1.93 = 1.55.** Round 0 reaches 66% of the reference.
+- **Paired difference (round 0 − v4): −0.67 ± 0.19 beacons/min**, about 3.5 standard errors. The 10-seed 1.6 came from the
+  easier seeds: seeds 9010–9029 average 1.10.
+- **Avoidance is intact** (fewer collisions than v4) and so is exploration. Beacon seeking is still impaired.
+- **The larger yaw bias** (0.106 vs 0.077) suggests the clone copies the two eyes asymmetrically.
+- Stopped and reported, as instructed.
+
+### User decision: mirror-symmetric clone and double the clone data (Task 12d, new)
+
+- **Ruling: the augmentation.** With probability 0.5 per training sample, the two eyes are swapped and flipped
+  horizontally, and every left/right target pair is swapped. A mirrored world must give mirrored currents, which is the fly's bilateral
+  symmetry. This is only valid if v4 itself is mirror-symmetric. The implementer must first check that on real v4 renders
+  and stop if it is not. Cost if wrong: a clone trained toward a symmetry v4 lacks.
+- **Ruling: 32 more clone flights**, seeds 632–663, disjoint from 600–631 and from every evaluation and validation seed. They are
+  collected now, alongside the code work, because the collector is unchanged. Cost: ~6 min, +0.9 GB of disk.
+- **Ruling: the 30-seed gate reuses the measured v4 reference** (1.933 on seeds 9000–9029). v4 is unchanged, and this saves 16 min.
+  Cost if wrong: none.
+- The clone is fit on both data files at 60k steps. Round 0 is then re-collected and refit, and the 30-seed gate is re-run.
+  If it passes, execution continues autonomously.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
