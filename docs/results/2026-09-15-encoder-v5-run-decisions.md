@@ -338,6 +338,15 @@ Screen: level 2, seeds 9000–9029, 60 s. Gate: 1.55.
   real encoder closed the gap in one iteration.
 - Next, automatically: validation, the v4 E1 baseline, the 6-worker smoke test, then Tasks 13–15.
 
+**Round-0 validation baseline** (`sac-validate`, level 3 with threats, seeds 9000–9009, 60 s). This is the starting point for SAC, not a gate:
+
+| near-dodge | balanced | ghost near-dodge | beacons/min | collisions/min | E1 loom AUC (≥ 0.8) | E2 margins (light ≥ 0.05, loom ≥ 0.1) |
+| ---------- | -------- | ---------------- | ----------- | -------------- | ------------------- | --------------------------------------- |
+| 0.27       | 0.18     | 0.30             | 1.9         | 2.7            | 0.69, fail          | 0.50 / 0.26, pass                       |
+
+Round 0 was trained only on threat-free level 2. It forages on level 3 but does not dodge causally yet: intact near-dodge 0.27 against 0.30
+for the ghost condition, and threat hits inflate collisions. Raising near-dodge, and the loom selectivity that E1 measures, is what the Task 13 SAC rounds are for.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
