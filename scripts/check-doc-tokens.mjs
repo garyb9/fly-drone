@@ -1,10 +1,6 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
-const palette = JSON.parse(
-  readFileSync(new URL("../web/src/theme/palette.json", import.meta.url)),
-);
+const palette = JSON.parse(readFileSync(new URL("../web/src/theme/palette.json", import.meta.url)));
 const html = readFileSync(new URL("../docs/overview/architecture.html", import.meta.url), "utf8");
 
 // Values architecture.html's dark-mode block is expected to copy verbatim from
@@ -33,12 +29,16 @@ for (const [cssVar, paletteKey] of SHARED) {
   const expected = palette[paletteKey].toLowerCase();
   const actual = extractDarkBlockValue(cssVar);
   if (actual !== expected) {
-    failures.push(`${cssVar}: architecture.html has ${actual ?? "(missing)"}, palette.json's ${paletteKey} is ${expected}`);
+    failures.push(
+      `${cssVar}: architecture.html has ${actual ?? "(missing)"}, palette.json's ${paletteKey} is ${expected}`,
+    );
   }
 }
 
 if (failures.length) {
-  console.error("architecture.html's dark-mode tokens have drifted from web/src/theme/palette.json:");
+  console.error(
+    "architecture.html's dark-mode tokens have drifted from web/src/theme/palette.json:",
+  );
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
