@@ -249,6 +249,23 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
 - **The extra clone data** is 32 flights, seeds 632–663, 1,500 frames each.
 - **Ruling: the re-run started alongside the 12d review**, as for 12c. It would have been stopped if the review had found a serious
   problem in the mirror or clone fit. Cost if wrong: the compute already spent.
+- **The 12d review approved it**, with 4 minors parked. I read the training loop myself to confirm that each step mirrors a random half
+  of the batch, because no test covers it.
+- **Mirror-symmetric clone** (`learned-v5:1681bff17b4eda85`, 64 flights, 60k steps). Held-out frames. Mirror consistency
+  compares the left−right difference on a frame with the negated difference on its mirror image; a perfect score is r = 1, rmse = 0.
+
+  | metric                                  | difference-aware clone (32 flights) | mirror-symmetric clone (64 flights) |
+  | --------------------------------------- | ----------------------------------- | ----------------------------------- |
+  | light left−right difference vs v4, r     | 0.890                               | **0.978**                           |
+  | light left−right difference vs v4, rmse  | 0.136                               | **0.085**                           |
+  | light mirror consistency, r             | 0.886                               | **0.997**                           |
+  | light mirror consistency, rmse          | 0.140                               | **0.029**                           |
+  | loom left−right difference vs v4, r      | 0.955                               | 0.962                               |
+  | loom mirror consistency, r              | 0.968                               | 0.994                               |
+
+  The previous clone's asymmetry was as large as its error against v4, and it depended on the scene. Mirror training
+  removes almost all of it and also brings the clone much closer to v4 on the steering signal. Caveat: the
+  held-out split now covers 6 flights across both data files, not 3, so the two columns use different frames. The gate decides.
 
 ## Tasks 13–15: pipeline
 
