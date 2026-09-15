@@ -901,3 +901,30 @@ main {
     display: none;
   }
 }
+/* One-time HUD power-on: elements start dim/offset and settle into place in a
+   staggered sequence, the single orchestrated motion moment (see AGENTS.md-level
+   design constraint: everything else stays quiet, functional feedback only).
+   Respect reduced-motion by skipping straight to the settled state. */
+@keyframes bp-boot-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bp-boot {
+  opacity: 0;
+}
+.bp-boot.bp-boot-run {
+  animation: bp-boot-in 0.45s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-boot,
+  .bp-boot.bp-boot-run {
+    opacity: 1;
+    animation: none;
+  }
+}

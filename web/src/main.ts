@@ -119,6 +119,15 @@ ${renderDrawer()}
 </div>
 </main>
 ${renderFooter()}`;
+function runBootSequence(): void {
+  const sequence = [".world-frame", "#hud-pinned", "#drawer"];
+  sequence.forEach((selector, i) => {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (!el) return;
+    setTimeout(() => el.classList.add("bp-boot-run"), i * 120);
+  });
+}
+runBootSequence();
 const el = (id: string) => document.getElementById(id)!;
 // The brain-activity pulse and the fly viewport's background share the site's
 // existing accent/surface tokens rather than introducing new colors.
