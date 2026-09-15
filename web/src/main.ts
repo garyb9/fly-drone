@@ -167,9 +167,30 @@ world.scene.add(axisGizmo);
 const HEADING_COLOR = 0xffb15c;
 const VELOCITY_COLOR = 0x6fe2ff;
 const COMMAND_COLOR = 0xff6fd8;
-const headingArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.3, HEADING_COLOR, 0.08, 0.05);
-const velocityArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.001, VELOCITY_COLOR, 0.08, 0.05);
-const commandArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.001, COMMAND_COLOR, 0.08, 0.05);
+const headingArrow = new THREE.ArrowHelper(
+  new THREE.Vector3(1, 0, 0),
+  new THREE.Vector3(),
+  0.3,
+  HEADING_COLOR,
+  0.08,
+  0.05,
+);
+const velocityArrow = new THREE.ArrowHelper(
+  new THREE.Vector3(1, 0, 0),
+  new THREE.Vector3(),
+  0.001,
+  VELOCITY_COLOR,
+  0.08,
+  0.05,
+);
+const commandArrow = new THREE.ArrowHelper(
+  new THREE.Vector3(1, 0, 0),
+  new THREE.Vector3(),
+  0.001,
+  COMMAND_COLOR,
+  0.08,
+  0.05,
+);
 world.scene.add(headingArrow, velocityArrow, commandArrow);
 let prevDronePos: THREE.Vector3 | undefined, prevFrameTime: number | undefined;
 const glowDecal = createGlowDecal(THEME.amber);
@@ -476,7 +497,12 @@ const MAX_ARROW_LEN = 1.0;
 function scaledArrowLength(magnitude: number): number {
   return Math.min(MAX_ARROW_LEN, Math.max(MIN_ARROW_LEN, magnitude * VECTOR_SCALE));
 }
-function setArrow(arrow: THREE.ArrowHelper, position: THREE.Vector3, direction: THREE.Vector3, magnitude: number) {
+function setArrow(
+  arrow: THREE.ArrowHelper,
+  position: THREE.Vector3,
+  direction: THREE.Vector3,
+  magnitude: number,
+) {
   if (magnitude < 1e-4) {
     arrow.visible = false;
     return;
@@ -549,11 +575,7 @@ function updateRoamHud(f: Frame) {
   el("roam-dodged").textContent = String(r.threats_dodged);
   el("roam-hit").textContent = String(r.threats_hit);
   el("roam-cells").textContent = String(r.visited_cells);
-  el("roam-log").innerHTML = r.events
-    .slice()
-    .reverse()
-    .map(describeRoamEvent)
-    .join("");
+  el("roam-log").innerHTML = r.events.slice().reverse().map(describeRoamEvent).join("");
 }
 function update(f: Frame) {
   latest = f;

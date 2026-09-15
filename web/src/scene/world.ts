@@ -174,7 +174,9 @@ export function createAxisGizmo(size = 0.6): THREE.Group {
     [new THREE.Vector3(0, 0, 1), 0x5cb0ff, "-Y"],
   ];
   for (const [dir, color, label] of axes) {
-    group.add(new THREE.ArrowHelper(dir, new THREE.Vector3(), size, color, size * 0.25, size * 0.15));
+    group.add(
+      new THREE.ArrowHelper(dir, new THREE.Vector3(), size, color, size * 0.25, size * 0.15),
+    );
     const sprite = createAxisLabel(label, color);
     sprite.position.copy(dir).multiplyScalar(size * 1.3);
     group.add(sprite);
