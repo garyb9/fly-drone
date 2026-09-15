@@ -468,3 +468,22 @@ Round 2 is more degenerate than round 1:
 The stop rule looks at near_dodge alone, so it accepted round 2 (1.0 > 0.926) and started round 3's encoder SAC at 00:52. Round 3's validation is expected around 04:30.
 
 With the current rule, Step 6 will select round 2 or round 3, which means Tasks 14–15 would evaluate a degenerate, non-causal actor. The recommendation is unchanged: stop, keep round 0, add the selection guard, and diagnose the SAC collapse. The stop is still waiting on the user's decision.
+
+### Run stopped (2026-09-16, 01:30)
+
+The user said "stop everything here" at 01:30, and the pipeline was killed during round 3's encoder SAC, at about 117k of 350k frames. As a result:
+
+- Tasks 14 and 15 did not run.
+- No final pair was chosen.
+- Round 0 remains the best valid pair: 2.13 beacons/min, no causal dodging, not accepted.
+
+**Lead for the collapse (unverified):** `build_sac` sets no `ent_coef`, so SB3's automatic α starts at 1.0. The warm-up keeps it at 1.0, so when the actor unfreezes at 50k frames the entropy bonus is about 0.65, falling to about 0.1 by 81k. The free-roam reward is about 0.05 per step. The entropy bonus likely dominates and drives erratic output before α decays, reaching about 1e-13 by the end of round 1.
+
+The round-1 decoder's reward also fell during its frozen warm-up (−272 → −677), so the round-1 encoder may already have broken the pair.
+
+**Next steps**, both needing user approval before any long run:
+
+- Checkpoint validations D1–D3 to locate the break.
+- Then fix α and add a selection guard (beacons, ghost dodge, E2).
+
+Full detail is in `docs/results/encoder-v5/HANDOFF-2026-09-16.md`.

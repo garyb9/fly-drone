@@ -1,0 +1,13 @@
+{
+  "learner": "decoder",
+  "frames": 150000,
+  "decoder": null,
+  "encoder": "/home/gb/projects/fly-drone/runs/v5/round1/encoder/encoder.pt",
+  "init": "runs/v5/round0/decoder.zip",
+  "workers": 6,
+  "seed": 42,
+  "buffer_size": 100000,
+  "actor_warmup": 50000,
+  "export_max_error": 5.722045899325678e-07,
+  "encoder_version": "learned-v5:b9722d66acced4f1"
+}
