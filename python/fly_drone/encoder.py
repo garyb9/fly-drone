@@ -26,6 +26,16 @@ from .brain import (
 )
 
 FEATURES = 64
+# Clone loss weight on the left-right difference of each pathway (the steering signal).
+DIFF_WEIGHT = 1.0
+# A loom target, or the left-right light difference, above this marks a rare frame to oversample.
+ACTIVE_THRESHOLD = 0.05
+# (pathway, left index, right index) in V5_CHANNELS order.
+PAIRS = tuple(
+    (name[:-2], i, V5_CHANNELS.index(name[:-2] + "_r"))
+    for i, name in enumerate(V5_CHANNELS)
+    if name.endswith("_l")
+)
 
 
 def eyes_space(frames=STACK_FRAMES):
@@ -191,6 +201,43 @@ def collect_clone(
     return {"frames": len(stacks), "flights": int(flights)}
 
 
+def _channels(prefix):
+    return [i for i, name in enumerate(V5_CHANNELS) if name.startswith(prefix)]
+
+
+def clone_pools(train_ids, targets):
+    """Loom-active frames (any loom target > 0.05) and light-side frames (|mi1_l - mi1_r| > 0.05).
+
+    mi1 and tm3 targets are identical by construction, so the mi1 pair stands for light.
+    """
+    loom_channels = _channels("lc4") + _channels("lplc2")
+    loom = train_ids[targets[train_ids][:, loom_channels].max(1) > ACTIVE_THRESHOLD]
+    _, left, right = next(p for p in PAIRS if p[0] == "mi1")
+    light_diff = targets[train_ids, left] - targets[train_ids, right]
+    side = train_ids[np.abs(light_diff) > ACTIVE_THRESHOLD]
+    return loom, side
+
+
+def clone_batch_ids(rng, train_ids, pools, batch):
+    """A third from each pool, the rest uniform; an empty pool's share is drawn uniformly."""
+    third = batch // 3
+    ids = [rng.choice(pool, third) for pool in pools if len(pool)]
+    ids.append(rng.choice(train_ids, batch - third * len(ids)))
+    return np.concatenate(ids)
+
+
+def clone_loss(pred, target):
+    """Per-channel MSE plus DIFF_WEIGHT x MSE of each pathway's left-right difference."""
+    left = [p[1] for p in PAIRS]
+    right = [p[2] for p in PAIRS]
+    diff = (pred[:, left] - pred[:, right]) - (target[:, left] - target[:, right])
+    return (pred - target).square().mean() + DIFF_WEIGHT * diff.square().mean()
+
+
+def _r(p, t):
+    return float(np.corrcoef(p, t)[0, 1]) if p.std() > 1e-9 and t.std() > 1e-9 else None
+
+
 def fit_clone(paths, output, steps=20000, batch=256, holdout=0.1, device=None, seed=0):
     """Supervised copy of v4 onto the learned encoder, so SAC starts from a working system."""
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -209,8 +256,8 @@ def fit_clone(paths, output, steps=20000, batch=256, holdout=0.1, device=None, s
     held = rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False)
     test = np.isin(flights, held)
     train_ids, test_ids = np.flatnonzero(~test), np.flatnonzero(test)
-    # Loom frames are rare: half of every batch comes from frames with loom input.
-    active = train_ids[targets[train_ids, 4:].max(1) > 0.05]
+    # Loom and light-side frames are rare: each fills a third of every batch.
+    pools = clone_pools(train_ids, targets)
 
     enc = LearnedEncoder.fresh(seed)
     net = nn.ModuleDict({"extractor": enc.extractor, "mu": enc.mu}).to(device).train()
@@ -221,20 +268,8 @@ def fit_clone(paths, output, steps=20000, batch=256, holdout=0.1, device=None, s
         return torch.tanh(net["mu"](net["extractor"]({"eyes": x}))) + 1.0
 
     for _ in range(steps):
-        if len(active):
-            ids = np.concatenate(
-                [
-                    rng.choice(train_ids, batch // 2),
-                    rng.choice(active, batch - batch // 2),
-                ]
-            )
-        else:
-            ids = rng.choice(train_ids, batch)
-        loss = (
-            (predict(ids) - torch.as_tensor(targets[ids], device=device))
-            .square()
-            .mean()
-        )
+        ids = clone_batch_ids(rng, train_ids, pools, batch)
+        loss = clone_loss(predict(ids), torch.as_tensor(targets[ids], device=device))
         opt.zero_grad()
         loss.backward()
         opt.step()
@@ -255,12 +290,17 @@ def fit_clone(paths, output, steps=20000, batch=256, holdout=0.1, device=None, s
     }
     for k, name in enumerate(V5_CHANNELS):
         p, t = pred[:, k], truth[:, k]
-        r = (
-            float(np.corrcoef(p, t)[0, 1])
-            if p.std() > 1e-9 and t.std() > 1e-9
-            else None
-        )
-        report["held_out"][name] = {"mse": float(np.mean((p - t) ** 2)), "r": r}
+        report["held_out"][name] = {"mse": float(np.mean((p - t) ** 2)), "r": _r(p, t)}
+    report["held_out_differences"] = {}
+    for pathway, left, right in PAIRS:
+        dp, dt = pred[:, left] - pred[:, right], truth[:, left] - truth[:, right]
+        report["held_out_differences"][pathway] = {
+            "r": _r(dp, dt),
+            "rmse": float(np.sqrt(np.mean((dp - dt) ** 2))),
+            "gain": float(dp.std() / dt.std())
+            if dp.std() > 1e-9 and dt.std() > 1e-9
+            else None,
+        }
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
     report["version"] = LearnedEncoder(net["extractor"], net["mu"]).save(

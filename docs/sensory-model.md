@@ -250,6 +250,16 @@ pathway name still works: `light_l`/`light_r` aggregate `mi1_*`+`tm3_*` and `loo
 aggregate `lc4_*`+`lplc2_*` per side (`BrainRuntime.pathway_ids`), so the v4 ablation vocabulary
 carries over unchanged.
 
+**Clone initialisation.** Before SAC, `encoder-clone` (`encoder.fit_clone`) fits the encoder to
+v4's own currents (`v4_targets`) on frames flown under v4. The loss is the per-channel MSE plus
+`DIFF_WEIGHT = 1.0` × the MSE of each pathway's left−right difference (`mi1`, `tm3`, `lc4`,
+`lplc2`), and each batch is one third uniform, one third loom-active and one third light-side
+frames (|mi1_l − mi1_r| > 0.05). Why: the brain steers to beacons with the side difference, which
+is exactly 0 in 67% of v4 frames; a plain per-channel fit copied each light channel at r 0.99 but
+the difference only at r 0.85, and the round-0 decoder collected half v4's beacons (second Task 12
+gate failure, 2026-09-15). `clone.json` reports `held_out_differences` (`r`, `rmse`, `gain` =
+std(pred diff)/std(target diff)) per pathway.
+
 **Sensing order.** Currents applied at step `t` come from the stack ending with the frame
 rendered at the _end_ of step `t − 1` (`env.py`: `push_frame` after `step`, `encode_stack` at the
 start of the next `_sense`). On `reset`, the drone pushes the first frame and then settles for 40

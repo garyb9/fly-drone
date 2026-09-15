@@ -385,7 +385,7 @@ collisions/min) and record it in `runs/v5/dagger/choice.json`.
 
 ```bash
 env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data.npz --flights 32 --seconds 60 --workers 6 --seed-base 600
-env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 20000
+env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 60000
 env -u PYTHONPATH .venv/bin/fly-drone roam-collect --output runs/v5/round0-data/it0.npz --flights 128 --seconds 60 --levels 2 --workers 6 --seed-base 200 --encoder runs/v5/clone/encoder.pt
 env -u PYTHONPATH .venv/bin/fly-drone sac-init-decoder runs/v5/round0-data/it0.npz --encoder runs/v5/clone/encoder.pt --output runs/v5/round0
 env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/round0/decoder.json --encoder runs/v5/clone/encoder.pt --level 2 --seeds 10 --seed-base 9000 --workers 6 --output runs/v5/round0/l2-screen.json

@@ -2513,10 +2513,12 @@ env -u PYTHONPATH .venv/bin/fly-drone roam-screen runs/v5/dagger/it$k/warm-actor
 
 ```bash
 env -u PYTHONPATH .venv/bin/fly-drone encoder-collect --output runs/v5/clone/data.npz --flights 32 --seconds 60 --workers 6 --seed-base 600
-env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 20000
+env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz --output runs/v5/clone --steps 60000
 ```
 
-Report the held-out `mse` and `r` per channel from `runs/v5/clone/clone.json`.
+Why (amended by Task 12c after the second Task 12 gate failure of 2026-09-15): the clone copied each light channel at r 0.99 but the left−right light difference only at r 0.85, the side signal the brain steers to beacons with; the fit now also matches pathway differences, oversamples light-side frames, and runs 60k steps.
+
+Report the held-out `mse` and `r` per channel, and `r`, `rmse`, `gain` per pathway difference (`held_out_differences`), from `runs/v5/clone/clone.json`.
 
 - [ ] **Step 3: Round-0 decoder on the clone, from data collected under the clone**
 

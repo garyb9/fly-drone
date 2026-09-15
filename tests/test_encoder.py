@@ -70,3 +70,46 @@ def test_fit_clone_writes_a_loadable_encoder_and_per_channel_report(tmp_path):
     assert (
         saved["version"] == LearnedEncoder.load(tmp_path / "fit" / "encoder.pt").version
     )
+    diffs = saved["held_out_differences"]
+    assert set(diffs) == {"mi1", "tm3", "lc4", "lplc2"}
+    for stats in diffs.values():
+        assert set(stats) == {"r", "rmse", "gain"}
+        assert all(np.isfinite(v) for v in stats.values())
+
+
+def test_clone_batches_draw_a_third_each_uniform_loom_and_light_side_frames():
+    n = 3000
+    targets = np.zeros((n, 8), np.float32)
+    targets[:100, 4] = 1.0  # loom-active frames
+    targets[100:200, 0] = 1.0  # light off to the left: mi1_l - mi1_r = 1
+    train_ids = np.arange(n)
+    rng = np.random.default_rng(0)
+    pools = encoder.clone_pools(train_ids, targets)
+    ids = np.concatenate(
+        [encoder.clone_batch_ids(rng, train_ids, pools, 256) for _ in range(20)]
+    )
+    assert len(ids) == 20 * 256
+    # Uniform draws land on either pool only ~3% of the time each.
+    assert 0.30 < np.mean(ids < 100) < 0.40
+    assert 0.30 < np.mean((ids >= 100) & (ids < 200)) < 0.40
+
+
+def test_clone_batches_fall_back_to_uniform_when_a_pool_is_empty():
+    targets = np.zeros((1000, 8), np.float32)
+    rng = np.random.default_rng(0)
+    train_ids = np.arange(1000)
+    pools = encoder.clone_pools(train_ids, targets)
+    assert all(len(pool) == 0 for pool in pools)
+    ids = encoder.clone_batch_ids(rng, train_ids, pools, 100)
+    assert len(ids) == 100 and ids.min() >= 0 and ids.max() < 1000
+
+
+def test_clone_loss_includes_the_left_right_difference_term(monkeypatch):
+    target = torch.ones(4, 8)
+    # Same per-channel error, but left and right err in opposite directions.
+    pred = target + 0.1 * torch.tensor([1.0, -1.0] * 4)
+    monkeypatch.setattr(encoder, "DIFF_WEIGHT", 0.0)
+    without = encoder.clone_loss(pred, target).item()
+    monkeypatch.setattr(encoder, "DIFF_WEIGHT", 1.0)
+    with_diff = encoder.clone_loss(pred, target).item()
+    assert without > 0 and with_diff > without
