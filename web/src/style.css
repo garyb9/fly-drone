@@ -220,6 +220,12 @@ button:hover {
   background: #2b434b;
   color: #e9f4ef;
 }
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--bp-grid);
+  outline-offset: 2px;
+}
 button.primary {
   background: var(--bp-success);
   color: #112c2c;
@@ -409,13 +415,6 @@ footer {
 .replay-form input[type="number"]::-webkit-outer-spin-button {
   appearance: none;
   margin: 0;
-}
-.replay-form select:focus-visible,
-.replay-form input:focus-visible,
-select:focus-visible {
-  outline: none;
-  border-color: var(--bp-grid);
-  box-shadow: 0 0 0 2px rgba(146, 204, 224, 0.18);
 }
 .outcome {
   margin: 10px 0 0;
