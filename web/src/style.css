@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
-/* Blueprint/schematic theme tokens. Keep web/src/scene/theme.ts's THEME object in sync
-   with these values — one is CSS-side chrome, the other is Three.js scene materials. */
+/* Fallback values only — the source of truth is web/src/theme/palette.json,
+   applied at runtime by applyCssTokens() (web/src/theme/apply-css-tokens.ts).
+   These are also what architecture.html's dark-mode block copies by hand;
+   scripts/check-doc-tokens.mjs (Task 3) guards that copy against drift. */
 :root {
   --bp-bg: #071b26;
   --bp-surface: #0d222c;
@@ -17,6 +19,8 @@
   --bp-axis-x: #ff5c5c;
   --bp-axis-y: #5cff7a;
   --bp-axis-z: #5cb0ff;
+  --bp-success: #8be6d5;
+  --bp-card: #101c23;
 }
 :root {
   font-family: "DM Sans", sans-serif;
@@ -56,7 +60,7 @@ body {
 .card {
   border: 1px solid #293b44;
   border-radius: 12px;
-  background: #101c23;
+  background: var(--bp-card);
   overflow: hidden;
 }
 .panel-head {
@@ -146,9 +150,9 @@ body {
   padding: 8px 10px;
 }
 .camera-controls button.active {
-  background: #8be6d5;
+  background: var(--bp-success);
   color: #112c2c;
-  border-color: #8be6d5;
+  border-color: var(--bp-success);
 }
 .world-hint {
   position: absolute;
@@ -171,7 +175,7 @@ body {
   display: inline-block;
   width: 4px;
   height: 4px;
-  background: #8be6d5;
+  background: var(--bp-success);
   border-radius: 50%;
   margin-right: 4px;
 }
@@ -190,12 +194,16 @@ canvas {
 select {
   font-family: inherit;
   font-size: 9px;
-  background: #13232c;
+  background-color: #13232c;
   color: #a7bdc6;
   border: 1px solid #2f444e;
   border-radius: 4px;
   width: 100%;
-  padding: 4px;
+  padding: 4px 20px 4px 6px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M0 0 L8 0 L4 6 Z' fill='%2392cce0'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
 }
 button {
   font-family: inherit;
@@ -212,10 +220,16 @@ button:hover {
   background: #2b434b;
   color: #e9f4ef;
 }
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--bp-grid);
+  outline-offset: 2px;
+}
 button.primary {
-  background: #8be6d5;
+  background: var(--bp-success);
   color: #112c2c;
-  border-color: #8be6d5;
+  border-color: var(--bp-success);
 }
 .button-row {
   display: flex;
@@ -385,7 +399,7 @@ footer {
 .replay-form input {
   min-width: 0;
   max-width: 100%;
-  background: #0d171e;
+  background-color: #0d171e;
   color: inherit;
   border: 1px solid #2c4550;
   border-radius: 6px;
@@ -394,12 +408,13 @@ footer {
     border-color 0.2s,
     box-shadow 0.2s;
 }
-.replay-form select:focus-visible,
-.replay-form input:focus-visible,
-select:focus-visible {
-  outline: none;
-  border-color: var(--bp-grid);
-  box-shadow: 0 0 0 2px rgba(146, 204, 224, 0.18);
+.replay-form input[type="number"] {
+  appearance: textfield;
+}
+.replay-form input[type="number"]::-webkit-inner-spin-button,
+.replay-form input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
 }
 .outcome {
   margin: 10px 0 0;
@@ -407,7 +422,7 @@ select:focus-visible {
   overflow-wrap: anywhere;
 }
 .outcome.pass {
-  color: #8be6d5;
+  color: var(--bp-success);
 }
 .outcome.fail {
   color: #ffa16c;
@@ -424,8 +439,8 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 .seed-grid .seed.pass {
-  border-color: #8be6d5;
-  color: #8be6d5;
+  border-color: var(--bp-success);
+  color: var(--bp-success);
 }
 .seed-grid .seed.fail {
   border-color: #ffa16c;
@@ -461,6 +476,8 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-border) var(--bp-surface);
 }
 .roam-log-entry {
   margin: 0;
@@ -471,7 +488,20 @@ select:focus-visible {
   color: var(--bp-amber);
 }
 .roam-log-entry.ok {
-  color: #8be6d5;
+  color: var(--bp-success);
+}
+.roam-log::-webkit-scrollbar,
+.drawer-body::-webkit-scrollbar {
+  width: 8px;
+}
+.roam-log::-webkit-scrollbar-track,
+.drawer-body::-webkit-scrollbar-track {
+  background: var(--bp-surface);
+}
+.roam-log::-webkit-scrollbar-thumb,
+.drawer-body::-webkit-scrollbar-thumb {
+  background: var(--bp-border);
+  border-radius: 4px;
 }
 
 /* Layout: the flight view (.world) is a fullscreen base layer filling <main>; every other
@@ -509,7 +539,7 @@ main {
 .hud-pinned .brain-mini {
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   overflow: hidden;
   width: 100%;
 }
@@ -533,7 +563,7 @@ main {
 .fly-mini-panel {
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   overflow: hidden;
   width: 100%;
 }
@@ -553,7 +583,7 @@ main {
 .eyes-panel {
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   padding: 12px;
   width: 100%;
 }
@@ -584,9 +614,9 @@ main {
   text-align: center;
 }
 .drawer-rail button.active {
-  background: #8be6d5;
+  background: var(--bp-success);
   color: #112c2c;
-  border-color: #8be6d5;
+  border-color: var(--bp-success);
 }
 .drawer-collapse {
   flex: none;
@@ -621,12 +651,14 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-border) var(--bp-surface);
 }
 .instruments {
   width: 100%;
   border: 1px solid #293b44;
   border-radius: 10px;
-  background: #101c23;
+  background: var(--bp-card);
   padding: 12px;
 }
 .attitude-gauges {
@@ -746,12 +778,19 @@ main {
   .eyes-panel .eyes figure {
     width: 50px;
   }
-  /* Only the brain graph and eyes are load-bearing per AGENTS.md ("brain-activity graph
-     and eyes stay pinned and always visible"); the fly body and attitude gauges are
-     supplementary and get dropped so the pinned stack doesn't grow tall enough to run
-     into the bottom-sheet drawer on a phone screen. */
+  /* The fly body panel shrinks instead of disappearing — AGENTS.md only requires
+     the brain-activity graph and eyes stay pinned and visible; giving the fly
+     panel a real compact size (rather than display:none) keeps the pinned stack
+     from feeling like a smaller, degraded version of the desktop layout. */
   .fly-mini-panel {
-    display: none;
+    width: 100%;
+  }
+  .fly-mini-panel #fly {
+    height: 54px;
+  }
+  .fly-mini-head {
+    height: 18px;
+    font-size: 6px;
   }
   .instruments {
     padding: 8px 10px;
@@ -762,8 +801,17 @@ main {
   .attitude-gauge .track {
     height: 34px;
   }
-  .turn-rate,
+  .turn-rate {
+    margin-top: 5px;
+    font-size: 6px;
+  }
   .vector-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-top: 6px;
+  }
+  .vector-legend .legend-label {
     display: none;
   }
   .drawer-rail {
@@ -801,9 +849,6 @@ main {
   .drawer-body {
     border-right: none;
     border-top: 1px solid #1c3947;
-  }
-  .vector-legend .legend-label {
-    display: none;
   }
   .connection {
     display: none;
@@ -867,5 +912,32 @@ main {
 @media (max-width: 700px) {
   .world-dims {
     display: none;
+  }
+}
+/* One-time HUD power-on: elements start dim/offset and settle into place in a
+   staggered sequence, the single orchestrated motion moment (see AGENTS.md-level
+   design constraint: everything else stays quiet, functional feedback only).
+   Respect reduced-motion by skipping straight to the settled state. */
+@keyframes bp-boot-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bp-boot {
+  opacity: 0;
+}
+.bp-boot.bp-boot-run {
+  animation: bp-boot-in 0.45s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-boot,
+  .bp-boot.bp-boot-run {
+    opacity: 1;
+    animation: none;
   }
 }

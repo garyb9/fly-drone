@@ -12,6 +12,7 @@
     "build": "vite build web",
     "typecheck": "tsc --noEmit -p web",
     "test": "vitest run --root web",
+    "test:tokens": "node scripts/check-doc-tokens.mjs",
     "format": "prettier --write \"web/src/**/*.ts\" \"scripts/**/*.mjs\" \"*.{json,md}\" \"docs/**/*.md\" \"eslint.config.js\"",
     "format:check": "prettier --check \"web/src/**/*.ts\" \"scripts/**/*.mjs\" \"*.{json,md}\" \"docs/**/*.md\" \"eslint.config.js\"",
     "lint": "eslint web/src scripts",
@@ -34,7 +35,7 @@
     "train": "scripts/venv.sh fly-drone train",
     "evaluate": "scripts/venv.sh fly-drone evaluate",
     "prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn py:fmt && yarn py:lint:fix && yarn typecheck && yarn rs:lint && yarn py:lint && yarn py:build && yarn build",
-    "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn py:fmt:check && yarn py:lint && yarn typecheck && yarn rs:lint && yarn rs:test && yarn py:build && yarn py:test && yarn test && yarn build && yarn smoke"
+    "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn py:fmt:check && yarn py:lint && yarn typecheck && yarn rs:lint && yarn rs:test && yarn py:build && yarn py:test && yarn test && yarn test:tokens && yarn build && yarn smoke"
   },
   "dependencies": {
     "three": "0.186.0"

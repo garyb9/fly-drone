@@ -2,8 +2,16 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import "./style.css";
+import { applyCssTokens } from "./theme/apply-css-tokens";
+import { PALETTE, hexToInt } from "./theme/tokens";
 import { THEME } from "./scene/theme";
 import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
+import { renderFlightView } from "./ui/flightView";
+import { renderHudPinned } from "./ui/hudPinned";
+import { renderDrawer } from "./ui/drawer";
+import { renderFooter } from "./ui/footer";
+
+applyCssTokens();
 
 type Cell = { id: string; type: string; side: string; position: number[]; measured: boolean };
 type Metadata = {
@@ -104,59 +112,39 @@ const HOLDING: Record<string, string> = {
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
 <main>
-<div class="world">
-<div id="world" class="viewport"></div>
-<div class="connection"><i id="dot"></i><span id="status">Connecting to simulation</span></div>
-<div class="world-bottom"><div><span>ALTITUDE</span><strong id="altitude">—<small> m</small></strong></div><div><span>SPEED</span><strong id="speed">—<small> m/s</small></strong></div><div><span>VX / VY / VZ</span><strong id="velocity-axes">—<small> m/s</small></strong></div><div><span>SIMULATION</span><strong id="simtime">0.00<small> s</small></strong></div><div><span>REAL TIME</span><strong id="rtf">—<small> ×</small></strong></div><div class="camera-controls"><button id="cam-follow" title="Keep the camera target locked to the drone">Follow</button><button id="cam-recenter" title="Snap the camera target to the drone once">Recenter</button><button id="cam-reset" title="Restore the default orbit view">Reset view</button><button id="cam-fpv" title="Ride along in the drone's cockpit">1st person</button><button id="cam-tpv" title="Chase camera behind the drone">3rd person</button></div></div>
-<div class="world-frame"><i></i><i></i><i></i><i></i></div>
-<div class="world-dims" id="dims"></div>
-<div class="world-hint">DRAG TO ORBIT · SCROLL TO ZOOM</div>
-</div>
+${renderFlightView()}
 <div class="hud-layer">
-<section class="hud-pinned" id="hud-pinned">
-<div class="brain-mini"><div class="brain-mini-head"><span id="mode">INITIALIZING</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>connections</span></div></div>
-<div class="fly-mini-panel" title="Same neural readouts, independent trajectory — illustrative fly dynamics, not calibrated biomechanics."><div class="fly-mini-head"><span>FLY BODY</span></div><div id="fly" class="viewport"></div></div>
-<div class="eyes-panel"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div></div>
-<div class="instruments">
-<div class="attitude-gauges">
-<div class="attitude-gauge"><div class="track"><i class="fill" id="roll-fill"></i><i class="needle" id="roll-needle"></i></div><span>ROLL</span><em id="roll-value">—</em></div>
-<div class="attitude-gauge"><div class="track"><i class="fill" id="pitch-fill"></i><i class="needle" id="pitch-needle"></i></div><span>PITCH</span><em id="pitch-value">—</em></div>
-<div class="attitude-gauge"><div class="track"><i class="fill" id="yaw-fill"></i><i class="needle" id="yaw-needle"></i></div><span>YAW</span><em id="yaw-value">—</em></div>
-</div>
-<div class="turn-rate"><span>TURN RATE</span><em id="turn-rate">—</em></div>
-<div class="vector-legend">
-<span><i style="background:#ffb15c"></i><span class="legend-label">heading</span></span>
-<span><i style="background:#6fe2ff"></i><span class="legend-label">velocity</span></span>
-<span><i style="background:#ff6fd8"></i><span class="legend-label">command</span></span>
-<span><i style="background:#ff5c5c"></i><span class="legend-label">world X</span></span>
-<span><i style="background:#5cff7a"></i><span class="legend-label">world Z↑</span></span>
-<span><i style="background:#5cb0ff"></i><span class="legend-label">world -Y</span></span>
-</div>
-</div>
-</section>
-<div class="drawer" id="drawer">
-<div class="drawer-body">
-<section class="card replay" data-panel="replay"><div class="panel-head"><span class="panel-title">Trials &amp; Replay</span><span class="panel-meta" id="trial">SEED 42 · VISUAL · INTACT</span></div><div class="replay-grid"><div><h3>RUN A TRIAL</h3><div class="replay-form"><label>Task<select id="task"></select></label><label>Brain<select id="ablation"><option value="none">Intact</option><option value="zero">Zeroed features</option><option value="sensory">Vision silenced</option><option value="shuffle">Shuffled features</option></select></label><label>Seed<input id="seed" type="number" value="1000" min="0" step="1"></label><button id="run" class="primary">Run trial</button></div><p id="outcome" class="outcome">Outcome: —</p></div><div><h3>REPLAY AN EVALUATION</h3><div class="replay-form"><label>Report<select id="report"><option value="">No reports loaded</option></select></label></div><p id="report-summary" class="outcome"></p><div id="seeds" class="seed-grid" aria-label="Evaluation seeds"></div></div></div></section>
-<section class="card brain-card" data-panel="brain" hidden><div class="panel-head"><span class="panel-title">Neuron Inspector</span></div><div class="inspect"><select id="neuron" aria-label="Neuron to inspect"><option>Loading neurons…</option></select><div class="button-row"><button data-op="pulse">Pulse</button><button data-op="hold">Hold</button><button data-op="silence">Silence</button><button data-op="restore">Restore</button></div></div></section>
-<section class="card roam-hud" id="roam-hud" data-panel="roam" hidden><div class="panel-head"><span class="panel-title">Free Roam</span><span class="panel-meta" id="roam-level">LEVEL —</span></div><div class="roam-stats"><div><span>BEACONS / MIN</span><strong id="roam-beacons">—</strong></div><div><span>COLLISIONS / MIN</span><strong id="roam-collisions">—</strong></div><div><span>THREATS DODGED</span><strong id="roam-dodged">—</strong></div><div><span>THREATS HIT</span><strong id="roam-hit">—</strong></div><div><span>CELLS VISITED</span><strong id="roam-cells">—</strong></div></div><div class="roam-log" id="roam-log" aria-label="Free roam event log"></div></section>
-<section class="card signals" data-panel="signals" hidden><div class="panel-head"><span class="panel-title">Signals &amp; Controls</span><span class="panel-meta" id="episode">EPISODE 0</span></div><div class="signal-grid"><div><h3>SENSORY CURRENT</h3><div id="cues" class="meters"></div></div><div><h3>NEURAL READOUT</h3><div id="readouts" class="meters"></div></div><div><h3>ACTUAL / COMMANDED RPM</h3><div id="motors" class="meters"></div></div></div><div class="controls"><div><h3>EXPERIMENT</h3><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div><div><h3>VISUAL TARGET</h3><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div><div><h3>OBSTACLE</h3><div class="button-row"><button id="loom">Place ahead</button><button id="clear">Move aside</button></div></div></div><div class="notes"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div></section>
-</div>
-</div>
-<div class="drawer-rail" id="drawer-rail">
-<button class="drawer-collapse" id="drawer-collapse" aria-label="Toggle panel drawer" title="Toggle panel"><i>‹</i></button>
-<button data-tab="replay" class="tab-btn active">Trials</button>
-<button data-tab="brain" class="tab-btn">Brain</button>
-<button data-tab="roam" class="tab-btn" id="roam-tab" hidden>Roam</button>
-<button data-tab="signals" class="tab-btn">Signals</button>
-</div>
+${renderHudPinned()}
+${renderDrawer()}
 </div>
 </main>
-<footer><span>ANATOMICAL WIRING · MODELED NEURONS · LEARNED DECODING</span><span>MaleCNS v1.0 · FlyEM / Cambridge / MRC LMB / Google Research · CC-BY 4.0</span></footer>`;
+${renderFooter()}`;
+function runBootSequence(): void {
+  // Derived from the DOM (every .bp-boot element, in document order) rather than a
+  // hardcoded selector list, so adding bp-boot to a new element can't silently leave
+  // it out of the sequence (and stuck invisible) the way .instruments once did.
+  const targets = Array.from(document.querySelectorAll<HTMLElement>(".bp-boot"));
+  targets.forEach((target, i) => {
+    setTimeout(() => {
+      target.classList.add("bp-boot-run");
+      // The boot animation sets transform:translateY(...) with animation-fill-mode:
+      // forwards, which outranks any later author-set transform (e.g. the drawer's
+      // open/collapsed state) in the cascade. Drop both classes once it finishes so
+      // the animation's transform stops shadowing the element's real state.
+      target.addEventListener(
+        "animationend",
+        () => target.classList.remove("bp-boot", "bp-boot-run"),
+        { once: true },
+      );
+    }, i * 120);
+  });
+}
+runBootSequence();
 const el = (id: string) => document.getElementById(id)!;
-// Colors outside the blueprint-schematic scope: the brain graph's activity pulse and
-// the fly viewport's background/grid keep their original values (fly stays untouched).
-const ACTIVITY_HOT = 0x8be6d5;
-const LEGACY_VIEWPORT_BG = 0x101c23;
+// The brain-activity pulse and the fly viewport's background share the site's
+// existing accent/surface tokens rather than introducing new colors.
+const ACTIVITY_HOT = hexToInt(PALETTE.successTeal);
+const LEGACY_VIEWPORT_BG = hexToInt(PALETTE.card);
 function view(id: string, position: number[], target: number[]) {
   const host = el(id),
     scene = new THREE.Scene();
