@@ -7,7 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap">
 <style>
-/* Tokens follow web/src/style.css (--bp-*): the blueprint look of the live viewer. */
+/* Tokens follow web/src/style.css (--bp-*): the blueprint look of the live viewer.
+   --bg/--ink/--learned/--frozen in the dark-mode block below must match
+   web/src/theme/palette.json's navyDeep/inkBright/amber/successTeal —
+   scripts/check-doc-tokens.mjs (yarn test:tokens) enforces this. */
 :root {
   --bg: #eef5f7;
   --sheet: #f8fbfc;
@@ -35,6 +38,8 @@
     --pass: #7fdca6; --fail: #ff9b7a; --pending: #e7c565;
   }
 }
+/* --bg/--ink/--learned/--frozen values must match web/src/theme/palette.json's
+   navyDeep/inkBright/amber/successTeal — scripts/check-doc-tokens.mjs enforces this. */
 :root[data-theme="dark"] {
   --bg: #071b26; --sheet: #0b212c; --rule: #1f3d4b; --grid: #10303d;
   --ink: #eaf6f9; --dim: #85aab5; --frozen: #8be6d5; --frozen-fill: #0e3338;
