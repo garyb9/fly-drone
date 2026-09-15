@@ -267,6 +267,23 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
   removes almost all of it and also brings the clone much closer to v4 on the steering signal. Caveat: the
   held-out split now covers 6 flights across both data files, not 3, so the two columns use different frames. The gate decides.
 
+### Gate FAILED with the mirror-symmetric clone (30 seeds)
+
+Round 0 was refit on 128 flights recorded under the mirror-symmetric clone: export error 5.9e-6, held-out avoid mse 0.118. Screen:
+level 2, seeds 9000–9029, 60 s. Gate: 0.8 × 1.93 = 1.55.
+
+| system                        | beacons/min (SEM) | collisions/min | visited cells | zero-beacon seeds | mean yaw bias | paired vs v4    |
+| ----------------------------- | ----------------- | -------------- | ------------- | ----------------- | ------------- | --------------- |
+| v4 it0 (reference)            | 1.93 ± 0.20       | 1.07           | 33.8          | 3                 | 0.077         | —               |
+| difference-aware clone        | 1.27 ± 0.19       | 0.57           | 34.6          | 8                 | 0.106         | −0.67 ± 0.19    |
+| **mirror-symmetric clone**    | **1.20 ± 0.22**   | 0.80           | 33.5          | 10                | **0.084**     | −0.73 ± 0.24    |
+
+- **The steering bias is fixed** (0.084, close to v4's 0.077), and the clone copies v4's steering signal much more faithfully. Foraging still did not recover.
+  So the clone is **no longer the likely bottleneck**.
+- **Ruling: one more diagnostic before reporting** (~16 min). The pre-tanh decoder fitted on v4 data, flown with v4 (diag B′, 2.2 on 10 seeds), is
+  screened on the same 30 seeds. If it also misses 1.55, the remaining loss is in the SAC decoder head or its warm start, not the encoder.
+  That points to a different fix.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
