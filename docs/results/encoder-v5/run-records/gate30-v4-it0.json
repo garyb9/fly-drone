@@ -1,0 +1,491 @@
+{
+  "seeds": [
+    9000,
+    9029
+  ],
+  "seconds": 60,
+  "level": 2,
+  "wall_seconds": 318.28383253799984,
+  "results": {
+    "policy:/home/gb/projects/fly-drone/runs/v5/dagger/it0/warm-actor.json|none": {
+      "near_threats": 0,
+      "near_dodge_rate": null,
+      "near_dodge_by_side": {
+        "left": null,
+        "right": null
+      },
+      "balanced_dodge_rate": null,
+      "beacons_per_min": 1.9333333333333333,
+      "collisions_per_min": 1.0666666666666667,
+      "threat_dodge_rate": null,
+      "threats": 0,
+      "mean_visited_cells": 33.833333333333336,
+      "mean_abs_yaw_bias": 0.07674945683635016,
+      "slow_fraction": 0.010133333333333333,
+      "runs": [
+        {
+          "seed": 9000,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "pillar": 2,
+            "wall": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 34,
+          "mean_yaw_command": -0.0039066376525928115,
+          "slow_fraction": 0.019333333333333334,
+          "wall_seconds": 62.488776013982715
+        },
+        {
+          "seed": 9001,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "wall": 2
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 30,
+          "mean_yaw_command": -0.0458728492565812,
+          "slow_fraction": 0.012,
+          "wall_seconds": 62.84884910800611
+        },
+        {
+          "seed": 9002,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "wall": 2
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 30,
+          "mean_yaw_command": -0.07499172151229383,
+          "slow_fraction": 0.013333333333333334,
+          "wall_seconds": 60.416741518012714
+        },
+        {
+          "seed": 9003,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 37,
+          "mean_yaw_command": 0.13939528441973986,
+          "slow_fraction": 0.008,
+          "wall_seconds": 63.8092374150001
+        },
+        {
+          "seed": 9004,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 40,
+          "mean_yaw_command": 0.12805664180239545,
+          "slow_fraction": 0.010666666666666666,
+          "wall_seconds": 61.62625434898655
+        },
+        {
+          "seed": 9005,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": 0.05829425087830411,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 63.71945174399298
+        },
+        {
+          "seed": 9006,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 34,
+          "mean_yaw_command": -0.0008651754280557119,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 61.675554845976876
+        },
+        {
+          "seed": 9007,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "wall": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": -0.10509643585159968,
+          "slow_fraction": 0.010666666666666666,
+          "wall_seconds": 66.65087935200427
+        },
+        {
+          "seed": 9008,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 37,
+          "mean_yaw_command": 0.12120868853376426,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 61.70041737801512
+        },
+        {
+          "seed": 9009,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 38,
+          "mean_yaw_command": -0.00904664680687347,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 62.797021141974255
+        },
+        {
+          "seed": 9010,
+          "beacons_per_min": 5.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 36,
+          "mean_yaw_command": 0.12164786191054494,
+          "slow_fraction": 0.006,
+          "wall_seconds": 68.5298246149905
+        },
+        {
+          "seed": 9011,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": 0.00880623995014806,
+          "slow_fraction": 0.007333333333333333,
+          "wall_seconds": 63.87783250998473
+        },
+        {
+          "seed": 9012,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 43,
+          "mean_yaw_command": 0.13181538606004173,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 66.0115721070033
+        },
+        {
+          "seed": 9013,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 34,
+          "mean_yaw_command": 0.03940639555701637,
+          "slow_fraction": 0.012,
+          "wall_seconds": 58.77573953999672
+        },
+        {
+          "seed": 9014,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 36,
+          "mean_yaw_command": -0.071412942030535,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 53.33349781599827
+        },
+        {
+          "seed": 9015,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "pillar": 1,
+            "wall": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 27,
+          "mean_yaw_command": -0.05149706454261832,
+          "slow_fraction": 0.011333333333333334,
+          "wall_seconds": 56.92967691499507
+        },
+        {
+          "seed": 9016,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "wall": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 34,
+          "mean_yaw_command": -0.07061628119788167,
+          "slow_fraction": 0.008666666666666666,
+          "wall_seconds": 65.02506382600404
+        },
+        {
+          "seed": 9017,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": 0.12947355189055088,
+          "slow_fraction": 0.007333333333333333,
+          "wall_seconds": 62.380108943994856
+        },
+        {
+          "seed": 9018,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 33,
+          "mean_yaw_command": 0.13548920366279163,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 59.44897214299999
+        },
+        {
+          "seed": 9019,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "wall": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 28,
+          "mean_yaw_command": 0.01785194579184463,
+          "slow_fraction": 0.011333333333333334,
+          "wall_seconds": 60.167661518004024
+        },
+        {
+          "seed": 9020,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 34,
+          "mean_yaw_command": 0.09363617755358973,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 62.1338436990045
+        },
+        {
+          "seed": 9021,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 36,
+          "mean_yaw_command": -0.11617137945683377,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 58.10720669000875
+        },
+        {
+          "seed": 9022,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "wall": 1,
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 32,
+          "mean_yaw_command": -0.07789116886170859,
+          "slow_fraction": 0.015333333333333332,
+          "wall_seconds": 63.54796871700091
+        },
+        {
+          "seed": 9023,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": 0.1065045227296893,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 63.39704883401282
+        },
+        {
+          "seed": 9024,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "wall": 2
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 33,
+          "mean_yaw_command": -0.07764682433147754,
+          "slow_fraction": 0.014666666666666666,
+          "wall_seconds": 58.92858896299731
+        },
+        {
+          "seed": 9025,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "wall": 3
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 23,
+          "mean_yaw_command": -0.019318430864126032,
+          "slow_fraction": 0.029333333333333333,
+          "wall_seconds": 61.314531145995716
+        },
+        {
+          "seed": 9026,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 4.0,
+          "collision_kinds": {
+            "wall": 4
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 25,
+          "mean_yaw_command": -0.07085764522772175,
+          "slow_fraction": 0.036,
+          "wall_seconds": 52.087741727998946
+        },
+        {
+          "seed": 9027,
+          "beacons_per_min": 3.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "wall": 1,
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": -0.05999119382703308,
+          "slow_fraction": 0.017333333333333333,
+          "wall_seconds": 62.630880543001695
+        },
+        {
+          "seed": 9028,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "wall": 1,
+            "pillar": 1
+          },
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 35,
+          "mean_yaw_command": -0.09271712579567976,
+          "slow_fraction": 0.016666666666666666,
+          "wall_seconds": 62.27608650099137
+        },
+        {
+          "seed": 9029,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 0,
+          "threats_dodged": 0,
+          "threats_hit": 0,
+          "threat_log": [],
+          "visited_cells": 36,
+          "mean_yaw_command": 0.12299803170647161,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 61.07770424999762
+        }
+      ]
+    }
+  },
+  "encoder": null
+}

@@ -197,12 +197,12 @@ off to one side, not in the frames with no light difference. Training longer alo
 Round 0 was refit on 128 flights recorded under the difference-aware clone. Export error 3.2e-6; held-out avoid mse 0.148.
 Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10 seeds.
 
-| system                                  | beacons/min (SEM)   | collisions/min | visited cells |
-| --------------------------------------- | ------------------- | -------------- | ------------- |
-| it0 warm actor (v4, linear), reference  | 2.2 (±0.29)         | 1.0            | 35.0          |
-| diag B′: v4, pre-tanh warm start        | 2.2 (±0.25)         | 0.5            | 35.0          |
-| round 0 v2: clone v1, clone data        | 1.0 (±0.33)         | 0.6            | 34.9          |
-| **round 0 v3: difference-aware clone**  | **1.6 (±0.34)**     | 0.6            | 35.7          |
+| system                                 | beacons/min (SEM) | collisions/min | visited cells |
+| -------------------------------------- | ----------------- | -------------- | ------------- |
+| it0 warm actor (v4, linear), reference | 2.2 (±0.29)       | 1.0            | 35.0          |
+| diag B′: v4, pre-tanh warm start       | 2.2 (±0.25)       | 0.5            | 35.0          |
+| round 0 v2: clone v1, clone data       | 1.0 (±0.33)       | 0.6            | 34.9          |
+| **round 0 v3: difference-aware clone** | **1.6 (±0.34)**   | 0.6            | 35.7          |
 
 - **Gate: 1.76. Failed.** As instructed, I stopped and report. The threshold was not relaxed.
 - The difference-aware clone recovered most of the lost foraging (1.0 → 1.6). Avoidance and exploration match v4.
@@ -219,10 +219,10 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
 
 **Result: FAILED, clearly.** Level 2, seeds 9000–9029, 60 s. The ± value is the standard error over the 30 seeds.
 
-| system                            | beacons/min      | collisions/min | visited cells | seeds with 0 beacons | mean yaw bias |
-| --------------------------------- | ---------------- | -------------- | ------------- | -------------------- | ------------- |
-| v4 it0 (reference)                | 1.93 ± 0.20      | 1.07           | 33.8          | 3                    | 0.077         |
-| round 0, difference-aware clone   | **1.27 ± 0.19**  | 0.57           | 34.6          | 8                    | 0.106         |
+| system                          | beacons/min     | collisions/min | visited cells | seeds with 0 beacons | mean yaw bias |
+| ------------------------------- | --------------- | -------------- | ------------- | -------------------- | ------------- |
+| v4 it0 (reference)              | 1.93 ± 0.20     | 1.07           | 33.8          | 3                    | 0.077         |
+| round 0, difference-aware clone | **1.27 ± 0.19** | 0.57           | 34.6          | 8                    | 0.106         |
 
 - **Gate: 0.8 × 1.93 = 1.55.** Round 0 reaches 66% of the reference.
 - **Paired difference (round 0 − v4): −0.67 ± 0.19 beacons/min**, about 3.5 standard errors. The 10-seed 1.6 came from the
@@ -256,11 +256,11 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
 
   | metric                                  | difference-aware clone (32 flights) | mirror-symmetric clone (64 flights) |
   | --------------------------------------- | ----------------------------------- | ----------------------------------- |
-  | light left−right difference vs v4, r     | 0.890                               | **0.978**                           |
-  | light left−right difference vs v4, rmse  | 0.136                               | **0.085**                           |
+  | light left−right difference vs v4, r    | 0.890                               | **0.978**                           |
+  | light left−right difference vs v4, rmse | 0.136                               | **0.085**                           |
   | light mirror consistency, r             | 0.886                               | **0.997**                           |
   | light mirror consistency, rmse          | 0.140                               | **0.029**                           |
-  | loom left−right difference vs v4, r      | 0.955                               | 0.962                               |
+  | loom left−right difference vs v4, r     | 0.955                               | 0.962                               |
   | loom mirror consistency, r              | 0.968                               | 0.994                               |
 
   The previous clone's asymmetry was as large as its error against v4, and it depended on the scene. Mirror training
@@ -272,11 +272,11 @@ Screen: level 2, seeds 9000–9009. SEM = standard error of the mean over the 10
 Round 0 was refit on 128 flights recorded under the mirror-symmetric clone: export error 5.9e-6, held-out avoid mse 0.118. Screen:
 level 2, seeds 9000–9029, 60 s. Gate: 0.8 × 1.93 = 1.55.
 
-| system                        | beacons/min (SEM) | collisions/min | visited cells | zero-beacon seeds | mean yaw bias | paired vs v4    |
-| ----------------------------- | ----------------- | -------------- | ------------- | ----------------- | ------------- | --------------- |
-| v4 it0 (reference)            | 1.93 ± 0.20       | 1.07           | 33.8          | 3                 | 0.077         | —               |
-| difference-aware clone        | 1.27 ± 0.19       | 0.57           | 34.6          | 8                 | 0.106         | −0.67 ± 0.19    |
-| **mirror-symmetric clone**    | **1.20 ± 0.22**   | 0.80           | 33.5          | 10                | **0.084**     | −0.73 ± 0.24    |
+| system                     | beacons/min (SEM) | collisions/min | visited cells | zero-beacon seeds | mean yaw bias | paired vs v4 |
+| -------------------------- | ----------------- | -------------- | ------------- | ----------------- | ------------- | ------------ |
+| v4 it0 (reference)         | 1.93 ± 0.20       | 1.07           | 33.8          | 3                 | 0.077         | —            |
+| difference-aware clone     | 1.27 ± 0.19       | 0.57           | 34.6          | 8                 | 0.106         | −0.67 ± 0.19 |
+| **mirror-symmetric clone** | **1.20 ± 0.22**   | 0.80           | 33.5          | 10                | **0.084**     | −0.73 ± 0.24 |
 
 - **The steering bias is fixed** (0.084, close to v4's 0.077), and the clone copies v4's steering signal much more faithfully. Foraging still did not recover.
   So the clone is **no longer the likely bottleneck**.
@@ -293,12 +293,12 @@ The same decoder method under the mirror clone loses **0.70 ± 0.21** beacons/mi
 **The brain amplifies tiny input differences.** Open-loop replay of held-out flight 600 (500 frames) through the frozen
 connectome. The features are the 2,022 descending/motor traces the decoder reads.
 
-| currents fed to the brain            | currents vs v4, r | features vs v4, median r | features with r < 0.9 |
-| ------------------------------------ | ----------------- | ------------------------ | --------------------- |
-| clone v1                             | 0.94–0.99         | 0.858                    | 66%                   |
-| mirror-symmetric clone               | 0.96–1.00         | 0.880                    | 58%                   |
-| exact v4 + noise σ = 0.01            | ≈ 1.000           | 0.902                    | 49%                   |
-| exact v4 + noise σ = 0.03            | 0.995–1.000       | 0.894                    | 53%                   |
+| currents fed to the brain | currents vs v4, r | features vs v4, median r | features with r < 0.9 |
+| ------------------------- | ----------------- | ------------------------ | --------------------- |
+| clone v1                  | 0.94–0.99         | 0.858                    | 66%                   |
+| mirror-symmetric clone    | 0.96–1.00         | 0.880                    | 58%                   |
+| exact v4 + noise σ = 0.01 | ≈ 1.000           | 0.902                    | 49%                   |
+| exact v4 + noise σ = 0.03 | 0.995–1.000       | 0.894                    | 53%                   |
 
 **Correction:** these are the numbers at the environment's real timing, 8 brain ticks (40 ms) per camera frame. My first replay
 stepped 40 ticks (200 ms) per frame and reported 0.835 / 0.866 / 0.921 / 0.919. The conclusion is unchanged and slightly stronger.
@@ -328,11 +328,11 @@ DAgger iteration 1: the teacher-only round-0 decoder flew half the time (beta 0.
 The decoder was then refit on both clone-recorded files: export error 3.5e-6, held-out avoid mse 0.181 (student-flown states make harder labels).
 Screen: level 2, seeds 9000–9029, 60 s. Gate: 1.55.
 
-| system                              | beacons/min (SEM) | collisions/min | visited cells | zero-beacon seeds | paired vs v4    |
-| ----------------------------------- | ----------------- | -------------- | ------------- | ----------------- | --------------- |
-| v4 it0 (reference)                  | 1.93 ± 0.20       | 1.07           | 33.8          | 3                 | —               |
-| round 0, teacher-only, mirror clone | 1.20 ± 0.22       | 0.80           | 33.5          | 10                | −0.73 ± 0.24    |
-| **round 0, DAgger it1, mirror clone** | **2.13 ± 0.27** | **0.53**       | **36.5**      | 5                 | **+0.20 ± 0.25** |
+| system                                | beacons/min (SEM) | collisions/min | visited cells | zero-beacon seeds | paired vs v4     |
+| ------------------------------------- | ----------------- | -------------- | ------------- | ----------------- | ---------------- |
+| v4 it0 (reference)                    | 1.93 ± 0.20       | 1.07           | 33.8          | 3                 | —                |
+| round 0, teacher-only, mirror clone   | 1.20 ± 0.22       | 0.80           | 33.5          | 10                | −0.73 ± 0.24     |
+| **round 0, DAgger it1, mirror clone** | **2.13 ± 0.27**   | **0.53**       | **36.5**      | 5                 | **+0.20 ± 0.25** |
 
 - **Passed without an override.** DAgger iteration 2 was not needed.
 - The installed `runs/v5/round0` is `round0-dagger1`, recorded in `gate.json`.
@@ -344,8 +344,8 @@ Screen: level 2, seeds 9000–9029, 60 s. Gate: 1.55.
 **Round-0 validation baseline** (`sac-validate`, level 3 with threats, seeds 9000–9009, 60 s). This is the starting point for SAC, not a gate:
 
 | near-dodge | balanced | ghost near-dodge | beacons/min | collisions/min | E1 loom AUC (≥ 0.8) | E2 margins (light ≥ 0.05, loom ≥ 0.1) |
-| ---------- | -------- | ---------------- | ----------- | -------------- | ------------------- | --------------------------------------- |
-| 0.27       | 0.18     | 0.30             | 1.9         | 2.7            | 0.69, fail          | 0.50 / 0.26, pass                       |
+| ---------- | -------- | ---------------- | ----------- | -------------- | ------------------- | ------------------------------------- |
+| 0.27       | 0.18     | 0.30             | 1.9         | 2.7            | 0.69, fail          | 0.50 / 0.26, pass                     |
 
 Round 0 was trained only on threat-free level 2. It forages on level 3 but does not dodge causally yet: intact near-dodge 0.27 against 0.30
 for the ghost condition, and threat hits inflate collisions. Raising near-dodge, and the loom selectivity that E1 measures, is what the Task 13 SAC rounds are for.
@@ -355,6 +355,7 @@ E2 passes (light margin 0.49, loom margin 0.27). The hand-built v4 encoder does 
 asks SAC for loom selectivity that v4 never had.
 
 **Task 12 complete** (18:39).
+
 - **Encoder:** the mirror-symmetric clone `learned-v5:1681bff17b4eda85`.
 - **Round 0:** DAgger iteration 1 under that clone (`runs/v5/round0`, gate passed).
 - **Also written:** validation and the v4 E1 baseline.
@@ -380,6 +381,7 @@ asks SAC for loom selectivity that v4 never had.
   - RAM headroom.
 
   Otherwise it stops and logs why. Cost if wrong: none. A failed check blocks the multi-hour run.
+
 - **Smoke decoder round** (9,000 frames, 6 workers): exited cleanly in 103 s. Peak RAM used was 10.8 GB, with at least 13.3 GB still available.
 - **Smoke check: all 12 passed (18:43).**
   - The encoder version matches `round.json`.
@@ -409,3 +411,41 @@ asks SAC for loom selectivity that v4 never had.
   and the results will say so.
 - **A near-dodge rate of `null` (no near threats) counts as −1 for comparisons**, so a round with no measurable dodging
   can never count as an improvement.
+
+### Round 1: result and where we stand (2026-09-15, 22:45)
+
+**Round 1 encoder SAC** finished at 20:22. Encoder `learned-v5:b9722d66acced4f1`, ep_rew_mean −239 (99k) → −151 (350k), metabolic cost 0.012.
+**Round 1 decoder SAC** finished at 20:56. ep_rew_mean −272 at the start, about −725 by the end of the 50k critic-only warm-up, then flat
+around −650 to −700 to the end (−688 at 144k). The entropy coefficient dropped from 1 to 0.004 after the unfreeze. Export parity 5.7e-7.
+
+**Round 1 validation** (seeds 9000–9009, level 3, `docs/results/encoder-v5/run-records/round1/validation.json`):
+
+| round | near-dodge | balanced | ghost near-dodge | beacons/min | collisions/min | E1 loom AUC | E2                       |
+| ----- | ---------- | -------- | ---------------- | ----------- | -------------- | ----------- | ------------------------ |
+| 0     | 0.27       | 0.18     | 0.30             | 1.9         | 2.7            | 0.69        | pass (0.50 / 0.26)       |
+| 1     | **0.93**   | 0.91     | **0.81**         | **0.0**     | **6.1**        | **0.48**    | **fail** (−0.04 / −0.05) |
+
+- **Diagnosis: round 1 is degenerate.** The drone stopped foraging and flies erratically all the time. That scores as "dodging"
+  whether or not a threat is visible (ghost 0.81 against the A3 limit of 0.3), and loom currents no longer carry threat information (AUC at chance).
+  The high near-dodge rate is not caused by vision, which the causal rule in `AGENTS.md` forbids.
+- **User question:** "isn't that how a fly actually flies?" Answer: real flies do fly jerkily (saccades, loom escapes), and jerky flight
+  alone would not fail any acceptance line. What fails is that the jerks are not caused by what it sees, foraging is gone, and collisions doubled.
+- **Pipeline defect:** plan Task 13's stop rule and Step 6 select rounds on near-dodge alone. Round 1 counted as an improvement (0.93 > 0.27),
+  so **round 2 encoder SAC started at 21:05 from the degenerate round 1**. At 252k of 350k frames its ep_rew_mean is about −2,480
+  (round 1 encoder: −151). If nothing changes, Step 6 will most likely choose round 1 as the final pair, and Tasks 14–15 will run on it.
+- **Attempted pause refused:** a `kill -STOP` on the pipeline process group was denied by the session's permission check. The pipeline is
+  **still running** (pid 788490, group leader). To stop it: `pkill -TERM -g $(ps -o pgid= -p 788490)`. All outputs in `runs/v5/` stay on disk.
+- **Pending user decision:** stop now, or let round 2 finish (validation ≈ 23:40) and see.
+  Recommendation: stop. Keep round 0 as the best valid pair. Before any new round, (1) add a selection guard that also requires
+  foraging to hold (for example beacons/min ≥ half of round 0) and ghost near-dodge ≤ 0.3, and (2) find why decoder SAC collapsed
+  (entropy after the unfreeze, or the reward). `roam_eval.ACCEPTANCE` is not touched by either.
+- **Backup of everything that lived only in git-ignored folders** (`docs/results/encoder-v5/`):
+  - `ledger.md`: copy of the SDD ledger (`.superpowers/sdd/…/progress.md`) with every ruling and user decision.
+  - `handoff-2026-09-15.md`: the session handoff.
+  - `scripts/`: the run drivers (`stage1-dagger.sh`, `stage2a*.sh`, `smoke13.sh`, `gate-smoke-then-pipeline.sh`, `pipeline13-15.sh`).
+  - `diag/`: diagnostic scripts (L−R fidelity, mirror consistency, replay, noise sensitivity, smoke check).
+  - `run-records/`: small JSON records (clone fit, round-0 gate and warm start, validations for rounds 0 and 1, round-1 encoder
+    `round.json`, v4 30-seed gate reference, v4 E1 baseline, Stage 1 choice) and the pipeline log.
+  - Model weights and datasets stay in `runs/v5/` (git-ignored, ~5 GB).
+- **To resume in a new session:** read `AGENTS.md`, this document, then `docs/results/encoder-v5/ledger.md` (lines 214 onward cover Tasks 13–15).
+  Check the pipeline (`ps -p 788490`, `tail runs/v5/pipeline13-15.log`) and ask the user for the pending decision above before anything else.

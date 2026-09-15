@@ -1,0 +1,7 @@
+{
+  "iteration": 0,
+  "actor": "runs/v5/dagger/it0/warm-actor.json",
+  "beacons_per_min": 2.2,
+  "collisions_per_min": 1.0,
+  "teacher_beacons_per_min": 2.3
+}

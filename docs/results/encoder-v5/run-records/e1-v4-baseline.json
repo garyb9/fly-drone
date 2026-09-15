@@ -1,0 +1,32 @@
+{
+  "policy": "/home/gb/projects/fly-drone/runs/v5/dagger/it0/warm-actor.json",
+  "encoder": null,
+  "seeds": [
+    1000,
+    1049
+  ],
+  "seconds": 120,
+  "frames": 150000,
+  "E1": {
+    "loom_auc": 0.6865678204791685,
+    "positives": 10182,
+    "negatives": 134708,
+    "passed": false
+  },
+  "E2": {
+    "auc": {
+      "loom_threat": 0.6865678204791685,
+      "loom_beacon": 0.4181747586810111,
+      "light_beacon": 0.9848446859572352,
+      "light_threat": 0.49812039157955024
+    },
+    "light_margin": 0.48672429437768494,
+    "loom_margin": 0.2683930617981574,
+    "passed": true
+  },
+  "thresholds": {
+    "E1_min_loom_auc": 0.8,
+    "E2_min_light_margin": 0.05,
+    "E2_min_loom_margin": 0.1
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "gate": 1.5466666666666669,
+  "passed": true,
+  "override": false,
+  "best": "runs/v5/round0-dagger1",
+  "candidates": [
+    {
+      "dir": "runs/v5/round0-mirror-it0",
+      "beacons_per_min": 1.2,
+      "collisions_per_min": 0.8
+    },
+    {
+      "dir": "runs/v5/round0-dagger1",
+      "beacons_per_min": 2.1333333333333333,
+      "collisions_per_min": 0.5333333333333333
+    }
+  ]
+}

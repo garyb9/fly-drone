@@ -1,0 +1,35 @@
+[2026-09-15 18:43:09] T13 round 1 encoder SAC
+[2026-09-15 20:22:31] T13 round 1 decoder SAC
+[2026-09-15 20:56:58] T13 round 1 validate
+{
+  "decoder": "/home/gb/projects/fly-drone/runs/v5/round1/decoder/decoder.json",
+  "encoder": "/home/gb/projects/fly-drone/runs/v5/round1/encoder/encoder.pt",
+  "seeds": [
+    9000,
+    9009
+  ],
+  "near_dodge_rate": 0.9259259259259259,
+  "balanced_dodge_rate": 0.9090909090909091,
+  "ghost_near_dodge_rate": 0.8148148148148148,
+  "beacons_per_min": 0.0,
+  "collisions_per_min": 6.1,
+  "E1": {
+    "loom_auc": 0.47951155586494953,
+    "positives": 1300,
+    "negatives": 11050,
+    "passed": false
+  },
+  "E2": {
+    "auc": {
+      "loom_threat": 0.47951155586494953,
+      "loom_beacon": 0.5267681221850363,
+      "light_beacon": 0.5073002086870443,
+      "light_threat": 0.5480009049773755
+    },
+    "light_margin": -0.04070069629033124,
+    "loom_margin": -0.04725656632008679,
+    "passed": false
+  }
+}
+[2026-09-15 21:05:01] T13 round 1 near_dodge=0.9259259259259259 best_earlier=0.2692307692307692
+[2026-09-15 21:05:01] T13 round 2 encoder SAC

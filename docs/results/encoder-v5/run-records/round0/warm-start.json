@@ -1,0 +1,30 @@
+{
+  "samples": 192000,
+  "held_out_flights": 25,
+  "loss_first": 0.3524865508079529,
+  "loss_last": 0.14588577598333358,
+  "drives": {
+    "threat": {
+      "train_mse": null,
+      "held_out_mse": null
+    },
+    "avoid": {
+      "train_mse": 0.13042186200618744,
+      "held_out_mse": 0.18069009482860565
+    },
+    "beacon": {
+      "train_mse": 0.03273497894406319,
+      "held_out_mse": 0.03748755156993866
+    },
+    "explore": {
+      "train_mse": 0.03281699866056442,
+      "held_out_mse": 0.033142365515232086
+    }
+  },
+  "export_max_error": 3.5315752029418945e-06,
+  "encoder_version": "learned-v5:1681bff17b4eda85",
+  "paths": [
+    "runs/v5/round0-data/it0.npz",
+    "runs/v5/round0-data/it1.npz"
+  ]
+}

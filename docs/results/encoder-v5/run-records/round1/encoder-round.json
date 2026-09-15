@@ -1,0 +1,12 @@
+{
+  "learner": "encoder",
+  "frames": 350004,
+  "decoder": "/home/gb/projects/fly-drone/runs/v5/round0/decoder.json",
+  "encoder": null,
+  "init": "runs/v5/clone/encoder.pt",
+  "workers": 6,
+  "seed": 42,
+  "buffer_size": 100000,
+  "actor_warmup": 50000,
+  "encoder_version": "learned-v5:b9722d66acced4f1"
+}
