@@ -6,6 +6,8 @@ import { applyCssTokens } from "./theme/apply-css-tokens";
 import { PALETTE, hexToInt } from "./theme/tokens";
 import { THEME } from "./scene/theme";
 import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
+import { renderFlightView } from "./ui/flightView";
+import { renderHudPinned } from "./ui/hudPinned";
 
 applyCssTokens();
 
@@ -108,36 +110,9 @@ const HOLDING: Record<string, string> = {
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
 <main>
-<div class="world">
-<div id="world" class="viewport"></div>
-<div class="connection"><i id="dot"></i><span id="status">Connecting to simulation</span></div>
-<div class="world-bottom"><div><span>ALTITUDE</span><strong id="altitude">—<small> m</small></strong></div><div><span>SPEED</span><strong id="speed">—<small> m/s</small></strong></div><div><span>VX / VY / VZ</span><strong id="velocity-axes">—<small> m/s</small></strong></div><div><span>SIMULATION</span><strong id="simtime">0.00<small> s</small></strong></div><div><span>REAL TIME</span><strong id="rtf">—<small> ×</small></strong></div><div class="camera-controls"><button id="cam-follow" title="Keep the camera target locked to the drone">Follow</button><button id="cam-recenter" title="Snap the camera target to the drone once">Recenter</button><button id="cam-reset" title="Restore the default orbit view">Reset view</button><button id="cam-fpv" title="Ride along in the drone's cockpit">1st person</button><button id="cam-tpv" title="Chase camera behind the drone">3rd person</button></div></div>
-<div class="world-frame"><i></i><i></i><i></i><i></i></div>
-<div class="world-dims" id="dims"></div>
-<div class="world-hint">DRAG TO ORBIT · SCROLL TO ZOOM</div>
-</div>
+${renderFlightView()}
 <div class="hud-layer">
-<section class="hud-pinned" id="hud-pinned">
-<div class="brain-mini"><div class="brain-mini-head"><span id="mode">INITIALIZING</span><span id="tick">TICK 0</span></div><div id="brain" class="viewport"></div><div class="brain-legend"><span><i></i> measured activity</span><span>connections</span></div></div>
-<div class="fly-mini-panel" title="Same neural readouts, independent trajectory — illustrative fly dynamics, not calibrated biomechanics."><div class="fly-mini-head"><span>FLY BODY</span></div><div id="fly" class="viewport"></div></div>
-<div class="eyes-panel"><div class="eyes"><figure><img id="eye0" alt="Left simulated eye"><figcaption>LEFT EYE</figcaption></figure><figure><img id="eye1" alt="Right simulated eye"><figcaption>RIGHT EYE</figcaption></figure></div></div>
-<div class="instruments">
-<div class="attitude-gauges">
-<div class="attitude-gauge"><div class="track"><i class="fill" id="roll-fill"></i><i class="needle" id="roll-needle"></i></div><span>ROLL</span><em id="roll-value">—</em></div>
-<div class="attitude-gauge"><div class="track"><i class="fill" id="pitch-fill"></i><i class="needle" id="pitch-needle"></i></div><span>PITCH</span><em id="pitch-value">—</em></div>
-<div class="attitude-gauge"><div class="track"><i class="fill" id="yaw-fill"></i><i class="needle" id="yaw-needle"></i></div><span>YAW</span><em id="yaw-value">—</em></div>
-</div>
-<div class="turn-rate"><span>TURN RATE</span><em id="turn-rate">—</em></div>
-<div class="vector-legend">
-<span><i style="background:#ffb15c"></i><span class="legend-label">heading</span></span>
-<span><i style="background:#6fe2ff"></i><span class="legend-label">velocity</span></span>
-<span><i style="background:#ff6fd8"></i><span class="legend-label">command</span></span>
-<span><i style="background:#ff5c5c"></i><span class="legend-label">world X</span></span>
-<span><i style="background:#5cff7a"></i><span class="legend-label">world Z↑</span></span>
-<span><i style="background:#5cb0ff"></i><span class="legend-label">world -Y</span></span>
-</div>
-</div>
-</section>
+${renderHudPinned()}
 <div class="drawer" id="drawer">
 <div class="drawer-body">
 <section class="card replay" data-panel="replay"><div class="panel-head"><span class="panel-title">Trials &amp; Replay</span><span class="panel-meta" id="trial">SEED 42 · VISUAL · INTACT</span></div><div class="replay-grid"><div><h3>RUN A TRIAL</h3><div class="replay-form"><label>Task<select id="task"></select></label><label>Brain<select id="ablation"><option value="none">Intact</option><option value="zero">Zeroed features</option><option value="sensory">Vision silenced</option><option value="shuffle">Shuffled features</option></select></label><label>Seed<input id="seed" type="number" value="1000" min="0" step="1"></label><button id="run" class="primary">Run trial</button></div><p id="outcome" class="outcome">Outcome: —</p></div><div><h3>REPLAY AN EVALUATION</h3><div class="replay-form"><label>Report<select id="report"><option value="">No reports loaded</option></select></label></div><p id="report-summary" class="outcome"></p><div id="seeds" class="seed-grid" aria-label="Evaluation seeds"></div></div></div></section>
