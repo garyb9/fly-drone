@@ -149,6 +149,33 @@ side signal. Steering toward a beacon depends on that side signal.
 - **Ruling: run a cheap test (clone refit with 60k steps instead of 20k), then stop and report**, as the Task 12 gate instruction
   says. Any encoder fix changes the encoder version, so the round-0 data must be re-collected. The user chooses.
 
+Test result: the same clone data, refit for 60k steps instead of 20k. Held-out frames.
+
+| metric                                        | 20k steps | 60k steps |
+| --------------------------------------------- | --------- | --------- |
+| light left−right difference r                  | 0.85      | 0.88      |
+| light difference gain (clone / v4)            | 0.86      | 1.00      |
+| light difference rmse (v4 difference std 0.28) | 0.149     | 0.141     |
+| clone difference where v4's is exactly 0      | 0.021     | 0.018     |
+| loom left−right difference r                   | 0.94      | 0.96      |
+
+More training removes the shrinkage but leaves most of the error. That error sits in the frames where the beacon is
+off to one side, not in the frames with no light difference. Training longer alone is unlikely to recover beacon seeking.
+
+### User decision: difference-aware clone (Task 12c, new)
+
+- The clone loss also penalises errors in each left−right difference, and batches oversample frames where the beacon is
+  off to one side. The clone trains for 60k steps. Then the round-0 data is re-collected under the new clone, the decoder
+  is refit, and the gate is re-checked.
+- **Ruling: the difference term has weight 1.0.** It is added to the per-channel MSE over the 4 pairs. Batches are
+  split 1/3 uniform, 1/3 loom-active (the existing > 0.05 rule), and 1/3 light-side frames (|light L−R| > 0.05). Equal weight keeps
+  channel fidelity primary, and the oversampling targets the third of frames that carry the side signal. Cost if wrong:
+  another clone refit (~8 min).
+- **Ruling: the earlier artifacts are kept** as `clone-v1`, `round0-v2-clonedata` and `round0-data-v1`, as the record of both failed
+  gates. This costs about 1.3 GB of disk.
+- **The v4 teacher labels, the connectome and the thresholds are unchanged.** The clone target is still v4's own currents, so this is
+  still an honest copy of v4, only one weighted toward the signal the brain steers with.
+
 ## Tasks 13–15: pipeline
 
 - **Tasks 13–15 run as one chained script** once the smoke test passes. If this session dies overnight, the run
