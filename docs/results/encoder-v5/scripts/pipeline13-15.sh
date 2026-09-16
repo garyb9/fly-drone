@@ -22,6 +22,10 @@ DEC_FRAMES=${DEC_FRAMES:-150000}
 # Set SKIP_STAGE_A=1 to reuse a stage-A snapshot (e.g. after fixing a later step); the staged
 # encoder round then starts from the snapshot already on disk.
 SKIP_STAGE_A=${SKIP_STAGE_A:-0}
+# NO_STOP=1 keeps the ladder going through every round even when one is ineligible or does not
+# improve (the user asked to push rounds 2-3 after round 1 collected no beacons). The guard still
+# records eligibility and step 6 still selects only eligible rounds.
+NO_STOP=${NO_STOP:-0}
 
 # Rounds before START were run in an earlier invocation; point the final-pair arrays at their
 # on-disk outputs so step 6 can still choose them (e.g. START_ROUND=2 after a manual round 1).
@@ -102,12 +106,19 @@ for r in round_gate_report(vals):
     print('T13 table', r)" "$last"
     log "T13 round $k eligible=$elig best_eligible=$best_so_far"
     if [ "$elig" -eq 0 ]; then
-        log "T13 STOP RULE: round $k ineligible (foraging / ghost / E2); no further rounds"
-        break
-    fi
-    if [ "$best_so_far" -ne "$k" ]; then
-        log "T13 STOP RULE: round $k did not improve the best eligible near-dodge; no further rounds"
-        break
+        if [ "$NO_STOP" = "1" ]; then
+            log "T13 NO_STOP: round $k ineligible (foraging / ghost / E2); continuing anyway"
+        else
+            log "T13 STOP RULE: round $k ineligible (foraging / ghost / E2); no further rounds"
+            break
+        fi
+    elif [ "$best_so_far" -ne "$k" ]; then
+        if [ "$NO_STOP" = "1" ]; then
+            log "T13 NO_STOP: round $k did not improve the best eligible near-dodge; continuing anyway"
+        else
+            log "T13 STOP RULE: round $k did not improve the best eligible near-dodge; no further rounds"
+            break
+        fi
     fi
 done
 
