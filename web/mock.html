@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fly / Drone — Airframe mock</title>
+    <style>
+      :root {
+        --bp-bg: #071b26;
+        --bp-surface: #0d222c;
+        --bp-border: #1c3947;
+        --bp-ink: #eaf6f9;
+        --bp-ink-dim: #7fa8b3;
+        --bp-amber: #ffb15c;
+        --bp-line: #cfeaf0;
+        --bp-card: #101c23;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bp-bg);
+        color: var(--bp-ink);
+        font:
+          13px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+      #mock {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        height: 100%;
+      }
+      aside {
+        border-right: 1px solid var(--bp-border);
+        background: var(--bp-surface);
+        padding: 18px 16px;
+        overflow-y: auto;
+      }
+      h1 {
+        font-size: 15px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--bp-ink-dim);
+        margin: 0 0 18px;
+        font-size: 11px;
+      }
+      h2 {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--bp-ink-dim);
+        margin: 20px 0 8px;
+      }
+      .group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      button {
+        background: var(--bp-card);
+        color: var(--bp-ink);
+        border: 1px solid var(--bp-border);
+        padding: 6px 10px;
+        font: inherit;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--bp-line);
+      }
+      button.active {
+        background: var(--bp-amber);
+        border-color: var(--bp-amber);
+        color: #071b26;
+      }
+      dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 12px;
+        font-size: 12px;
+      }
+      dt {
+        color: var(--bp-ink-dim);
+      }
+      dd {
+        margin: 0;
+        text-align: right;
+      }
+      .note {
+        color: var(--bp-ink-dim);
+        font-size: 11px;
+        margin-top: 14px;
+      }
+      #stage {
+        position: relative;
+        min-width: 0;
+      }
+      #stage canvas {
+        display: block;
+      }
+      .legend {
+        position: absolute;
+        left: 16px;
+        bottom: 14px;
+        background: rgba(7, 27, 38, 0.72);
+        border: 1px solid var(--bp-border);
+        padding: 8px 10px;
+        font-size: 11px;
+        color: var(--bp-ink-dim);
+      }
+      .legend i {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        margin-right: 6px;
+        vertical-align: -1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mock">
+      <aside>
+        <h1>Airframe mock</h1>
+        <p class="sub">Visual shell for the MaleCNS cyborg · not a flight model</p>
+        <h2>Airframe</h2>
+        <div class="group" id="airframe"></div>
+        <h2>Options</h2>
+        <div class="group" id="options"></div>
+        <h2>Environment</h2>
+        <div class="group" id="environment"></div>
+        <h2>Spec</h2>
+        <dl id="spec"></dl>
+        <p class="note" id="note"></p>
+      </aside>
+      <div id="stage">
+        <div class="legend">
+          <div><i style="background: #ffb15c"></i>left eye FOV (splay +0.75 rad)</div>
+          <div><i style="background: #6fe2ff"></i>right eye FOV (splay −0.75 rad)</div>
+          <div><i style="background: #cfeaf0"></i>frame / guards</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/mock/airframe.ts"></script>
+  </body>
+</html>
