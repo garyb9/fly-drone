@@ -2574,9 +2574,9 @@ env -u PYTHONPATH .venv/bin/fly-drone sac-round decoder --output runs/v5/round$k
 env -u PYTHONPATH .venv/bin/fly-drone sac-validate --decoder runs/v5/round$k/decoder/decoder.json --encoder runs/v5/round$k/encoder/encoder.pt --output runs/v5/round$k/validation.json
 ```
 
-- [ ] **Step 5: Apply the stop rule and report.** Show the user a table of rounds 0..k: near-dodge, balanced, ghost near-dodge, beacons/min, collisions/min, E1 AUC, mean metabolic cost (last `rollout/metabolic_cost` in the encoder log). If round k's `near_dodge_rate` is not higher than the best earlier round's, **stop and report** rather than starting round k+1.
+- [ ] **Step 5: Apply the stop rule and report.** Show the user a table of rounds 0..k: near-dodge, balanced, ghost near-dodge, beacons/min, collisions/min, E1 AUC, mean metabolic cost (last `rollout/metabolic_cost` in the encoder log). **Eligibility (amended 2026-09-16):** a round counts only if `roam_eval.round_eligible` passes — beacons/min ≥ ½ of round 0's, ghost near-dodge ≤ `A3_max_ghost_dodge_rate` (0.3), and E2 passes. If round k is ineligible, or is eligible but does not beat the best eligible earlier round's `near_dodge_rate`, **stop and report** rather than starting round k+1. A near-dodge gain that costs foraging or is not causal is not progress.
 
-- [ ] **Step 6: Choose the final pair.** Take the round with the best validation near-dodge rate (ties go to more beacons/min):
+- [ ] **Step 6: Choose the final pair.** Take the best **eligible** round (`roam_eval.pick_best_round`) by validation near-dodge rate (ties go to more beacons/min); round 0 is the fallback and is always eligible, so a run where every SAC round is degenerate ends on the round-0 pair:
 
 ```bash
 mkdir -p runs/v5/final && cp runs/v5/round<best>/encoder/encoder.pt runs/v5/round<best>/decoder/decoder.json runs/v5/final/

@@ -13,7 +13,19 @@ ENC[0]=runs/v5/clone/encoder.pt
 DEC[0]=runs/v5/round0/decoder.json
 START=${START_ROUND:-1}
 
-ndr() { $PY -c "import json,sys;v=json.load(open(sys.argv[1]))['near_dodge_rate'];print(-1 if v is None else v)" "$1"; }
+# Round selection guard (2026-09-16): a round must keep foraging, dodge on sight (ghost) and keep
+# E2 semantics to count. Prints "<eligible> <best_eligible_index>" for rounds 0..k.
+guard() {
+    $PY -c "
+import json, sys
+from fly_drone.roam_eval import pick_best_round, round_eligible
+k = int(sys.argv[1])
+vals = []
+for i in range(k + 1):
+    p = 'runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json'
+    vals.append(json.load(open(p)))
+print(int(round_eligible(vals[k], vals[0])), pick_best_round(vals))" "$1"
+}
 
 last=0
 for k in 1 2 3; do
@@ -37,27 +49,38 @@ for k in 1 2 3; do
     ENC[$k]=runs/v5/round$k/encoder/encoder.pt
     DEC[$k]=runs/v5/round$k/decoder/decoder.json
     last=$k
-    cur=$(ndr runs/v5/round$k/validation.json)
-    best_prev=$($PY -c "
-import json,sys
-vals=[json.load(open(p))['near_dodge_rate'] for p in sys.argv[1:]]
-print(max(-1 if v is None else v for v in vals))" runs/v5/round0/validation.json $(for j in $(seq 1 $((k - 1))); do echo runs/v5/round$j/validation.json; done))
-    log "T13 round $k near_dodge=$cur best_earlier=$best_prev"
-    if ! $PY -c "import sys;sys.exit(0 if $cur > $best_prev else 1)"; then
-        log "T13 STOP RULE: round $k did not improve near-dodge; no further rounds"
+    read -r elig best_so_far <<<"$(guard $k)"
+    $PY -c "
+import json, sys
+from fly_drone.roam_eval import round_gate_report
+last = int(sys.argv[1])
+vals = []
+for i in range(last + 1):
+    p = 'runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json'
+    vals.append(json.load(open(p)))
+for r in round_gate_report(vals):
+    print('T13 table', r)" "$last"
+    log "T13 round $k eligible=$elig best_eligible=$best_so_far"
+    if [ "$elig" -eq 0 ]; then
+        log "T13 STOP RULE: round $k ineligible (foraging / ghost / E2); no further rounds"
+        break
+    fi
+    if [ "$best_so_far" -ne "$k" ]; then
+        log "T13 STOP RULE: round $k did not improve the best eligible near-dodge; no further rounds"
         break
     fi
 done
 
-# Step 6: best validation near-dodge over rounds 0..last, ties to more beacons/min.
+# Step 6: best eligible round 0..last by near-dodge, ties to more beacons/min; round 0 if none.
 best=$($PY -c "
-import json
-rows=[]
-for k in range($last+1):
-    p='runs/v5/round0/validation.json' if k==0 else f'runs/v5/round{k}/validation.json'
-    v=json.load(open(p)); n=v['near_dodge_rate']
-    rows.append((-1 if n is None else n, v['beacons_per_min'], -k, k))
-print(max(rows)[3])")
+import json, sys
+from fly_drone.roam_eval import pick_best_round
+last = int(sys.argv[1])
+vals = []
+for i in range(last + 1):
+    p = 'runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json'
+    vals.append(json.load(open(p)))
+print(pick_best_round(vals))" "$last")
 mkdir -p runs/v5/final
 cp "${ENC[$best]}" runs/v5/final/encoder.pt
 cp "${DEC[$best]}" runs/v5/final/decoder.json

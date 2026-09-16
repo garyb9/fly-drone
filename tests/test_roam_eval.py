@@ -9,6 +9,7 @@ from fly_drone.roam_eval import (
     BASELINES,
     CONDITIONS,
     PROBES,
+    ROUND_GATE,
     THREAT_NEGATIVE_RANGE,
     THREAT_POSITIVE_RANGE,
     _checks_job,
@@ -18,7 +19,10 @@ from fly_drone.roam_eval import (
     bypass_comparison,
     encoder_scores,
     paired_bootstrap,
+    pick_best_round,
     roc_auc,
+    round_eligible,
+    round_gate_report,
 )
 from fly_drone.sac import SpacesOnlyEnv, build_sac
 from test_sac import zero_actor
@@ -226,3 +230,61 @@ def test_bypass_controller_without_a_learned_encoder_raises(tmp_path):
     job = (f"bypass:{tmp_path / 'bypass.zip'}", [3], 0.4, 3, "none", None)
     with pytest.raises(ValueError):
         distill._screen_job(job)
+
+
+def validation(near, beacons, ghost, e2=True, balanced=None, collisions=1.0):
+    return {
+        "near_dodge_rate": near,
+        "balanced_dodge_rate": near if balanced is None else balanced,
+        "ghost_near_dodge_rate": ghost,
+        "beacons_per_min": beacons,
+        "collisions_per_min": collisions,
+        "E2": {"passed": e2},
+    }
+
+
+# The recorded round 0..2 validations that motivated the guard (see
+# docs/results/encoder-v5/PHASE0-DIAGNOSTICS-2026-09-16.md).
+ROUND0 = validation(0.269, 1.9, 0.296, True)
+ROUND1 = validation(0.926, 0.0, 0.815, False, balanced=0.909, collisions=6.1)
+ROUND2 = validation(1.0, 0.0, 1.0, False, balanced=1.0, collisions=10.3)
+
+
+def test_round_gate_rejects_the_recorded_degenerate_rounds_and_falls_back_to_round_0():
+    assert round_eligible(ROUND0, ROUND0)
+    assert not round_eligible(ROUND1, ROUND0)  # zero beacons, ghost 0.815, E2 fail
+    assert not round_eligible(ROUND2, ROUND0)
+    assert pick_best_round([ROUND0, ROUND1, ROUND2]) == 0
+
+
+def test_round_gate_accepts_a_round_that_keeps_foraging_and_dodges_on_sight():
+    good = validation(0.9, 1.5, 0.1, True, balanced=0.85)
+    assert round_eligible(good, ROUND0)
+    assert pick_best_round([ROUND0, good]) == 1
+
+
+def test_round_gate_requires_foraging_above_half_of_round_0():
+    assert ROUND_GATE["min_beacon_fraction"] == 0.5
+    assert not round_eligible(validation(0.9, 0.9, 0.1, True), ROUND0)  # < 0.95
+    assert round_eligible(validation(0.9, 0.95, 0.1, True), ROUND0)
+
+
+def test_round_gate_requires_causal_dodging_and_e2():
+    assert not round_eligible(validation(0.9, 1.5, 0.5, True), ROUND0)  # ghost too high
+    assert not round_eligible(validation(0.9, 1.5, 0.1, False), ROUND0)  # E2 fail
+
+
+def test_round_gate_missing_baseline_never_advances_past_round_0():
+    assert not round_eligible(ROUND1, validation(0.0, 0.0, 0.0))
+    assert pick_best_round([ROUND0, ROUND1]) == 0
+    with pytest.raises(ValueError):
+        pick_best_round([])
+
+
+def test_round_gate_report_lists_every_round_with_its_verdict():
+    report = round_gate_report([ROUND0, ROUND1, ROUND2])
+    assert [r["round"] for r in report] == [0, 1, 2]
+    assert [r["eligible"] for r in report] == [True, False, False]
+    assert (
+        report[1]["ghost_near_dodge_rate"] == 0.815 and report[1]["E2_passed"] is False
+    )

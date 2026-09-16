@@ -541,3 +541,76 @@ def bypass_comparison(full, bypass):
         "bypass_better": bool(better),
         "note": "If bypass_better, stop and report to the user before any stage 4 conclusions.",
     }
+
+
+# Round selection guard (added 2026-09-16 after the encoder v5 round-1 collapse). Task 13's original
+# rule ranked rounds by near_dodge_rate alone; a blind, erratic policy scores high on it while
+# collecting zero beacons and scoring the same with the eyes ablated. A round is eligible only if
+# it kept foraging, its dodging is causal (ghost), and channel semantics survive (E2). Round 0 is
+# eligible by construction: it defines the baseline and is the fallback.
+ROUND_GATE = {
+    "min_beacon_fraction": 0.5,  # of round 0's validated beacons/min
+    "max_ghost_dodge": ACCEPTANCE["A3_max_ghost_dodge_rate"],
+}
+
+
+def round_eligible(validation, baseline, gate=ROUND_GATE):
+    """True when a SAC round kept foraging, dodges on sight, and kept E2 semantics.
+
+    `validation` and `baseline` are `sac.validate` summaries (round 0's is the baseline). A
+    missing or non-positive baseline beacon rate makes every round ineligible: there is nothing to
+    measure progress against.
+    """
+    base = baseline.get("beacons_per_min")
+    beacons = validation.get("beacons_per_min")
+    ghost = validation.get("ghost_near_dodge_rate")
+    if base is None or base <= 0 or beacons is None or ghost is None:
+        return False
+    return bool(
+        beacons >= gate["min_beacon_fraction"] * base
+        and ghost <= gate["max_ghost_dodge"]
+        and (validation.get("E2") or {}).get("passed", False)
+    )
+
+
+def pick_best_round(validations, gate=ROUND_GATE):
+    """Index of the eligible round with the best near-dodge rate; ties to more beacons/min.
+
+    `validations[0]` is the round-0 baseline and is always eligible, so the result is always 0 for
+    an all-degenerate run. Earlier rounds win exact ties.
+    """
+    if not validations:
+        raise ValueError("no round validations to choose from")
+    base = validations[0]
+    rows = []
+    for k, v in enumerate(validations):
+        if k > 0 and not round_eligible(v, base, gate):
+            continue
+        nd = v.get("near_dodge_rate")
+        rows.append(
+            (
+                -1.0 if nd is None else float(nd),
+                float(v.get("beacons_per_min") or 0.0),
+                -k,
+                k,
+            )
+        )
+    return max(rows)[3]
+
+
+def round_gate_report(validations, gate=ROUND_GATE):
+    """Per-round eligibility columns for the Task 13 report table."""
+    base = validations[0]
+    return [
+        {
+            "round": k,
+            "eligible": k == 0 or round_eligible(v, base, gate),
+            "near_dodge_rate": v.get("near_dodge_rate"),
+            "balanced_dodge_rate": v.get("balanced_dodge_rate"),
+            "ghost_near_dodge_rate": v.get("ghost_near_dodge_rate"),
+            "beacons_per_min": v.get("beacons_per_min"),
+            "collisions_per_min": v.get("collisions_per_min"),
+            "E2_passed": (v.get("E2") or {}).get("passed"),
+        }
+        for k, v in enumerate(validations)
+    ]
