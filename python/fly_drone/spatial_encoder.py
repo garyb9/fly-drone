@@ -164,15 +164,25 @@ class SpatialEncoderNet(nn.Module):
         self.eye = EyeNetV6(frames)
         self.spatial = nn.Conv2d(32, len(SPATIAL_CHANNELS), 1)
         self.direct = nn.Conv2d(32, len(DIRECT_CHANNELS), 1)
+        # Whole-eye context: the conv trunk's receptive field is local (~17 px), so a per-patch
+        # head alone cannot represent a globally pooled cue (v4's light/loom pools). A pooled
+        # feature -> per-channel constant is added to every patch, giving each channel a global
+        # component plus local structure.
+        n = len(SPATIAL_CHANNELS) + len(DIRECT_CHANNELS)
+        self.global_head = nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, n))
 
     def forward(self, eyes):
         left_in, right_in = eye_inputs(eyes, self.frames)
+        n_spatial = len(SPATIAL_CHANNELS)
         out = {}
         for side, feature in (("l", self.eye(left_in)), ("r", self.eye(right_in))):
+            context = self.global_head(feature.mean((2, 3)))  # (N, n_channels)
             spatial = fn.interpolate(
                 self.spatial(feature), size=DEFAULT_GRID, mode="bilinear"
             )
+            spatial = spatial + context[:, :n_spatial, None, None]
             direct = fn.adaptive_avg_pool2d(self.direct(feature), DIRECT_GRID)
+            direct = direct + context[:, n_spatial:, None, None]
             for p, prefix in enumerate(SPATIAL_CHANNELS):
                 out[f"{prefix}_{side}"] = spatial[:, p]
             for p, prefix in enumerate(DIRECT_CHANNELS):

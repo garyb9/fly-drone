@@ -657,12 +657,13 @@ def fit_spatial_clone(
     """
     from . import spatial_clone
     from .brain import DATA, ENCODER_VERSION
-    from .encoder import MIRROR_PROB
+    from .encoder import ACTIVE_THRESHOLD, MIRROR_PROB, clone_batch_ids
     from .retinotopy import build_default_maps
     from .spatial_encoder import (
         CHANNEL_ORDER,
         SpatialEncoder,
         SpatialEncoderNet,
+        channel_slices,
         flatten,
         mirror_eyes,
         mirror_flat,
@@ -692,6 +693,11 @@ def fit_spatial_clone(
     held = rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False)
     test = np.isin(flights, held)
     train_ids, test_ids = np.flatnonzero(~test), np.flatnonzero(test)
+    # Rare frames carry the steering/loom signal: each fills a third of every batch (as v5).
+    pools = (
+        train_ids[cues[train_ids][:, 2:].max(1) > ACTIVE_THRESHOLD],
+        train_ids[np.abs(cues[train_ids, 0] - cues[train_ids, 1]) > ACTIVE_THRESHOLD],
+    )
 
     net = SpatialEncoderNet().to(device).train()
     opt = torch.optim.Adam(net.parameters(), lr=3e-4)
@@ -701,7 +707,7 @@ def fit_spatial_clone(
         return torch.tanh(flatten(net(x))) + 1.0
 
     for _ in range(steps):
-        ids = rng.choice(train_ids, batch)
+        ids = clone_batch_ids(rng, train_ids, pools, batch)
         eyes = stacks[ids].copy()
         targets = target_flat[ids].copy()
         mask = rng.random(len(ids)) < MIRROR_PROB
@@ -731,9 +737,14 @@ def fit_spatial_clone(
         )
         return {"mse": float(np.mean((p - t) ** 2)), "r": r}
 
+    slices = channel_slices()
     report = {"frames": int(len(stacks)), "held_out_flights": int(len(held))}
     report["held_out"] = {
-        name: _stats(pred[:, i], truth[:, i]) for i, name in enumerate(CHANNEL_ORDER)
+        name: _stats(
+            pred[:, slices[name][0] : slices[name][1]].ravel(),
+            truth[:, slices[name][0] : slices[name][1]].ravel(),
+        )
+        for name in CHANNEL_ORDER
     }
     from .spatial_encoder import group_slices
 

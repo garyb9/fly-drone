@@ -172,3 +172,19 @@ def test_spatial_maps_summary_covers_every_channel(tmp_path):
     assert len(result["rows"]) == len(CHANNEL_ORDER)
     assert result["flat_dim"] == spatial_encoder.flat_dim()
     assert (tmp_path / "maps" / "summary.json").exists()
+
+
+def test_global_head_can_drive_a_uniform_per_channel_map():
+    from fly_drone.spatial_encoder import SpatialEncoderNet
+
+    net = SpatialEncoderNet()
+    with torch.no_grad():
+        net.spatial.weight.zero_()
+        net.spatial.bias.zero_()
+        net.direct.weight.zero_()
+        net.direct.bias.zero_()
+    eyes = torch.rand(2, 2 * STACK_FRAMES, 48, 64)
+    out = net(eyes)
+    for name in CHANNEL_ORDER:
+        arr = out[name]
+        assert torch.allclose(arr[0], arr[0][0, 0].expand_as(arr[0]))

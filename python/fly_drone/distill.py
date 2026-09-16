@@ -85,10 +85,17 @@ def collect(
             'encoder="external" cannot collect: pass a saved learned encoder .pt path'
         )
     else:
-        from .encoder import LearnedEncoder
+        from .brain import _is_spatial
 
         encoder = str(Path(encoder).resolve())
-        encoder_version = LearnedEncoder.load(encoder).version
+        if _is_spatial(encoder):
+            from .spatial_encoder import SpatialEncoder
+
+            encoder_version = SpatialEncoder.load(encoder).version
+        else:
+            from .encoder import LearnedEncoder
+
+            encoder_version = LearnedEncoder.load(encoder).version
     seeds = np.arange(seed_base, seed_base + flights)
     levels = sorted(levels if levels is not None else LEVELS)
     if not levels or any(level not in LEVELS for level in levels):
