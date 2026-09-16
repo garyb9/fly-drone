@@ -15,8 +15,9 @@ Commits, oldest first:
 | `b471d06` | **Phase 1b** post-warm-up entropy regime (`auto_0.01`, matched target entropy, `ClampedActor` log_std ∈ [−4, −1]) |
 | `0f5deee` | **Phase 1c** `ProbeLogger` (log_std, action level, action-state drift) |
 | `a7d9475` | **Phase 1d** Pack 1: fixed-probe E1/E2, per-axis clone error, per-evade peaks, action-axis logging, worker clamp |
+| `4f199ee` | **Phase 1e** Pack 2: critic-only warm-up, n-step targets, memory-optimised buffer, crash-resume |
 
-Full test suite is green (162 passed) and `ruff check python tests` is clean as of `a7d9475`.
+Full test suite is green (170 passed) and `ruff check python tests` is clean as of `4f199ee`.
 `roam_eval.ACCEPTANCE` and every pre-registered bar are untouched. No training was run.
 
 ## 2. The diagnosis in one paragraph
