@@ -111,25 +111,30 @@ lateralised effect on the connectome's loom/escape output. The injection target 
 - **Map:** default `NX x NY = 12 x 8` per eye per group, uniform within a patch. Each neuron is
   assigned to the nearest patch by 2D PCA of that population's positions (cached offline in the
   encoder identity).
-- **Channels:** `tm4_l/r` (12×8), `t2_l/r` (12×8), `lc4_l/r` (coarse, e.g. 4×3 given sparsity),
-  `lplc2_l/r` (coarse). Bandwidth rises from 8 scalars to roughly `2 × (96 + 96 + 12 + 6) ≈ 420`
-  currents per frame; the true ceiling is set by the graph, not by us.
+- **Channels (12 maps, 816 currents/frame):** spatial 12×8 maps for the **light** pathway
+  (`mi1_l/r`, `tm3_l/r` — beacon steering, v4/v5's proven cue) and the **motion/loom** pathway
+  (`tm4_l/r`, `t2_l/r` — drive the loom circuit), plus coarse 4×3 direct maps for `lc4_l/r` and
+  `lplc2_l/r` (v4's guaranteed loom route). See §2.1: Mi1/Tm3 are the same dense 2D sheets as
+  Tm4, and light is what v4/v5 use to steer to beacons. Bandwidth rises
+  from 8 scalars to `2 × (4·96 + 2·12) = 816`; the true ceiling is set by the graph, not by us.
 - **Input temporal channels:** explicit frame difference (L8 s16; v4's working cue is literally
   `ΔD`), on top of the 3-frame stack.
 - **Identity:** `learned-v6:<weights-hash>`; `BrainRuntime` builds the spatial input roles from the
   cached mapper; a decoder pinned to a v6 encoder cannot run against another.
-- **Injection cost:** ~400 `inject` calls per 40 ms frame over precomputed roles — negligible next
-  to the whole-brain LIF step. The bottleneck stays CPU simulation, not the encoder.
+- **Injection cost:** ~800 `inject` calls per 40 ms frame over precomputed roles — still negligible
+  next to the whole-brain LIF step. The bottleneck stays CPU simulation, not the encoder.
 - **Code (additive so far):** `python/fly_drone/retinotopy.py` (position -> patch roles) and
   `python/fly_drone/spatial_encoder.py` (the `learned-v6:` conv net with frame-difference inputs,
-  emitting the patch maps; 432 currents/frame). Both are standalone — no `brain.py` wiring yet, so
-  the v5 path is untouched. Wiring lands with M2.
+  emitting the 12 patch maps). Both are standalone — no `brain.py` wiring yet, so the v5 path is
+  untouched. Wiring lands with M2.
 
 ### 4.1 Clone / warm start
 
-The v4 clone remains the warm start, but it now lands on the spatial channels: distribute the v4
-loom cue across the `lc4`/`lplc2` patches and the v4 light cue across a coarse light map. The
-existing difference-aware and mirror augmentation (`encoder.py`) carry over.
+The v4 clone remains the warm start, but it now lands on the spatial channels: the v4 light cue
+(`light_l`/`light_r`) is broadcast across the `mi1`/`tm3` patches, the v4 loom cue
+(`loom_l`/`loom_r`) across the direct `lc4`/`lplc2` patches, and the upstream `tm4`/`t2` maps start
+neutral (the clone cannot infer them; SAC learns them). The existing difference-aware and mirror
+augmentation (`encoder.py`) carry over.
 
 ### 4.2 Domain randomisation
 

@@ -22,8 +22,9 @@ import numpy as np
 
 LEARNED_PREFIX_V6 = "learned-v6:"
 
-# A spatial map is injected into these populations (cell type -> channel prefix).
-SPATIAL_CHANNELS = {"tm4": "Tm4", "t2": "T2"}
+# A spatial map is injected into these populations (channel prefix -> cell type).
+# Light (Mi1/Tm3) drives beacon steering; Tm4/T2 drive the loom/escape circuit.
+SPATIAL_CHANNELS = {"mi1": "Mi1", "tm3": "Tm3", "tm4": "Tm4", "t2": "T2"}
 # These are injected directly, v4's guaranteed loom route; coarser by necessity.
 DIRECT_CHANNELS = {"lc4": "LC4", "lplc2": "LPLC2"}
 # (nx, ny) patches per eye.

@@ -12,6 +12,10 @@ def _stack(seed=0):
 
 def test_channel_layout_matches_the_retinotopic_grids():
     assert CHANNEL_ORDER == (
+        "mi1_l",
+        "mi1_r",
+        "tm3_l",
+        "tm3_r",
         "tm4_l",
         "tm4_r",
         "t2_l",
@@ -21,10 +25,11 @@ def test_channel_layout_matches_the_retinotopic_grids():
         "lplc2_l",
         "lplc2_r",
     )
+    assert spatial_encoder.channel_grid("mi1_r") == (12, 8)
     assert spatial_encoder.channel_grid("tm4_r") == (12, 8)
     assert spatial_encoder.channel_grid("lplc2_l") == (4, 3)
-    # 2 spatial x 12*8 + 2 direct x 4*3, per eye.
-    assert spatial_encoder.flat_dim() == (2 * 12 * 8 + 2 * 4 * 3) * 2
+    # 4 spatial x 12*8 + 2 direct x 4*3, per eye.
+    assert spatial_encoder.flat_dim() == (4 * 12 * 8 + 2 * 4 * 3) * 2
 
 
 def test_eye_inputs_add_frame_differences_and_a_side_flag():

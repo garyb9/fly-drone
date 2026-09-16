@@ -16,6 +16,10 @@ def maps(brain):
 
 def test_default_maps_cover_the_expected_channels_and_every_cell(maps):
     assert set(maps) == {
+        "mi1_l",
+        "mi1_r",
+        "tm3_l",
+        "tm3_r",
         "tm4_l",
         "tm4_r",
         "t2_l",
@@ -28,6 +32,7 @@ def test_default_maps_cover_the_expected_channels_and_every_cell(maps):
     tm4_l = maps["tm4_l"]
     assert tm4_l.population == "Tm4" and tm4_l.side == "l"
     assert tm4_l.nx == retinotopy.DEFAULT_GRID[0]
+    assert maps["mi1_l"].population == "Mi1"
     assert maps["lc4_l"].nx == retinotopy.DIRECT_GRID[0]
     # Every cell of the population is assigned exactly once.
     assert len(tm4_l.all_cells()) == tm4_l.n_cells
