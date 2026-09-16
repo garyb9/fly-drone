@@ -6,6 +6,7 @@ import { applyCssTokens } from "./theme/apply-css-tokens";
 import { PALETTE, hexToInt } from "./theme/tokens";
 import { THEME } from "./scene/theme";
 import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
+import { buildDrone, type Airframe, type AirframeId } from "./scene/drone";
 import { renderFlightView } from "./ui/flightView";
 import { renderHudPinned } from "./ui/hudPinned";
 import { renderDrawer } from "./ui/drawer";
@@ -230,15 +231,31 @@ const mat = (c: number, metalness = 0.2) =>
   new THREE.MeshStandardMaterial({ color: c, metalness, roughness: 0.45 });
 const drone = new THREE.Group();
 world.scene.add(drone);
-function box(w: number, h: number, d: number, m: THREE.Material, x = 0, y = 0, z = 0) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
-  mesh.position.set(x, y, z);
-  return mesh;
+// Hardware airframe shell (A = 250 mm with the connectome on the ground, B = 450 mm with an
+// onboard companion). Built in the drone's local Z-up frame; the flight plant is still the
+// Crazyflie CF2X, so the shell is deliberately larger than the simulated collision body.
+const AIRFRAME_KEY = "fly-drone.airframe";
+let airframeId: AirframeId = localStorage.getItem(AIRFRAME_KEY) === "B" ? "B" : "A";
+let airframe: Airframe = buildDrone(airframeId);
+drone.add(airframe.group);
+function setAirframe(id: AirframeId) {
+  airframe.group.removeFromParent();
+  airframe.group.traverse((n) => {
+    const mesh = n as THREE.Mesh;
+    mesh.geometry?.dispose();
+    if (Array.isArray(mesh.material)) mesh.material.forEach((m) => m.dispose());
+    else mesh.material?.dispose();
+  });
+  airframeId = id;
+  airframe = buildDrone(id);
+  airframe.fov.visible = el("toggle-fov").classList.contains("active");
+  airframe.guards.visible = el("toggle-guards").classList.contains("active");
+  drone.add(airframe.group);
+  el("af-a").classList.toggle("active", id === "A");
+  el("af-b").classList.toggle("active", id === "B");
+  localStorage.setItem(AIRFRAME_KEY, id);
 }
-// Drawn at physical scale so visible clearance to the obstacle matches the collision model.
-const body = new THREE.Group();
-drone.add(body);
-// Flat ground marker keeps the small airframe easy to find; it does not tilt with the body.
+// Flat ground marker keeps the airframe easy to find; it does not tilt with the body.
 const locator = new THREE.Mesh(
   new THREE.RingGeometry(0.1, 0.115, 48),
   new THREE.MeshBasicMaterial({
@@ -252,44 +269,6 @@ const locator = new THREE.Mesh(
 locator.rotation.x = -Math.PI / 2;
 locator.position.y = 0.003;
 world.scene.add(locator);
-body.add(box(0.055, 0.045, 0.009, mat(0x33484d), 0, 0, 0.005));
-body.add(box(0.032, 0.022, 0.014, mat(0xb9c5bd), 0, 0, 0.017));
-body.add(box(0.015, 0.02, 0.003, mat(THEME.amber), 0.02, 0, 0.011));
-const rotors: THREE.Group[] = [];
-const motorXY = [
-  [1, 1],
-  [-1, 1],
-  [-1, -1],
-  [1, -1],
-].map(([x, y]) => [(x * 0.0397) / Math.sqrt(2), (y * 0.0397) / Math.sqrt(2)]);
-for (const [i, [x, y]] of motorXY.entries()) {
-  const arm = box(Math.hypot(x, y), 0.008, 0.005, mat(0x263f45), x / 2, y / 2, 0);
-  arm.rotation.z = Math.atan2(y, x);
-  body.add(arm);
-  const motor = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.006, 0.006, 0.015, 12),
-    mat(i < 2 ? THEME.line : 0x697c84),
-  );
-  motor.rotation.x = Math.PI / 2;
-  motor.position.set(x, y, 0.004);
-  body.add(motor);
-  const rotor = new THREE.Group();
-  rotor.position.set(x, y, 0.014);
-  rotor.add(box(0.045, 0.004, 0.0015, mat(i % 2 === 0 ? THEME.line : THEME.amber)));
-  rotors.push(rotor);
-  body.add(rotor);
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(0.022, 0.023, 40),
-    new THREE.MeshBasicMaterial({
-      color: i % 2 === 0 ? THEME.line : THEME.amber,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.2,
-    }),
-  );
-  ring.position.set(x, y, 0.015);
-  body.add(ring);
-}
 // Base radii match the legacy room's beacon_radius/threat_radius; other rooms (e.g.
 // free_roam) report different values in the "room" message, applied as a uniform
 // scale in setupBrain()/applyRoom() rather than rebuilding the sphere geometry.
@@ -648,7 +627,7 @@ function update(f: Frame) {
   locator.position.set(drone.position.x, 0.003, drone.position.z);
   glowDecal.position.set(drone.position.x, 0.002, drone.position.z);
   drone.quaternion.copy(rotation).multiply(quaternion(f.state.quaternion));
-  rotors.forEach((r, i) => (r.rotation.z = f.state.rotor_phase[i]));
+  airframe.rotors.forEach((r, i) => (r.rotation.z = f.state.rotor_phase[i]));
   updateDebugVectors(f);
   target.position.copy(vector(f.state.target));
   obstacle.position.copy(vector(f.state.obstacle));
@@ -662,7 +641,8 @@ function update(f: Frame) {
     w.node.rotation.x = w.rest + w.sign * Math.sin(f.time * 2 * Math.PI * 8) * power * 0.6;
   }
   if (cameraMode === "fpv") {
-    const eye = new THREE.Vector3(0.08, 0.02, 0)
+    const cam = airframe.eyes[0];
+    const eye = new THREE.Vector3(cam.x, 0, cam.z)
       .applyQuaternion(drone.quaternion)
       .add(drone.position);
     const ahead = new THREE.Vector3(1, 0, 0).applyQuaternion(drone.quaternion).add(eye);
@@ -818,6 +798,18 @@ el("cam-reset").onclick = () => {
 };
 el("cam-fpv").onclick = () => setCameraMode("fpv");
 el("cam-tpv").onclick = () => setCameraMode("tpv");
+el("af-a").onclick = () => setAirframe("A");
+el("af-b").onclick = () => setAirframe("B");
+el("toggle-fov").onclick = () => {
+  const on = !el("toggle-fov").classList.contains("active");
+  airframe.fov.visible = on;
+  el("toggle-fov").classList.toggle("active", on);
+};
+el("toggle-guards").onclick = () => {
+  const on = !el("toggle-guards").classList.contains("active");
+  airframe.guards.visible = on;
+  el("toggle-guards").classList.toggle("active", on);
+};
 document
   .querySelectorAll<HTMLButtonElement>("[data-op]")
   .forEach(
