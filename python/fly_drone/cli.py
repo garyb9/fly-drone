@@ -137,6 +137,22 @@ def main():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--buffer-size", type=int, default=100_000)
     p.add_argument(
+        "--n-step",
+        type=int,
+        default=1,
+        help="n-step returns in the Bellman target (default 1; the accepted runs used 1)",
+    )
+    p.add_argument(
+        "--optimize-memory",
+        action="store_true",
+        help="store the replay buffer once and derive next_obs, halving its RAM",
+    )
+    p.add_argument(
+        "--resume",
+        action="store_true",
+        help="continue a round from its resume/ snapshot instead of starting over",
+    )
+    p.add_argument(
         "--actor-warmup",
         type=int,
         default=None,
@@ -217,6 +233,9 @@ def main():
                     if args.actor_warmup is None
                     else args.actor_warmup
                 ),
+                n_step=args.n_step,
+                optimize_memory=args.optimize_memory,
+                resume=args.resume,
             )
         elif args.command == "sac-export":
             if args.repin_decoder:

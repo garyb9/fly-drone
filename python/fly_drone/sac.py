@@ -7,6 +7,7 @@ geometry of objects the eyes can currently see (honest-labels rule).
 
 import json
 import math
+import shutil
 from pathlib import Path
 
 import gymnasium as gym
@@ -23,6 +24,7 @@ from torch import nn
 from .brain import V5_CHANNELS, BrainRuntime
 from .encoder import FEATURES, EyesExtractor, eyes_space
 from .env import ConnectomeEnv
+from .replay import FlyDictReplayBuffer
 
 GEOMETRY = 8
 LAMBDA_LOOM = 0.01
@@ -287,24 +289,77 @@ class WarmupSAC(SAC):
         return self.num_timesteps < self.actor_warmup
 
     def train(self, gradient_steps, batch_size=64):
-        frozen = self.actor_frozen
-        self.logger.record("train/actor_frozen", int(frozen))
-        if not frozen:
+        self.logger.record("train/actor_frozen", int(self.actor_frozen))
+        if not self.actor_frozen:
             return super().train(gradient_steps, batch_size)
-        optimizers = [self.actor.optimizer]
+        self._train_critic_only(gradient_steps, batch_size)
+
+    def _train_critic_only(self, gradient_steps, batch_size):
+        """Critic-only gradient steps: SAC's loop with the actor and entropy losses removed.
+
+        The actor's and alpha's parameters and Adam state stay bitwise untouched, and the
+        actor forward-backward that only the actor loss needs is not run at all (the warm-up
+        spends its compute on the critic, not on optimising an actor that cannot move). Mirrors
+        stable_baselines3 2.9.0 ``SAC.train``; the parameters it moves and the losses it logs
+        are pinned by ``test_warmup_trains_only_the_critic_then_normal_sac``.
+        """
+        from stable_baselines3.common.utils import polyak_update
+        from torch.nn import functional as F
+
+        self.policy.set_training_mode(True)
+        optimizers = [self.actor.optimizer, self.critic.optimizer]
         if self.ent_coef_optimizer is not None:
-            optimizers.append(self.ent_coef_optimizer)
-        for optimizer in optimizers:
-            optimizer.step = _skip_step  # instance attribute shadows the class method
-        try:
-            return super().train(gradient_steps, batch_size)
-        finally:
-            for optimizer in optimizers:
-                del optimizer.step
-
-
-def _skip_step(closure=None):
-    return None
+            optimizers += [self.ent_coef_optimizer]
+        self._update_learning_rate(optimizers)
+        # Frozen alpha: read once, never stepped.
+        ent_coef = (
+            torch.exp(self.log_ent_coef.detach())
+            if self.log_ent_coef is not None
+            else self.ent_coef_tensor
+        )
+        critic_losses = []
+        for gradient_step in range(gradient_steps):
+            replay_data = self.replay_buffer.sample(
+                batch_size, env=self._vec_normalize_env
+            )
+            discounts = (
+                replay_data.discounts
+                if replay_data.discounts is not None
+                else self.gamma
+            )
+            with torch.no_grad():
+                next_actions, next_log_prob = self.actor.action_log_prob(
+                    replay_data.next_observations
+                )
+                next_q_values = torch.cat(
+                    self.critic_target(replay_data.next_observations, next_actions),
+                    dim=1,
+                )
+                next_q_values, _ = torch.min(next_q_values, dim=1, keepdim=True)
+                next_q_values = next_q_values - ent_coef * next_log_prob.reshape(-1, 1)
+                target_q_values = (
+                    replay_data.rewards
+                    + (1 - replay_data.dones) * discounts * next_q_values
+                )
+            current_q_values = self.critic(
+                replay_data.observations, replay_data.actions
+            )
+            critic_loss = 0.5 * sum(
+                F.mse_loss(current_q, target_q_values) for current_q in current_q_values
+            )
+            critic_losses.append(critic_loss.item())
+            self.critic.optimizer.zero_grad()
+            critic_loss.backward()
+            self.critic.optimizer.step()
+            if gradient_step % self.target_update_interval == 0:
+                polyak_update(
+                    self.critic.parameters(), self.critic_target.parameters(), self.tau
+                )
+                polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
+        self._n_updates += gradient_steps
+        self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
+        self.logger.record("train/ent_coef", ent_coef.item())
+        self.logger.record("train/critic_loss", np.mean(critic_losses))
 
 
 def build_sac(
@@ -315,6 +370,8 @@ def build_sac(
     device="auto",
     learning_starts=5_000,
     actor_warmup=ACTOR_WARMUP_FRAMES,
+    n_step=1,
+    optimize_memory=False,
 ):
     action_dim = int(np.prod(env.action_space.shape))
     return WarmupSAC(
@@ -322,6 +379,9 @@ def build_sac(
         env,
         actor_warmup=actor_warmup,
         buffer_size=buffer_size,
+        replay_buffer_class=FlyDictReplayBuffer,
+        replay_buffer_kwargs={"n_steps": int(n_step), "gamma": 0.99},
+        optimize_memory_usage=bool(optimize_memory),
         batch_size=256,
         learning_starts=learning_starts,
         train_freq=1,
@@ -693,6 +753,30 @@ class ActionLogger(BaseCallback):
         return True
 
 
+class ResumeCheckpoint(BaseCallback):
+    """Keeps one model+replay-buffer snapshot so a crashed round can resume (Pack 2 S2).
+
+    Model and buffer are written back to back on the same callback step, so they describe the
+    same ``num_timesteps``; each snapshot overwrites the previous one, so at most one copy sits
+    on disk. Resume trusts the model's timestep count, not a separate metadata file.
+    """
+
+    def __init__(self, out, every):
+        super().__init__()
+        self.dir = Path(out) / "resume"
+        self.every = max(1, int(every))
+        self._next = self.every
+
+    def _on_step(self):
+        if self.num_timesteps < self._next:
+            return True
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.model.save(self.dir / "model")
+        self.model.save_replay_buffer(self.dir / "buffer.pkl")
+        self._next += self.every
+        return True
+
+
 def _factory(learner, rank, seed, decoder, encoder, level):
     def make():
         from stable_baselines3.common.monitor import Monitor
@@ -721,12 +805,22 @@ def train_round(
     level=3,
     learning_starts=5_000,
     actor_warmup=ACTOR_WARMUP_FRAMES,
+    n_step=1,
+    optimize_memory=False,
+    resume=False,
+    resume_every=50_000,
 ):
     """One SAC round for one learner; the other half is frozen inside the environment.
 
     The first `actor_warmup` frames train only the critic (`WarmupSAC`); 0 disables it.
     `learn(reset_num_timesteps=True)` counts every round from frame 0, so a round resumed
     from a checkpoint repeats the warm-up unless `actor_warmup=0` is passed.
+
+    `n_step>1` uses n-step returns and `optimize_memory=True` halves the buffer's RAM (both
+    via `FlyDictReplayBuffer`); the defaults reproduce the pre-Pack-2 round exactly. With
+    `resume=True` a `resume/` snapshot left by the same round continues it instead of starting
+    over; `frames` is then the round's total, and the warm-up is not repeated because
+    `num_timesteps` is restored.
     """
     from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
@@ -742,6 +836,8 @@ def train_round(
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
     workers = max(1, min(int(workers), 6))
+    snapshot = out / "resume"
+    resumed_from = None
     decoder = str(Path(decoder).resolve()) if decoder else None
     encoder = str(Path(encoder).resolve()) if encoder else None
     factories = [
@@ -754,7 +850,28 @@ def train_round(
         else DummyVecEnv(factories)
     )
     try:
-        if init is not None and str(init).endswith(".zip"):
+        buffer_kwargs = {
+            "replay_buffer_class": FlyDictReplayBuffer,
+            "replay_buffer_kwargs": {"n_steps": int(n_step), "gamma": 0.99},
+            "optimize_memory_usage": bool(optimize_memory),
+            "n_steps": int(n_step),
+        }
+        if resume and (snapshot / "model.zip").exists():
+            # Continue the interrupted attempt. The snapshot's model and buffer are a matched
+            # pair from the same step, and its num_timesteps means the warm-up is already over.
+            model = WarmupSAC.load(
+                snapshot / "model.zip",
+                env=vec,
+                device=device,
+                buffer_size=buffer_size,
+                learning_starts=learning_starts,
+                seed=seed,
+                actor_warmup=int(actor_warmup),
+                **buffer_kwargs,
+            )
+            model.load_replay_buffer(snapshot / "buffer.pkl")
+            resumed_from = int(model.num_timesteps)
+        elif init is not None and str(init).endswith(".zip"):
             # Fresh replay buffer each round: the frozen partner changed, old transitions are stale.
             # WarmupSAC.load (not SAC.load) keeps train() warm-up-aware; the argument, not
             # the value saved in the .zip, sets this round's warm-up.
@@ -766,10 +883,19 @@ def train_round(
                 learning_starts=learning_starts,
                 seed=seed,
                 actor_warmup=int(actor_warmup),
+                **buffer_kwargs,
             )
         else:
             model = build_sac(
-                learner, vec, buffer_size, seed, device, learning_starts, actor_warmup
+                learner,
+                vec,
+                buffer_size,
+                seed,
+                device,
+                learning_starts,
+                actor_warmup,
+                n_step,
+                optimize_memory,
             )
             if init is not None:
                 if learner != "encoder":
@@ -795,12 +921,22 @@ def train_round(
                 MetabolicLogger(),
                 ProbeLogger(),
                 ActionLogger(),
+                ResumeCheckpoint(out, resume_every),
             ]
         )
+        # A resumed round runs the remainder of its target; with reset_num_timesteps=False,
+        # `learn` adds `total_timesteps` to the restored count.
+        remaining = (
+            frames if resumed_from is None else max(1, int(frames) - resumed_from)
+        )
         model.learn(
-            total_timesteps=frames, callback=callbacks, reset_num_timesteps=True
+            total_timesteps=remaining,
+            callback=callbacks,
+            reset_num_timesteps=resumed_from is None,
         )
         model.save(out / learner)
+        if snapshot.exists():  # the round finished; the one-shot buffer is not needed
+            shutil.rmtree(snapshot)
         report = {
             "learner": learner,
             "frames": int(model.num_timesteps),
@@ -811,6 +947,9 @@ def train_round(
             "seed": seed,
             "buffer_size": buffer_size,
             "actor_warmup": int(model.actor_warmup),
+            "n_step": int(n_step),
+            "optimize_memory": bool(optimize_memory),
+            "resumed_from": resumed_from,
         }
         if learner == "encoder":
             report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(

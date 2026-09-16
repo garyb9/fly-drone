@@ -429,6 +429,43 @@ def test_resumed_round_uses_the_given_seed_not_the_saved_one(tmp_path, monkeypat
     assert first_a == 101 and first_b == 202
 
 
+def test_train_round_resumes_from_a_snapshot(tmp_path, monkeypatch):
+    """A crash snapshot continues the round from its saved timestep instead of restarting
+    the warm-up: the resumed call runs the remainder of the round's target."""
+    from fly_drone import sac
+
+    decoder0 = zero_actor(tmp_path / "decoder0.json", BrainRuntime())
+    LearnedEncoder.fresh(seed=7).save(tmp_path / "clone.pt")
+    small = {
+        "workers": 1,
+        "buffer_size": 50,
+        "device": "cpu",
+        "learning_starts": 5,
+        "resume_every": 10,
+    }
+    out = tmp_path / "round"
+    # Simulate a crash right after the last snapshot by keeping the resume directory.
+    monkeypatch.setattr(sac.shutil, "rmtree", lambda path: None)
+    first = train_round(
+        "encoder", out, 20, decoder=decoder0, init=tmp_path / "clone.pt", **small
+    )
+    assert (out / "resume" / "model.zip").exists()
+    assert (out / "resume" / "buffer.pkl").exists()
+    assert first["resumed_from"] is None
+
+    second = train_round(
+        "encoder",
+        out,
+        40,
+        decoder=decoder0,
+        init=tmp_path / "clone.pt",
+        resume=True,
+        **small,
+    )
+    assert second["resumed_from"] == first["frames"]  # continued, not restarted
+    assert second["frames"] == 40  # `frames` is the round total, not extra steps
+
+
 def small_warmup_model(actor_warmup):
     from stable_baselines3.common.logger import Logger
 
@@ -488,6 +525,30 @@ def test_warmup_trains_only_the_critic_then_normal_sac():
     model.train(gradient_steps=4, batch_size=16)
     assert not unchanged(model.actor, actor)
     assert not torch.equal(model.log_ent_coef.detach(), alpha)
+
+
+def test_warmup_skips_the_actor_forward_pass():
+    model = small_warmup_model(actor_warmup=100)
+    model.num_timesteps = 60
+    calls = []
+    original = model.actor.action_log_prob
+
+    def counting(obs):
+        calls.append(1)
+        return original(obs)
+
+    model.actor.action_log_prob = counting
+    model.train(gradient_steps=4, batch_size=16)
+    # Once per step, for the target's next action; the actor-loss call is gone.
+    assert len(calls) == 4
+    assert "train/critic_loss" in model.logger.name_to_value
+    assert "train/actor_loss" not in model.logger.name_to_value
+
+    model.num_timesteps = 100  # warm-up over: SAC's full loop returns
+    before = len(calls)
+    model.train(gradient_steps=4, batch_size=16)
+    assert len(calls) - before == 8  # next-action target + the actor loss
+    assert "train/actor_loss" in model.logger.name_to_value
 
 
 def test_zero_warmup_updates_the_actor_immediately():

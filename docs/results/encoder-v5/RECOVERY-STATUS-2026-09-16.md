@@ -43,27 +43,29 @@ round-0 decoder; D4: 0.337 → 0.977 → 1.000 across 50 k/100 k/350 k; run logs
   kept), CLI `--controller`; per-axis clone MSE (`{split}_{vx,vy,vz,yaw}_mse`); `peak_vy`/`peak_vz`
   on each threat outcome; worker defaults 16 → 6.
 
-## 4. What is left in Phase 1
+## 4. Phase 1e (Pack 2) — done
 
-### Pack 2 (S1–S4) — not started (all four approved before any re-run)
+All four packed changes landed as opt-in flags whose defaults reproduce the pre-Pack-2 path
+(pinned by `test_the_default_mode_reproduces_a_plain_dict_buffer`):
 
-| ID | What | Notes |
-| -- | ---- | ----- |
-| S4 | Skip the actor loss during warm-up | Small; touches `WarmupSAC.train` (already edited for logging) |
-| S3 | `--n-step` in the Bellman target only, default 1 | Default 1 must be numerically identical; the first re-run stays at n = 1 |
-| S2 | Crash-resume (`--resume-buffer`, `--resume-steps`) | Same learner + frozen partner only; resume skips warm-up; **rotate a single buffer checkpoint** |
-| S1 | `next_obs`-by-index `DictReplayBuffer` (same RAM → 2× buffer) | Riskiest; dedicated tests (no cross-episode `next_obs`, ~half footprint, save/load). Then rounds may set `buffer_size=200_000` |
+| ID | What | Flag / default |
+| -- | ---- | -------------- |
+| S4 | Critic-only warm-up skips the actor forward/backward, not just its optimiser step (`WarmupSAC._train_critic_only`) | always on during warm-up |
+| S3 | n-step returns in the Bellman target only, stopping at done or timeout | `--n-step` (default 1) |
+| S1 | Replay buffer stores obs once and derives `next_obs`, halving RAM | `--optimize-memory` (off) |
+| S2 | One matched model+buffer snapshot every `resume_every` steps; `--resume` continues it, restoring `num_timesteps` so the warm-up is not repeated, and runs the remainder of the round | `--resume` (off) |
 
-Disk note: S2's buffer checkpoint is ~5.3 GB at 100 k, ~10.6 GB at 200 k; keep one and alert the
-user if the project crosses 20 GB (it is ~17 GB now including the new commits; `runs/v5` is 4.9 GB).
+S1/S3 live in `python/fly_drone/replay.py` (`FlyDictReplayBuffer`). Disk: the S2 snapshot is one
+buffer copy (~5.3 GB at 100k) and is deleted when the round completes on its own.
 
-### Also outstanding before the re-run
+## 5. What is left before the re-run
 
 1. **v4 fixed-probe E1 reference**: run `fly-drone encoder-checks --policy <v4 actor>` (teacher
    controller) once and store the number (`runs/v5/e1-v4-fixed.json`, back it up under
    `docs/results/encoder-v5/run-records/`). The pre-2026-09-16 v4 baseline was 0.687 policy-flown;
    the fixed-probe number will differ and must be reported alongside, not used to relax the 0.8 bar.
-2. **Phase 1f**: full `pytest` + ruff after Pack 2.
+2. **Phase 1f**: full `pytest` + ruff are already green after Pack 2 (170 passed); re-run once
+   more if anything above changes.
 3. **Phase 1.5**: re-plan Task 13 in `pipeline13-15.sh` — shorter rounds with a mid-round
    checkpoint validation (tooling: `sac-export --learner … <ckpt.zip>` → repin/validate) and an
    explicit abort on degeneration; lengths informed by the D2/D3 timing (collapse was visible by
@@ -72,14 +74,14 @@ user if the project crosses 20 GB (it is ~17 GB now including the new commits; `
    rounds 1–2 collectively (α init, target entropy, log_std clamp, 200 k buffer, guard), so gains
    will be attributed to the bundle, not single fixes.
 
-## 5. Rules that still bind
+## 6. Rules that still bind
 
 `env -u PYTHONPATH` on every python/fly-drone call; ≤ 6 workers; long runs via `setsid nohup`;
 no `.py` edits while any `sac-round`/`roam-*` chain is active; stage by explicit path (never
 `git add -A`); pre-registered thresholds are never relaxed without the user; commit and push after
 each completed step (no agent trailer, per user 2026-09-16).
 
-## 6. Artifact map for this recovery
+## 7. Artifact map for this recovery
 
 - `docs/results/encoder-v5/PHASE0-DIAGNOSTICS-2026-09-16.md` — the diagnosis (read first)
 - `docs/results/encoder-v5/RECOVERY-STATUS-2026-09-16.md` — this file
