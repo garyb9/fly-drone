@@ -875,6 +875,11 @@ select("ablation").onchange = () => renderSeeds();
 function setCameraMode(mode: "orbit" | "fpv" | "tpv") {
   cameraMode = cameraMode === mode ? "orbit" : mode;
   world.controls.enabled = cameraMode === "orbit";
+  if (cameraMode !== "orbit") {
+    // Auto-orbit drives the orbit camera; leaving it on would fight the canned FPV/TPV pose.
+    world.controls.autoRotate = false;
+    el("cam-orbit").classList.remove("active");
+  }
   el("cam-fpv").classList.toggle("active", cameraMode === "fpv");
   el("cam-tpv").classList.toggle("active", cameraMode === "tpv");
 }
@@ -907,6 +912,17 @@ el("toggle-guards").onclick = () => {
   const on = !el("toggle-guards").classList.contains("active");
   airframe.guards.visible = on;
   el("toggle-guards").classList.toggle("active", on);
+};
+el("eye-fx").onclick = () => {
+  const on = !el("eye-fx").classList.contains("active");
+  el("eye0").closest(".eyes")?.classList.toggle("fx", on);
+  el("eye-fx").classList.toggle("active", on);
+};
+el("cam-orbit").onclick = () => {
+  const on = !world.controls.autoRotate;
+  world.controls.autoRotate = on;
+  world.controls.autoRotateSpeed = 0.8;
+  el("cam-orbit").classList.toggle("active", on);
 };
 document
   .querySelectorAll<HTMLButtonElement>("[data-op]")
