@@ -131,6 +131,12 @@ wing/wrench level and a plant path that accepts it.
 Wing-level action is sequenced **after** the sensing milestone's intermediate gate (sensing spec §8,
 M3), so sensing and action gains are attributable separately.
 
+**Code (additive so far).** `python/fly_drone/wrench.py` + `tests/test_wrench.py` provide the pure
+mixer/inverse with envelope clipping, the hover derivation, a P-D rate controller, the vertical
+thrust law, and an approximate `intent_to_wrench` label map. The plant entry point
+(`advance_wrench`) and the env wiring are held for a window between runs, so the running v5 path is
+untouched.
+
 ## 9. Open decisions
 
 1. **Command level:** desired body rates + thrust (recommended) vs body torque + thrust vs raw RPMs.

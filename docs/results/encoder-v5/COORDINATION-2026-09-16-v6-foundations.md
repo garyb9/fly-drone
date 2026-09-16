@@ -4,15 +4,15 @@
 `pipeline13-15.sh` (Plan 05 / encoder v5, Phase 2). Read this before touching shared modules
 or the ledger for the next iteration.
 
-## 1. The live run
+## 1. The live run (updated 2026-09-16 ~14:25)
 
-- `pipeline13-15.sh` (pid 332789) is active: T13 **round 1 encoder, stage B** (`--resume` from the
-  stage-A snapshot), ≈271k/350k frames at ~55 fps when this was written. After it: round 1 decoder
-  SAC, validation, the selection guard, then possibly rounds 2–3, then T14 (bypass + E3) and T15
-  (evaluation + E1/E2 + E4). This is the Phase 2 re-run with the entropy bundle and guard.
+- The Phase 2 `pipeline13-15.sh` (pid 332789) **exited at 14:13** right after launching the round-1
+  decoder SAC. The Phase 2 session then committed `c5796d7` and `10b7a2b` (pin loaded rounds to the
+  post-warm-up entropy regime) and `f246f66` (preload pre-START round paths), and relaunched the
+  round-1 decoder by hand (`sac-round decoder ...`, pid 363990, started 14:21).
 - Shared working tree, same filesystem, same branch (`main`). There are no separate clones, so any
   file write is immediately visible to both sessions; the risk is a concurrent write, not a merge.
-- `git status` was clean when this was written; no staged or uncommitted work to clobber.
+- `git status` was clean at each of this session's commits; no staged or uncommitted work to clobber.
 
 ## 2. Hard rule for this session while the pipeline runs
 
@@ -36,11 +36,18 @@ until the pipeline stops or a window is named. Specifically held back:
 | `ef34d90` | `python/fly_drone/spatial_encoder.py` + `tests/test_spatial_encoder.py` (the v6 conv net, `learned-v6:`) |
 | `5946d77` | Coordination-note update |
 | `e667a9d` | `python/fly_drone/predictive.py` + `tests/test_predictive.py` (auxiliary predictive objective) |
+| `7b8b1b5` | Fixed the v6 light pathway: added `mi1`/`tm3` spatial channels (12 maps, 816 currents) |
+| `16b1e6f` | `python/fly_drone/augment.py` + tests (domain randomisation) |
+| `334b32f` | `python/fly_drone/wrench.py` + tests (wing-level mixer and rate loop) |
+| `a77c18f` | `python/fly_drone/spatial_clone.py` + tests (v4-cue -> v6 target maps) |
+| `1b06172` | `python/fly_drone/spatial_policy.py` + tests (SB3 actor/extractor adapter) |
+| `1f705d2` | `scripts/spatial_maps.py` (map inspection) |
 
-These are **new files only**. The pipeline does not import `retinotopy`, `spatial_encoder` or
-`predictive`, and its T15 E4 pytest runs only `test_arena.py::test_legacy_room_mjcf_unchanged` and
-`test_env.py -k "legacy or replay_is_bit_identical"`, so the new test files are not collected by the
-run. Full suite 192 passed, `ruff` clean.
+These are **new files only** (except edits to this session's own earlier modules). The pipeline does
+not import `retinotopy`, `spatial_encoder`, `predictive`, `augment`, `spatial_clone` or
+`spatial_policy`, and its T15 E4 pytest runs only `test_arena.py::test_legacy_room_mjcf_unchanged`
+and `test_env.py -k "legacy or replay_is_bit_identical"`, so the new test files are not collected by
+the run. Full suite 215 passed, `ruff` clean.
 
 ## 4. What v6 is, in one paragraph
 
@@ -55,7 +62,8 @@ deepens the action output (body wrench over a reflex rate loop). Nothing in it c
 ## 5. Request to the Phase 2 session
 
 - Continue as planned. Do not adjust anything for v6; Plan 05's result stands on its own.
-- When the pipeline reaches a natural stop (T15) or you name a landing window, add a line to
+- The pipeline exited at 14:13 and the decoder round is now running under your manual control. When
+  the chain reaches a natural stop (T15) or you name a landing window, add a line to
   `docs/results/encoder-v5/ledger.md` saying so. The v6 session will then land the shared-module
   changes (brain/plant/env) in one window, between runs.
 - If the Phase 2 run produces a usable v5 final pair, note it in the ledger; the v6 specs assume

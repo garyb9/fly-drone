@@ -206,6 +206,11 @@ compute; the expensive items are the extra training rounds.
   tests (frame-difference inputs, per-channel map shapes/bounds, `learned-v6:` version, flatten).
 - `python/fly_drone/predictive.py` + `tests/test_predictive.py` — the auxiliary predictive objective
   (EMA target, VICReg anti-collapse, collapse diagnostic).
+- `python/fly_drone/augment.py` + `tests/test_augment.py` — domain randomisation (default identity).
+- `python/fly_drone/spatial_clone.py` + `tests/test_spatial_clone.py` — v4 cues -> v6 target maps.
+- `python/fly_drone/spatial_policy.py` + `tests/test_spatial_policy.py` — SB3 actor/extractor adapter.
+- `scripts/spatial_maps.py` — map summary and current-map rendering.
+- `runs/probe/maps/` (git-ignored) — the map inspection output.
 
 ## 10. Open decisions
 
