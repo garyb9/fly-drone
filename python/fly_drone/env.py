@@ -326,7 +326,12 @@ class ConnectomeEnv(gym.Env):
             <= spec.threat_radius + 0.3
         ):
             return False
-        plan.update(t0=self.frames * FRAME_SECONDS, min_distance=plan["range"])
+        plan.update(
+            t0=self.frames * FRAME_SECONDS,
+            min_distance=plan["range"],
+            peak_vy=0.0,
+            peak_vz=0.0,
+        )
         r["threat"] = plan
         r["events"].append({"type": "threat_launched", "side": plan["side"]})
         plant.set_objects(obstacle=plan["origin"])
@@ -341,6 +346,10 @@ class ConnectomeEnv(gym.Env):
             "hit": bool(hit),
             # Only a threat that actually came within range can count as dodged.
             "dodged": bool(not hit and threat["min_distance"] < THREAT_RANGE),
+            # Peak |vy|/|vz| commanded while this threat was in flight, in the action's own
+            # [-1, 1] units (the teacher label and log_std space); diagnostics only.
+            "peak_vy": float(threat.get("peak_vy", 0.0)),
+            "peak_vz": float(threat.get("peak_vz", 0.0)),
         }
         r["threats"].append(outcome)
         r["events"].append(
@@ -428,6 +437,8 @@ class ConnectomeEnv(gym.Env):
         if threat is not None:
             distance = float(np.linalg.norm(pos - plant.obstacle))
             threat["min_distance"] = min(threat["min_distance"], distance)
+            threat["peak_vy"] = max(threat.get("peak_vy", 0.0), abs(float(action[1])))
+            threat["peak_vz"] = max(threat.get("peak_vz", 0.0), abs(float(action[2])))
             if "threat" in kinds:
                 self._finish_threat(hit=True)
         beacon_distance = float(np.linalg.norm((plant.target - pos)[:2]))

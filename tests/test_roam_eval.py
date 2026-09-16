@@ -17,7 +17,9 @@ from fly_drone.roam_eval import (
     _threat_label,
     acceptance,
     bypass_comparison,
+    encoder_checks,
     encoder_scores,
+    evaluate_free_roam,
     paired_bootstrap,
     pick_best_round,
     roc_auc,
@@ -167,6 +169,56 @@ def test_checks_job_labels_frames_and_maps_v4_cues_to_eight_channels(tmp_path):
     assert currents[0].shape == (8,) and set(threat) <= {-1, 0, 1}
 
 
+def v5_policy(tmp_path, encoder, name, bias=0.0):
+    """A decoder pinned to `encoder`, same architecture, optionally biased on every axis."""
+    path = zero_actor(tmp_path / name, BrainRuntime())
+    data = json.loads(path.read_text())
+    data["encoder_version"] = encoder.version
+    data["layers"] = [
+        {"weights": [[0.0] * len(data["feature_ids"])] * 4, "bias": [bias] * 4}
+    ]
+    path.write_text(json.dumps(data))
+    return path
+
+
+def test_teacher_probe_is_policy_independent_and_removes_the_behaviour_confound(
+    tmp_path,
+):
+    enc = LearnedEncoder.fresh(seed=1)
+    enc.save(tmp_path / "e.pt")
+    still = v5_policy(tmp_path, enc, "still.json", bias=0.0)
+    moving = v5_policy(tmp_path, enc, "moving.json", bias=0.9)
+    probe = lambda policy: _checks_job(  # noqa: E731
+        (policy, str(tmp_path / "e.pt"), [3], 0.4, 3, "teacher")
+    )
+    a = probe(str(still))
+    b = probe(str(moving))
+    np.testing.assert_array_equal(np.stack(a[0]), np.stack(b[0]))  # same currents
+    assert a[1] == b[1] and a[2] == b[2]  # same flight, so the same labels
+    # Without the fixed probe the policy choice does change the recording.
+    flown = _checks_job((str(moving), str(tmp_path / "e.pt"), [3], 0.4, 3, "policy"))
+    assert not np.allclose(np.stack(a[0]), np.stack(flown[0]))
+
+
+def test_teacher_probe_labels_are_encoder_independent(tmp_path):
+    a = LearnedEncoder.fresh(seed=1)
+    b = LearnedEncoder.fresh(seed=2)
+    a.save(tmp_path / "a.pt")
+    b.save(tmp_path / "b.pt")
+    policy_a = v5_policy(tmp_path, a, "pa.json")
+    policy_b = v5_policy(tmp_path, b, "pb.json")
+    currents_a, threat_a, beacon_a = _checks_job(
+        (str(policy_a), str(tmp_path / "a.pt"), [3], 0.4, 3, "teacher")
+    )
+    currents_b, threat_b, beacon_b = _checks_job(
+        (str(policy_b), str(tmp_path / "b.pt"), [3], 0.4, 3, "teacher")
+    )
+    assert threat_a == threat_b and beacon_a == beacon_b  # identical flight
+    assert not np.allclose(
+        np.stack(currents_a), np.stack(currents_b)
+    )  # only currents differ
+
+
 def test_screen_job_flies_a_v5_policy_with_its_encoder_and_baselines_on_v4(tmp_path):
     enc = LearnedEncoder.fresh(seed=6)
     enc.save(tmp_path / "e.pt")
@@ -288,3 +340,13 @@ def test_round_gate_report_lists_every_round_with_its_verdict():
     assert (
         report[1]["ghost_near_dodge_rate"] == 0.815 and report[1]["E2_passed"] is False
     )
+
+
+def test_eval_defaults_use_the_teacher_probe_and_clamp_workers():
+    import inspect
+
+    assert (
+        inspect.signature(encoder_checks).parameters["controller"].default == "teacher"
+    )
+    for fn in (evaluate_free_roam, distill.screen, distill.collect):
+        assert inspect.signature(fn).parameters["workers"].default == 6

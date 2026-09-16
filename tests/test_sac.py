@@ -195,6 +195,9 @@ def test_warm_start_decoder_learns_labels_and_shares_normalisation(tmp_path):
     report = warm_start_decoder(model, [path], digest, ENCODER_VERSION, steps=300)
     assert report["held_out_flights"] == 2 and set(report["drives"]) == set(DRIVES)
     assert report["loss_last"] < report["loss_first"]
+    for split in ("train", "held_out"):
+        axes = {f"{split}_{a}_mse" for a in ("vx", "vy", "vz", "yaw")}
+        assert axes <= set(report["drives"]["threat"])
     actor_norm = model.actor.features_extractor
     assert float(actor_norm.scale.min()) >= 0.003
     assert torch.equal(model.critic.features_extractor.dn_norm.mean, actor_norm.mean)
@@ -592,3 +595,24 @@ def test_probe_logger_records_log_std_and_detects_a_constant_action():
     assert model.logger.name_to_value["probe/action_state_std"] == pytest.approx(
         0.0, abs=1e-6
     )
+
+
+def test_action_logger_records_lateral_and_vertical_magnitudes():
+    from fly_drone.sac import ActionLogger
+    from stable_baselines3.common.logger import Logger
+
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    model.set_logger(Logger(folder=None, output_formats=[]))
+    callback = ActionLogger()
+    callback.init_callback(model)
+    callback.locals = {
+        "actions": np.array([[0.0, 0.3, -0.6, 0.2], [0.0, -0.5, 0.2, 0.0]])
+    }
+    assert callback._on_step()
+    values = model.logger.name_to_value
+    assert values["rollout/action_vy_absmean"] == pytest.approx(0.4)
+    assert values["rollout/action_vz_absmean"] == pytest.approx(0.4)
+    # Encoder-sized actions (8 currents) are not velocity axes and must be ignored.
+    callback.locals = {"actions": np.zeros((1, 8))}
+    assert callback._on_step()
+    assert values["rollout/action_vy_absmean"] == pytest.approx(0.4)

@@ -157,3 +157,15 @@ def test_visible_threat_dodges_away_but_ghost_threat_does_not(env):
         assert drive != "threat"
     finally:
         env.plant.set_ghost(False)
+
+
+def test_threat_outcome_records_peak_lateral_and_vertical_command(env):
+    place(env, beacon=(-4.0, 3.0, 1.0))
+    assert env.launch_threat()
+    for _ in range(3):
+        env.step(np.array([0.1, 0.8, -0.5, 0.0]))
+    assert env.roam["threat"] is not None
+    env._finish_threat(hit=False)
+    outcome = env.roam["threats"][-1]
+    assert outcome["peak_vy"] == pytest.approx(0.8)
+    assert outcome["peak_vz"] == pytest.approx(0.5)

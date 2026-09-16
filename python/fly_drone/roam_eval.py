@@ -276,7 +276,7 @@ def _probe_job(job):
 def skill_probes(
     controller,
     episodes=50,
-    workers=16,
+    workers=6,
     vision=True,
     seconds=None,
     seed_base=1000,
@@ -321,7 +321,7 @@ def evaluate_free_roam(
     output,
     episodes=50,
     seconds=120,
-    workers=16,
+    workers=6,
     level=3,
     seed_base=1000,
     probes=True,
@@ -445,12 +445,19 @@ def _threat_label(flying, gap, previous_gap, visible):
 
 
 def _checks_job(job):
-    """Fly a policy intact; per frame, the currents applied and labels of the state they saw."""
+    """Fly a controller; per frame, the currents applied and labels of the state they saw.
+
+    `controller="teacher"` (fixed probe): the geometry-driven teacher flies and only the encoder
+    varies, so trajectories and threat/beacon labels are identical across encoders and only the
+    applied currents differ. `controller="policy"`: the loaded decoder flies, so labels mix in the
+    policy's own behaviour (the pre-2026-09-16 mode, kept as a secondary number).
+    """
     from .brain import V4_TO_V5, BrainRuntime
     from .distill import _roam_env
-    from .teacher import visible
+    from .teacher import teacher_action, visible
 
-    policy, encoder, seeds, seconds, level = job
+    policy, encoder, seeds, seconds, level, *rest = job
+    controller = rest[0] if rest else "policy"
     brain = BrainRuntime(encoder=encoder)
     brain.load_policy(policy)
     env = _roam_env(level, brain)
@@ -470,7 +477,11 @@ def _checks_job(job):
                 )
                 previous_gap = gap if flying else None
                 seen = env.beacon_visible()
-                obs, *_ = env.step(brain.infer(obs) / env.plant.limits)
+                if controller == "teacher":
+                    action = teacher_action(env)[0]
+                else:
+                    action = brain.infer(obs) / env.plant.limits
+                obs, *_ = env.step(action)
                 applied = brain.cues if brain.learned else brain.cues[list(V4_TO_V5)]
                 currents.append(np.asarray(applied, dtype=np.float32).copy())
                 threat.append(label)
@@ -489,8 +500,14 @@ def encoder_checks(
     workers=6,
     seed_base=1000,
     level=3,
+    controller="teacher",
 ):
-    """E1-E2 on held-out seeds, intact brain. encoder=None measures the v4 baseline."""
+    """E1-E2 on held-out seeds, intact brain. encoder=None measures the v4 baseline.
+
+    Defaults to the fixed probe (`controller="teacher"`): the teacher flies, so the frame labels
+    are policy-independent and E1/E2 compare encoders rather than behaviours. Pass
+    `controller="policy"` for the confounded, policy-driven number.
+    """
     import multiprocessing
     from concurrent.futures import ProcessPoolExecutor
 
@@ -498,7 +515,7 @@ def encoder_checks(
     policy = str(Path(policy).resolve())
     encoder = str(Path(encoder).resolve()) if encoder else None
     jobs = [
-        (policy, encoder, c.tolist(), seconds, level)
+        (policy, encoder, c.tolist(), seconds, level, controller)
         for c in np.array_split(seeds, min(workers, episodes))
         if len(c)
     ]
@@ -512,6 +529,7 @@ def encoder_checks(
     report = {
         "policy": policy,
         "encoder": encoder,
+        "controller": controller,
         "seeds": [int(seeds[0]), int(seeds[-1])],
         "seconds": seconds,
         "frames": len(currents),

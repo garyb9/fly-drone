@@ -482,17 +482,23 @@ def warm_start_decoder(
                     - torch.as_tensor(target[ids[i : i + 4096]], device=device)
                 )
                 .square()
-                .mean(1)
                 .cpu()
                 .numpy()
                 for i in range(0, len(ids), 4096)
             ]
-            err = np.concatenate(errs) if errs else np.zeros(0)
+            err = np.concatenate(errs) if errs else np.zeros((0, target.shape[1]))
             for k, name in enumerate(DRIVES):
                 sel = drive[mask] == k
-                report["drives"][name][f"{split}_mse"] = (
-                    float(err[sel].mean()) if sel.any() else None
-                )
+                if not sel.any():
+                    report["drives"][name][f"{split}_mse"] = None
+                    continue
+                # Per-action-axis error (vy-vz spec M1): vx, vy, vz, yaw.
+                per_axis = err[sel].mean(0)
+                report["drives"][name][f"{split}_mse"] = float(per_axis.mean())
+                for axis, value in zip(
+                    ("vx", "vy", "vz", "yaw"), per_axis, strict=True
+                ):
+                    report["drives"][name][f"{split}_{axis}_mse"] = float(value)
     return report
 
 
@@ -664,6 +670,29 @@ class ProbeLogger(BaseCallback):
         return True
 
 
+class ActionLogger(BaseCallback):
+    """Records the mean |vy| and |vz| the decoder commanded (vy-vz spec M3).
+
+    Only the 4-axis velocity decoder is logged; the encoder/bypass actors write 8 currents, where
+    indices 1 and 2 are not velocity axes.
+    """
+
+    def _on_step(self):
+        actions = self.locals.get("actions")
+        if actions is None:
+            return True
+        actions = np.asarray(actions)
+        if actions.ndim != 2 or actions.shape[1] != 4:
+            return True
+        self.logger.record_mean(
+            "rollout/action_vy_absmean", float(np.abs(actions[:, 1]).mean())
+        )
+        self.logger.record_mean(
+            "rollout/action_vz_absmean", float(np.abs(actions[:, 2]).mean())
+        )
+        return True
+
+
 def _factory(learner, rank, seed, decoder, encoder, level):
     def make():
         from stable_baselines3.common.monitor import Monitor
@@ -765,6 +794,7 @@ def train_round(
                 ),
                 MetabolicLogger(),
                 ProbeLogger(),
+                ActionLogger(),
             ]
         )
         model.learn(
@@ -800,9 +830,21 @@ def train_round(
 
 
 def validate(
-    decoder, encoder, output, seeds=10, seed_base=9000, seconds=60, workers=6, level=3
+    decoder,
+    encoder,
+    output,
+    seeds=10,
+    seed_base=9000,
+    seconds=60,
+    workers=6,
+    level=3,
+    policy_checks=True,
 ):
-    """End-of-round check on validation seeds: near-dodge (intact, ghost), foraging, E1-E2."""
+    """End-of-round check on validation seeds: near-dodge (intact, ghost), foraging, E1-E2.
+
+    E1/E2 come from the fixed probe (teacher-flown, so labels are policy-independent); the
+    policy-driven numbers are kept alongside as `E1_policy`/`E2_policy` (spec R1).
+    """
     from .distill import screen
     from .roam_eval import encoder_checks
 
@@ -830,6 +872,22 @@ def validate(
         workers,
         seed_base,
         level,
+        controller="teacher",
+    )
+    policy_checks = (
+        encoder_checks(
+            decoder,
+            output.with_suffix(".checks-policy.json"),
+            encoder,
+            seeds,
+            seconds,
+            workers,
+            seed_base,
+            level,
+            controller="policy",
+        )
+        if policy_checks
+        else None
     )
     none, ghost = report["results"][f"{key}|none"], report["results"][f"{key}|ghost"]
     summary = {
@@ -843,6 +901,8 @@ def validate(
         "collisions_per_min": none["collisions_per_min"],
         "E1": checks["E1"],
         "E2": checks["E2"],
+        "E1_policy": policy_checks["E1"] if policy_checks else None,
+        "E2_policy": policy_checks["E2"] if policy_checks else None,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(summary, indent=2))

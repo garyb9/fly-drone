@@ -175,6 +175,7 @@ def main():
     p.add_argument("--episodes", type=int, default=50)
     p.add_argument("--seconds", type=float, default=120)
     p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--controller", choices=["teacher", "policy"], default="teacher")
     args = parser.parse_args()
     if args.command in (
         "encoder-collect",
@@ -248,6 +249,7 @@ def main():
                 args.episodes,
                 args.seconds,
                 args.workers,
+                controller=args.controller,
             )
             result = {k: result[k] for k in ("frames", "E1", "E2")}
         print(json.dumps(result, indent=2))
