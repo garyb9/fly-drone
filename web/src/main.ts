@@ -323,7 +323,7 @@ function groupColor(index: number): THREE.Color {
   return new THREE.Color().setHSL(((index * 137.508) % 360) / 360, 0.5, 0.62);
 }
 let socket: WebSocket,
-  following = false,
+  following = true,
   cameraMode: "orbit" | "fpv" | "tpv" = "orbit",
   initialized = false;
 const WORLD_HOME = { position: [2.5, 2.2, 3.2], target: [0.3, 0.8, 0] };
@@ -722,7 +722,9 @@ function render(now = performance.now()) {
   const k = 1 - Math.exp(-dt / POSE_TAU);
   drone.position.lerp(droneTarget.pos, k);
   drone.quaternion.slerp(droneTarget.quat, k);
-  target.position.lerp(targetTarget, k);
+  // The beacon teleports when collected/placed; interpolating it made a caught ball appear
+  // to be dragged to the next spot. Snap it; only the thrown threat glides.
+  target.position.copy(targetTarget);
   obstacle.position.lerp(obstacleTarget, k);
   locator.position.set(drone.position.x, 0.003, drone.position.z);
   glowDecal.position.set(drone.position.x, 0.002, drone.position.z);

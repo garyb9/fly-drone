@@ -167,7 +167,7 @@ body {
 .brain-legend {
   display: flex;
   justify-content: space-between;
-  font-size: 7px;
+  font-size: 8px;
   color: #78939e;
   padding: 0 14px 10px;
 }
@@ -283,7 +283,7 @@ button.primary {
   image-rendering: pixelated;
 }
 .eyes figcaption {
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1.2px;
   color: #6b8794;
   margin-top: 4px;
@@ -580,7 +580,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1.2px;
   color: #94aab5;
   border-bottom: 1px solid #263841;
@@ -603,7 +603,7 @@ main {
   padding: 0 10px;
   display: flex;
   align-items: center;
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1.2px;
   color: #94aab5;
   border-bottom: 1px solid #263841;
@@ -635,19 +635,19 @@ main {
 }
 .telemetry span {
   display: block;
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1.2px;
   color: #88a0ac;
 }
 .telemetry strong {
   display: block;
   font-family: "Space Grotesk", sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 400;
   margin-top: 2px;
 }
 .telemetry small {
-  font-size: 9px;
+  font-size: 10px;
   color: #78929e;
 }
 .telemetry-wide {
@@ -677,22 +677,44 @@ main {
 }
 .bar-group h3 {
   margin: 0 0 8px;
+  font-size: 9px;
 }
 .bar-grid {
   display: grid;
-  grid-auto-flow: row;
-  grid-template-columns: repeat(2, minmax(150px, auto));
+  grid-template-columns: repeat(2, minmax(160px, auto));
   gap: 6px 18px;
   align-items: start;
 }
-.bar-group-signals .bar-grid,
-.bar-group-controls .bar-grid {
-  grid-template-columns: repeat(2, minmax(160px, auto));
+.bar-group-console {
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* Controls and camera live in one card as two stacked rows/layers. */
+.bar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 6px 18px;
+  align-items: start;
+}
+.bar-row-camera {
+  grid-template-columns: 104px 1fr;
+  align-items: center;
+  border-top: 1px solid #223640;
+  padding-top: 10px;
+}
+.bar-row-camera .bar-label {
+  margin-bottom: 0;
 }
 .bottom-bar .meter {
   grid-template-columns: 46px 1fr 40px;
   gap: 5px;
   margin: 6px 0;
+  font-size: 9px;
 }
 .bottom-bar #motors .meter {
   grid-template-columns: 18px 1fr 74px;
@@ -705,7 +727,7 @@ main {
 }
 .bar-label {
   display: block;
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: #78929e;
@@ -714,7 +736,7 @@ main {
 .bar-note {
   display: block;
   font-style: normal;
-  font-size: 7px;
+  font-size: 8px;
   color: #89a4af;
   margin-top: 6px;
   max-width: 190px;
@@ -723,7 +745,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 8px;
+  font-size: 9px;
   color: #89a4af;
   max-width: 250px;
 }
@@ -732,13 +754,9 @@ main {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-.bar-group-camera {
-  flex: 1 1 0;
-  min-width: 0;
-}
 .bar-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 6px;
   min-width: 0;
 }
@@ -748,7 +766,7 @@ main {
   text-overflow: ellipsis;
 }
 .bottom-bar button {
-  font-size: 8px;
+  font-size: 9px;
   padding: 6px 8px;
 }
 .bottom-bar .button-row {
@@ -870,7 +888,7 @@ main {
   transform-origin: center;
 }
 .attitude-gauge span {
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1px;
   color: var(--bp-ink-dim);
 }
@@ -885,7 +903,7 @@ main {
   justify-content: space-between;
   gap: 10px;
   margin-top: 8px;
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1px;
   color: var(--bp-ink-dim);
 }
@@ -900,7 +918,7 @@ main {
   flex-direction: column;
   gap: 3px;
   margin-top: 10px;
-  font-size: 7px;
+  font-size: 8px;
   color: #78939e;
 }
 .vector-legend span {
