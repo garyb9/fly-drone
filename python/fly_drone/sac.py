@@ -56,6 +56,21 @@ LOG_STD_MAX = -1.0
 TARGET_ENTROPY_PER_DIM = 0.5 * math.log(2.0 * math.pi * math.e) + WARM_START_LOG_STD
 # Auto-alpha initial value; SB3's 1.0 dwarfs the ~0.05/step reward. Alpha stays adaptive.
 ENT_COEF_INIT = 0.01
+# SB3's entropy term is ``ent_coef * sum_over_dims(log_prob)``, so its magnitude grows with the
+# action dimension. v5's encoder had 8 outputs; the v6 spatial encoder has 816, so the same alpha is
+# ~100x stronger and pulls the deterministic mean to the action-space centre (the v6 round-1
+# collapse: light/loom -> a constant ~1.0). Scale alpha by the reference dimension so the entropy
+# pressure stays v5-like. Dimensions <= the reference (decoder 4, v5 encoder 8) keep 0.01 exactly.
+ENT_COEF_REF_DIM = 8
+
+
+def ent_coef_init(action_dim):
+    """Initial auto-alpha, scaled down for a high-dimensional action (the v6 spatial encoder)."""
+    action_dim = max(1, int(action_dim))
+    if action_dim <= ENT_COEF_REF_DIM:
+        return ENT_COEF_INIT
+    return ENT_COEF_INIT * ENT_COEF_REF_DIM / action_dim
+
 
 # Encoder-round stabilisation (added 2026-09-16 after the v6 round-1 encoder collapsed with its
 # light channels saturated at 2.0). The frozen decoder lets an encoder drift into a degenerate
@@ -151,7 +166,9 @@ class SacRoamEnv(gym.Env):
             raise ValueError(f"learner must be one of {LEARNERS}")
         if spatial and learner == "bypass":
             raise ValueError("the spatial v6 path has no brain-bypass control")
-        self.spatial = bool(spatial)
+        # Only the encoder learner has the 816-dim spatial action; a decoder round runs under a v6
+        # encoder but keeps the 4-dim velocity interface, so it must not use the spatial policy.
+        self.spatial = bool(spatial) and learner == "encoder"
         if learner == "encoder":
             if decoder is None:
                 raise ValueError("encoder learning needs a frozen decoder")
@@ -465,9 +482,10 @@ def build_sac(
     spatial=False,
 ):
     action_dim = int(np.prod(env.action_space.shape))
+    spatial_encoder = spatial and learner == "encoder"
     policy_class = AsymmetricSACPolicy
     pi_arch = [] if learner == "encoder" else [64, 64]
-    if spatial:
+    if spatial_encoder:
         from .spatial_policy import SpatialSACPolicy
 
         policy_class = SpatialSACPolicy
@@ -486,8 +504,9 @@ def build_sac(
         gradient_steps=2,
         gamma=0.99,
         learning_rate=3e-4,
-        # Post-warm-up exploration: small initial alpha pinned to the warm-start sigma (design §8.6).
-        ent_coef=f"auto_{ENT_COEF_INIT}",
+        # Post-warm-up exploration: small initial alpha pinned to the warm-start sigma (design §8.6);
+        # scaled by action dimension so the summed entropy term stays v5-sized (see ent_coef_init).
+        ent_coef=f"auto_{ent_coef_init(action_dim)}",
         target_entropy=action_dim * TARGET_ENTROPY_PER_DIM,
         seed=seed,
         device=device,
@@ -513,13 +532,14 @@ def apply_entropy_regime(model, action_dim):
     before the regime landed (the round-0 decoder, or any round chained off it) keeps the old
     automatic schedule — alpha 1.0 at unfreeze, target entropy ``-dim``. A fresh round always
     starts pinned to the warm-start sigma, so loaded rounds are reset to match; `--resume` keeps
-    its own evolved alpha and does not call this.
+    its own evolved alpha and does not call this. Alpha is dimension-scaled (`ent_coef_init`).
     """
-    model.ent_coef = f"auto_{ENT_COEF_INIT}"
+    alpha = ent_coef_init(action_dim)
+    model.ent_coef = f"auto_{alpha}"
     model.target_entropy = float(action_dim) * TARGET_ENTROPY_PER_DIM
     if model.log_ent_coef is not None:
         with torch.no_grad():
-            model.log_ent_coef.fill_(math.log(ENT_COEF_INIT))
+            model.log_ent_coef.fill_(math.log(alpha))
     return model
 
 

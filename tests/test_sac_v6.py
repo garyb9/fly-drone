@@ -186,3 +186,40 @@ def test_anchor_rejected_for_non_encoder_learner(tmp_path):
             spatial=True,
             anchor=str(tmp_path / "a.pt"),
         )
+
+
+def test_ent_coef_scales_with_action_dimension():
+    from fly_drone.sac import ENT_COEF_INIT, ENT_COEF_REF_DIM, ent_coef_init
+
+    assert ent_coef_init(4) == ENT_COEF_INIT
+    assert ent_coef_init(8) == ENT_COEF_INIT
+    assert ent_coef_init(flat_dim()) == pytest.approx(
+        ENT_COEF_INIT * ENT_COEF_REF_DIM / flat_dim()
+    )
+
+
+def test_spatial_decoder_uses_the_velocity_policy_not_the_spatial_actor():
+    from fly_drone.sac import AsymmetricSACPolicy, build_sac
+
+    model = build_sac(
+        "decoder",
+        SpacesOnlyEnv("decoder", spatial=True),
+        buffer_size=1,
+        device="cpu",
+        spatial=True,
+    )
+    assert isinstance(model.policy, AsymmetricSACPolicy)
+    assert model.action_space.shape == (4,)
+
+
+def test_spatial_encoder_uses_the_scaled_entropy_alpha():
+    from fly_drone.sac import build_sac, ent_coef_init
+
+    model = build_sac(
+        "encoder",
+        SpacesOnlyEnv("encoder", spatial=True),
+        buffer_size=1,
+        device="cpu",
+        spatial=True,
+    )
+    assert model.ent_coef == f"auto_{ent_coef_init(flat_dim())}"
