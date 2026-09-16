@@ -72,6 +72,7 @@ class ConnectomeEnv(gym.Env):
         level=3,
         respawn=False,
         spec=None,
+        frame_transform=None,
     ):
         if task not in HORIZON_FRAMES:
             raise ValueError(f"unknown task {task!r}")
@@ -83,6 +84,7 @@ class ConnectomeEnv(gym.Env):
         self.level = level
         self.respawn = respawn
         self.task = task
+        self.frame_transform = frame_transform
         self.plant = DronePlant(vision=vision, arena=self._wanted_arena())
         self.ablation = ablation
         self.action_space = spaces.Box(-1, 1, (4,), np.float32)
@@ -111,6 +113,11 @@ class ConnectomeEnv(gym.Env):
             self.plant.close()
             self.plant = DronePlant(vision=self.vision, arena=wanted)
             self._geom_kinds = None
+
+    def _frame(self):
+        """The frame the learned encoder reads, after any domain-randomisation transform."""
+        images = self.plant.camera()
+        return images if self.frame_transform is None else self.frame_transform(images)
 
     def observe(self):
         x = self.brain.features()
@@ -150,7 +157,7 @@ class ConnectomeEnv(gym.Env):
         if self.plant.arena is not None:
             self.plant.set_ghost(self.ablation == "ghost")
         if self.brain.learned:
-            self.brain.push_frame(self.plant.camera())
+            self.brain.push_frame(self._frame())
             # Settle on zero input: identical for a deployed and a learning encoder.
             self.brain.set_currents(np.zeros_like(self.brain.cues))
         else:
@@ -382,7 +389,7 @@ class ConnectomeEnv(gym.Env):
             result = self._step_room(action)
         if self.brain.learned:
             # The next step's currents come from what the eyes see now, after any respawn.
-            self.brain.push_frame(self.plant.camera())
+            self.brain.push_frame(self._frame())
         return result
 
     def _step_room(self, action):

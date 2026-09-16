@@ -161,7 +161,7 @@ class SacRoamEnv(gym.Env):
                 plant.model.geom_rgba[g, :3] = grey  # alpha stays: ghost mode owns it
         # The first stacked frame was rendered before the recolour; start the stack again.
         self.env.brain.stack.clear()
-        self.env.brain.push_frame(plant.camera())
+        self.env.brain.push_frame(self.env._frame())
 
     def step(self, action):
         action = np.clip(np.asarray(action, dtype=np.float32), -1, 1)

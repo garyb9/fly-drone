@@ -61,3 +61,32 @@ def test_v4_role_set_is_unchanged():
     brain = BrainRuntime()
     assert tuple(brain.input_ids) == ("light_l", "light_r", "looming_l", "looming_r")
     assert brain.current_maps is None and brain.cues.shape == (4,)
+
+
+def test_frame_transform_changes_the_stack_but_not_the_v4_path():
+    from fly_drone.env import ConnectomeEnv
+
+    def constant(images):
+        return np.full_like(images, 42)
+
+    plain = ConnectomeEnv(task="free_roam", level=0, brain=BrainRuntime())
+    dark = ConnectomeEnv(
+        task="free_roam", level=0, brain=BrainRuntime(), frame_transform=constant
+    )
+    try:
+        plain.reset(seed=5)
+        dark.reset(seed=5)
+        np.testing.assert_array_equal(plain.brain.cues, dark.brain.cues)
+    finally:
+        plain.close()
+        dark.close()
+
+    brain = BrainRuntime(encoder=SpatialEncoder.fresh(seed=7))
+    env = ConnectomeEnv(
+        task="free_roam", level=0, brain=brain, frame_transform=constant
+    )
+    try:
+        env.reset(seed=5)
+        np.testing.assert_array_equal(brain.stack.array(), 42)
+    finally:
+        env.close()
