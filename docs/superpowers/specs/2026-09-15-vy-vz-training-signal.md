@@ -1,7 +1,17 @@
 # vy/vz training signal for the decoder/encoder — design
 
-**Status:** proposed, awaiting user decision (2026-09-15). Documentation only — no code, no
-runs. Read [`docs/free-roam.md`](../../free-roam.md) and the encoder v5 spec
+> **Superseded (2026-09-16).** Absorbed into three places and no longer maintained as a standalone
+> design: its instrumentation (M1–M3) landed as Pack 1 R2–R4 of
+> [`2026-09-15-training-improvements.md`](2026-09-15-training-improvements.md); its lateral-lag
+> diagnosis now motivates [`2026-09-16-wing-level-action-design.md`](2026-09-16-wing-level-action-design.md)
+> §1; and its strategy option (c), "increase evade exposure", was approved as the
+> threats-without-pillars curriculum in
+> [`2026-09-16-retinotopic-sensing-v6-design.md`](2026-09-16-retinotopic-sensing-v6-design.md) §5.
+> Retained for provenance: §2 (the vy/vz diagnosis) and §6 (the axis asymmetry) are still cited.
+
+**Status:** absorbed 2026-09-16; retained as a historical record. Originally proposed 2026-09-15,
+awaiting user decision — documentation only, no code, no runs. Read
+[`docs/free-roam.md`](../../free-roam.md) and the encoder v5 spec
 ([`2026-09-14-learned-encoder-sac-design.md`](2026-09-14-learned-encoder-sac-design.md)) first;
 this doc cross-references both and reopens neither.
 

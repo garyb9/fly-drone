@@ -1,7 +1,10 @@
 # Training improvements for encoder v5 and the decoder — design
 
-**Status:** packs decided 2026-09-16 (see §10); Pack 1 and Pack 2 land in Phase 1, Packs 3–4 are
-deferred. Documentation only — no code.
+**Status:** Packs 1–2 **landed** in Phase 1 (2026-09-16, commits `b471d06`–`4f199ee`); Pack 3
+deferred; Pack 4 (encoder representation) **superseded** by
+[`2026-09-16-retinotopic-sensing-v6-design.md`](2026-09-16-retinotopic-sensing-v6-design.md), which
+subsumes it as motion input, domain randomisation and channel differentiation. Documentation only —
+no code.
 Read [`2026-09-14-learned-encoder-sac-design.md`](2026-09-14-learned-encoder-sac-design.md) and
 [`2026-09-15-vy-vz-training-signal.md`](2026-09-15-vy-vz-training-signal.md) first; this doc
 absorbs the latter's M1–M3 instrumentation as a prerequisite and does not reopen either.
