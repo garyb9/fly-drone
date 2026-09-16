@@ -82,19 +82,26 @@ def visible_geometry(env):
     return out
 
 
-def learner_spaces(learner, n_features=2022):
+def learner_spaces(learner, n_features=2022, spatial=False):
     """Observation (actor key + critic-only keys) and action space for one learner."""
     keys = {"geometry": spaces.Box(-np.inf, np.inf, (GEOMETRY,), np.float32)}
     action = spaces.Box(-1, 1, (4,), np.float32)
     if learner == "encoder":
         keys["eyes"] = eyes_space()
         keys["dn"] = spaces.Box(0, 1, (n_features,), np.float32)
-        action = spaces.Box(-1, 1, (len(V5_CHANNELS),), np.float32)
+        n_currents = _spatial_dim() if spatial else len(V5_CHANNELS)
+        action = spaces.Box(-1, 1, (n_currents,), np.float32)
     elif learner == "decoder":
         keys["dn"] = spaces.Box(0, 1, (n_features,), np.float32)
     else:
         keys["currents"] = spaces.Box(0, 2, (len(V5_CHANNELS),), np.float32)
     return spaces.Dict(keys), action
+
+
+def _spatial_dim():
+    from .spatial_encoder import flat_dim
+
+    return flat_dim()
 
 
 class SacRoamEnv(gym.Env):
@@ -110,13 +117,21 @@ class SacRoamEnv(gym.Env):
         level=3,
         lambda_loom=LAMBDA_LOOM,
         lambda_light=LAMBDA_LIGHT,
+        spatial=False,
     ):
         if learner not in LEARNERS:
             raise ValueError(f"learner must be one of {LEARNERS}")
+        if spatial and learner == "bypass":
+            raise ValueError("the spatial v6 path has no brain-bypass control")
+        self.spatial = bool(spatial)
         if learner == "encoder":
             if decoder is None:
                 raise ValueError("encoder learning needs a frozen decoder")
-            brain = BrainRuntime(encoder="external")
+            from .brain import LEARNED_EXTERNAL_V6
+
+            brain = BrainRuntime(
+                encoder=LEARNED_EXTERNAL_V6 if self.spatial else "external"
+            )
             # The frozen decoder is scenery here; validate() pairs it with the learned
             # encoder under the strict version check.
             brain.load_policy(decoder, check_encoder=False)
@@ -131,8 +146,14 @@ class SacRoamEnv(gym.Env):
             task="free_roam", level=level, respawn=True, brain=brain
         )
         n = len(brain.feature_ids)
-        self.observation_space, self.action_space = learner_spaces(learner, n)
+        self.observation_space, self.action_space = learner_spaces(
+            learner, n, spatial=self.spatial
+        )
         self.features = np.zeros(n, np.float32)
+        if self.spatial:
+            from .spatial_encoder import group_slices
+
+            self._groups = group_slices()
 
     def _obs(self):
         brain, keys = self.env.brain, self.observation_space.spaces
@@ -170,8 +191,16 @@ class SacRoamEnv(gym.Env):
         if self.learner == "encoder":
             currents = brain.set_currents(action + 1.0)
             velocity = brain.infer(self.features) / self.env.plant.limits
-            loom_cost = self.lambda_loom * float(currents[LOOM].mean())
-            light_cost = self.lambda_light * float(currents[LIGHT].mean())
+            if self.spatial:
+                loom_cost = self.lambda_loom * float(
+                    currents[self._groups["loom"]].mean()
+                )
+                light_cost = self.lambda_light * float(
+                    currents[self._groups["light"]].mean()
+                )
+            else:
+                loom_cost = self.lambda_loom * float(currents[LOOM].mean())
+                light_cost = self.lambda_light * float(currents[LIGHT].mean())
             cost = loom_cost + light_cost
         else:
             velocity = action
@@ -372,10 +401,18 @@ def build_sac(
     actor_warmup=ACTOR_WARMUP_FRAMES,
     n_step=1,
     optimize_memory=False,
+    spatial=False,
 ):
     action_dim = int(np.prod(env.action_space.shape))
+    policy_class = AsymmetricSACPolicy
+    pi_arch = [] if learner == "encoder" else [64, 64]
+    if spatial:
+        from .spatial_policy import SpatialSACPolicy
+
+        policy_class = SpatialSACPolicy
+        pi_arch = []
     return WarmupSAC(
-        AsymmetricSACPolicy,
+        policy_class,
         env,
         actor_warmup=actor_warmup,
         buffer_size=buffer_size,
@@ -397,9 +434,10 @@ def build_sac(
         policy_kwargs={
             "actor_key": ACTOR_KEYS[learner],
             # The encoder's head is linear on the eye features (LearnedEncoder format);
-            # the decoder's hidden layers are tanh (Rust actor format).
+            # the decoder's hidden layers are tanh (Rust actor format). The v6 spatial
+            # actor's latent must stay empty so its mean head is the identity.
             "net_arch": {
-                "pi": [] if learner == "encoder" else [64, 64],
+                "pi": pi_arch,
                 "qf": [256, 256],
             },
             "activation_fn": nn.Tanh,
@@ -440,8 +478,10 @@ class SpacesOnlyEnv(gym.Env):
 
     metadata = {}
 
-    def __init__(self, learner, n_features=2022):
-        self.observation_space, self.action_space = learner_spaces(learner, n_features)
+    def __init__(self, learner, n_features=2022, spatial=False):
+        self.observation_space, self.action_space = learner_spaces(
+            learner, n_features, spatial=spatial
+        )
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)

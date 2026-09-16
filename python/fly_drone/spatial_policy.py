@@ -12,10 +12,10 @@ with the M2 window.
 
 import torch
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from stable_baselines3.sac.policies import Actor, MultiInputPolicy
+from stable_baselines3.sac.policies import Actor
 from torch import nn
 
-from .sac import LOG_STD_MAX, LOG_STD_MIN
+from .sac import LOG_STD_MAX, LOG_STD_MIN, AsymmetricSACPolicy
 from .spatial_encoder import SpatialEncoderNet, flat_dim, flatten
 
 
@@ -49,8 +49,13 @@ class SpatialActor(Actor):
         return mean_actions, log_std, {}
 
 
-class SpatialSACPolicy(MultiInputPolicy):
-    """SAC policy using the spatial encoder for the actor."""
+class SpatialSACPolicy(AsymmetricSACPolicy):
+    """SAC policy whose actor is the spatial encoder; critic stays the asymmetric training view.
+
+    ``net_arch["pi"]`` must be empty so the actor's latent is the extractor output itself
+    (``flat_dim()``); the mean head is then the identity and the deployable action is exactly the
+    per-patch logits.
+    """
 
     def make_actor(self, features_extractor=None):
         extractor = SpatialFeaturesExtractor(self.observation_space)

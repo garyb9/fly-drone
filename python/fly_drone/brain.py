@@ -12,6 +12,8 @@ DATA = ROOT / "data/malecns"
 ENCODER_VERSION = "bright-contrast-400-splay075-noaa-loom150-v4"
 LEARNED_PREFIX = "learned-v5:"
 LEARNED_EXTERNAL = LEARNED_PREFIX + "external"
+# v6 spatial encoder path whose currents are set by a learner rather than a stored net.
+LEARNED_EXTERNAL_V6 = "learned-v6:external"
 STACK_FRAMES = 3
 EYE_SHAPE = (48, 64)
 # Encoder v5 drives each anatomical input population with its own uniform current.
@@ -40,7 +42,7 @@ def luma_u8(images):
 
 def _is_spatial(encoder):
     """True when the runtime should use the v6 per-patch spatial input path."""
-    if isinstance(encoder, str) and encoder == "external":
+    if isinstance(encoder, str) and encoder in ("external", LEARNED_EXTERNAL_V6):
         return False
     from .spatial_encoder import SpatialEncoder
 
@@ -100,6 +102,8 @@ class BrainRuntime:
             for side in ("l", "r"):
                 self.input_ids["looming_" + side] = self._cells(side, ("LC4", "LPLC2"))
             self.current_dim = len(self.input_ids)
+        elif isinstance(encoder, str) and encoder == LEARNED_EXTERNAL_V6:
+            self.current_dim = self._load_v6(encoder)
         elif _is_spatial(encoder):
             self.current_dim = self._load_v6(encoder)
         else:
@@ -174,10 +178,14 @@ class BrainRuntime:
             flat_dim,
         )
 
-        if not isinstance(encoder, SpatialEncoder):
-            encoder = SpatialEncoder.load(encoder)
-        self.encoder = encoder
-        self.encoder_version = encoder.version
+        if isinstance(encoder, str) and encoder == LEARNED_EXTERNAL_V6:
+            self.encoder = encoder
+            self.encoder_version = LEARNED_EXTERNAL_V6
+        else:
+            if not isinstance(encoder, SpatialEncoder):
+                encoder = SpatialEncoder.load(encoder)
+            self.encoder = encoder
+            self.encoder_version = encoder.version
         self.maps = build_default_maps(self.cells)
         self.roles = {
             channel: define_roles(
