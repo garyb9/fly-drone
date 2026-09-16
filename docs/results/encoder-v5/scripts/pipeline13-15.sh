@@ -34,18 +34,20 @@ vals = [json.load(open('runs/v5/round0/validation.json' if i == 0 else f'runs/v5
 print(int(round_eligible(vals[k], vals[0])), pick_best_round(vals))" "$1"
 }
 
-# Mid-round gate: abort the ladder if the 100k encoder is blind (foraging collapsed). This is the
-# same fraction of round 0 the round gate uses, so it cannot fail a healthy round that the
-# post-round gate would pass.
+# Mid-round degeneracy gate: the phase-1c probe logged during training. A blind encoder's
+# deployed output stops varying with the observation (the round-1 collapse); the warm start sits
+# near 0.22. This is a degeneracy check, not an acceptance bar: it only rejects an essentially
+# constant action, so a healthy but drifting encoder cannot fail it. A decoder pairing cannot be
+# used here because a decoder JSON pins the encoder version it was trained against.
+ENC_PROBE_FLOOR=${ENC_PROBE_FLOOR:-0.02}
 mid_gate() {
-    $PY -c "
-import json, sys
-from fly_drone.roam_eval import ROUND_GATE
-mid = json.load(open(sys.argv[1]))['beacons_per_min']
-base = json.load(open('runs/v5/round0/validation.json'))['beacons_per_min']
-floor = ROUND_GATE['min_beacon_fraction'] * base
-print(f'mid beacons/min {mid} (floor {floor:.2f})')
-sys.exit(0 if mid is not None and mid >= floor else 1)" "$1"
+    local value
+    value=$(grep -oE 'action_state_std[[:space:]]*\|[[:space:]]*[0-9.eE+-]+' "$1" | tail -1 | grep -oE '[0-9.eE+-]+$')
+    if [ -z "$value" ]; then
+        log "mid gate: no action_state_std in $1; refusing to continue"
+        return 1
+    fi
+    $PY -c "import sys; v=float('$value'); print(f'mid action_state_std {v:.3f} (floor $ENC_PROBE_FLOOR)'); sys.exit(0 if v >= $ENC_PROBE_FLOOR else 1)"
 }
 
 last=0
@@ -64,13 +66,8 @@ for k in 1 2 3; do
             $FD sac-round encoder --output runs/v5/round$k/encoder --frames $ENC_MID_FRAMES --decoder $PREV_DEC --init $ENC_INIT \
                 --workers 6 --keep-resume > runs/v5/round$k-encoder-a.log 2>&1
         fi
-        log "T13 round $k mid-round validation (frozen partner + 100k encoder)"
-        mkdir -p runs/v5/round$k/mid
-        $FD sac-export runs/v5/round$k/encoder/resume/model.zip --learner encoder \
-            --output runs/v5/round$k/mid/encoder.pt > runs/v5/round$k-mid-export.log 2>&1
-        $FD sac-validate --decoder $PREV_DEC --encoder runs/v5/round$k/mid/encoder.pt \
-            --output runs/v5/round$k/mid/validation.json
-        if ! mid_gate runs/v5/round$k/mid/validation.json; then
+        log "T13 round $k mid-round probe gate"
+        if ! mid_gate runs/v5/round$k-encoder-a.log; then
             rm -rf runs/v5/round$k/encoder/resume  # drop the one-shot snapshot
             log "T13 STOP RULE: round $k encoder is blind by the $ENC_MID_FRAMES checkpoint; keeping round $((k - 1))"
             break
