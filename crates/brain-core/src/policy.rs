@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 /// Camera geometry + cue encoder identity; decoders trained on another encoder are rejected.
 pub const ENCODER_VERSION: &str = "bright-contrast-400-splay075-noaa-loom150-v4";
 
-/// Learned encoders (v5) pin their weights hash after this prefix; Python checks the exact match.
-pub const LEARNED_ENCODER_PREFIX: &str = "learned-v5:";
+/// Learned encoders pin their weights hash after one of these prefixes; Python checks the exact match.
+pub const LEARNED_ENCODER_PREFIXES: &[&str] = &["learned-v5:", "learned-v6:"];
 
 /// Squashing of the final layer: PPO actors clip, SAC actors use tanh.
 #[derive(Serialize, Deserialize, Default, Clone, Copy, PartialEq, Debug)]
@@ -38,7 +38,9 @@ impl Policy {
         let p: Self = serde_json::from_str(s).map_err(|e| e.to_string())?;
         let n = p.feature_ids.len();
         if (p.encoder_version != ENCODER_VERSION
-            && !p.encoder_version.starts_with(LEARNED_ENCODER_PREFIX))
+            && !LEARNED_ENCODER_PREFIXES
+                .iter()
+                .any(|prefix| p.encoder_version.starts_with(prefix)))
             || p.version != 1
             || n == 0
             || p.mean.len() != n
@@ -131,6 +133,14 @@ mod learned_encoder_tests {
         assert!(Policy::from_json(&policy_json("learned-v4:0123", None)).is_err());
         assert!(Policy::from_json(&policy_json("something-else", None)).is_err());
         assert!(Policy::from_json(&policy_json(ENCODER_VERSION, Some("relu"))).is_err());
+    }
+
+    #[test]
+    fn accepts_learned_v5_and_v6_and_rejects_other_encoders() {
+        assert!(Policy::from_json(&policy_json("learned-v5:0123456789abcdef", None)).is_ok());
+        assert!(Policy::from_json(&policy_json("learned-v6:0123456789abcdef", None)).is_ok());
+        assert!(Policy::from_json(&policy_json("learned-v4:0123", None)).is_err());
+        assert!(Policy::from_json(&policy_json("learned-", None)).is_err());
     }
 
     #[test]
