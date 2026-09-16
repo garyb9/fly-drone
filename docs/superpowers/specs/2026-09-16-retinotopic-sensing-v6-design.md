@@ -199,6 +199,8 @@ compute; the expensive items are the extra training rounds.
 - `python/fly_drone/retinotopy.py` + `tests/test_retinotopy.py` — the mapper and its tests.
 - `python/fly_drone/spatial_encoder.py` + `tests/test_spatial_encoder.py` — the v6 network and its
   tests (frame-difference inputs, per-channel map shapes/bounds, `learned-v6:` version, flatten).
+- `python/fly_drone/predictive.py` + `tests/test_predictive.py` — the auxiliary predictive objective
+  (EMA target, VICReg anti-collapse, collapse diagnostic).
 
 ## 10. Open decisions
 
