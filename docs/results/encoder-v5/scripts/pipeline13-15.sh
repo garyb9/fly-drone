@@ -19,6 +19,9 @@ START=${START_ROUND:-1}
 ENC_MID_FRAMES=${ENC_MID_FRAMES:-100000}
 ENC_FRAMES=${ENC_FRAMES:-350000}
 DEC_FRAMES=${DEC_FRAMES:-150000}
+# Set SKIP_STAGE_A=1 to reuse a stage-A snapshot (e.g. after fixing a later step); the staged
+# encoder round then starts from the snapshot already on disk.
+SKIP_STAGE_A=${SKIP_STAGE_A:-0}
 
 # Round selection guard (2026-09-16): a round must keep foraging, dodge on sight (ghost) and keep
 # E2 semantics to count. Prints "<eligible> <best_eligible_index>" for rounds 0..k.
@@ -54,12 +57,16 @@ for k in 1 2 3; do
         ENC_INIT=runs/v5/round$((k - 1))/encoder/encoder.zip
     fi
     if [ "$k" -ge "$START" ]; then
-        log "T13 round $k encoder SAC stage A (to $ENC_MID_FRAMES, keeping the snapshot)"
-        $FD sac-round encoder --output runs/v5/round$k/encoder --frames $ENC_MID_FRAMES --decoder $PREV_DEC --init $ENC_INIT \
-            --workers 6 --keep-resume > runs/v5/round$k-encoder-a.log 2>&1
+        if [ "$SKIP_STAGE_A" = "1" ] && [ -f runs/v5/round$k/encoder/resume/model.zip ]; then
+            log "T13 round $k encoder stage A skipped (reusing runs/v5/round$k/encoder/resume)"
+        else
+            log "T13 round $k encoder SAC stage A (to $ENC_MID_FRAMES, keeping the snapshot)"
+            $FD sac-round encoder --output runs/v5/round$k/encoder --frames $ENC_MID_FRAMES --decoder $PREV_DEC --init $ENC_INIT \
+                --workers 6 --keep-resume > runs/v5/round$k-encoder-a.log 2>&1
+        fi
         log "T13 round $k mid-round validation (frozen partner + 100k encoder)"
         mkdir -p runs/v5/round$k/mid
-        $FD sac-export --learner encoder --checkpoint runs/v5/round$k/encoder/resume/model.zip \
+        $FD sac-export runs/v5/round$k/encoder/resume/model.zip --learner encoder \
             --output runs/v5/round$k/mid/encoder.pt > runs/v5/round$k-mid-export.log 2>&1
         $FD sac-validate --decoder $PREV_DEC --encoder runs/v5/round$k/mid/encoder.pt \
             --output runs/v5/round$k/mid/validation.json
