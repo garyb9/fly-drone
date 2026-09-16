@@ -23,6 +23,13 @@ DEC_FRAMES=${DEC_FRAMES:-150000}
 # encoder round then starts from the snapshot already on disk.
 SKIP_STAGE_A=${SKIP_STAGE_A:-0}
 
+# Rounds before START were run in an earlier invocation; point the final-pair arrays at their
+# on-disk outputs so step 6 can still choose them (e.g. START_ROUND=2 after a manual round 1).
+for j in $(seq 1 $((START - 1))); do
+    ENC[$j]=runs/v5/round$j/encoder/encoder.pt
+    DEC[$j]=runs/v5/round$j/decoder/decoder.json
+done
+
 # Round selection guard (2026-09-16): a round must keep foraging, dodge on sight (ghost) and keep
 # E2 semantics to count. Prints "<eligible> <best_eligible_index>" for rounds 0..k.
 guard() {
