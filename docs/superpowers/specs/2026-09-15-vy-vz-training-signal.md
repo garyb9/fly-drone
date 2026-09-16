@@ -188,6 +188,21 @@ importing.
 3. Any objection to this living as a standalone spec (this file) rather than as an amendment
    section appended to the encoder v5 spec?
 
-## 10. Decisions (user, 2026-09-15)
+## 10. Decisions (user, 2026-09-16)
 
-_Pending user review._
+Recorded by the recovery session after Phase 0 diagnostics
+(`docs/results/encoder-v5/PHASE0-DIAGNOSTICS-2026-09-16.md`). The pipeline has stopped, so the
+§8 landing hazard is moot.
+
+1. **(a) Measure first — adopted.** M1–M3 land as Pack 1 R2–R4 of
+   `2026-09-15-training-improvements.md` in Phase 1; M4's columns ride in the new round selection
+   guard's report. No new stop condition, no `ACCEPTANCE` change.
+2. **(b) Bias initial exploration — gated on measurement.** Only after the re-run's M1–M3 data
+   says `threat_vy_mse`/`threat_vz_mse` are not improving, or dodges succeed with near-zero peak
+   `|vy|`/`|vz|`. It touches the same two init sites as the Phase 1 log_std clamp, so it stays a
+   small addition.
+3. **(c) Increase evade exposure — placeholder.** Fully specified only if (b) proves insufficient;
+   it touches the pre-registered `arena.LEVELS` and needs separate sign-off.
+4. **Open question 2:** (c) stays a placeholder as recommended. **Question 3:** this file stays
+   standalone. **Question 1 (hold M1–M3 until the pipeline stops):** resolved — the pipeline is
+   stopped and the instrumentation lands in Phase 1.

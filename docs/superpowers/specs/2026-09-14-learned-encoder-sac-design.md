@@ -225,3 +225,12 @@ the loom channels must still mean "something is coming at me".
 5. Critic-only warm-up: **actor and entropy coefficient frozen for the first 50 k frames of every
    SAC round** (§4), so an untrained critic cannot wreck the warm-started actor (final review,
    Important 3).
+6. **Post-warm-up entropy regime (2026-09-16 amendment).** The 2026-09-14 decision froze α during
+   warm-up but left its post-warm-up value at SB3's default (`auto` → init 1.0, target entropy
+   −dim A). Round 1's encoder mean collapsed to a constant 1.0 current on all 8 channels within the
+   first ~13 k frames after unfreeze at α ≈ 1, blinding the system (evidence:
+   `docs/results/encoder-v5/PHASE0-DIAGNOSTICS-2026-09-16.md`). Amended: `build_sac` sets
+   `ent_coef="auto_0.01"` and a target entropy matched to the warm-start `log_std = −2.5`
+   (`dim·(0.5·ln(2πe) − 2.5)` ≈ −1.08·dim), and the SAC actor clamps `log_std` to [−4, −1] so the
+   tanh policy cannot saturate. A fresh round must start at α ≈ 0.01. Landed in Phase 1 together
+   with the round selection guard and per-channel current-drift logging.
