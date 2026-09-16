@@ -67,13 +67,50 @@ def group_slices():
     return {group: np.asarray(ids, dtype=np.int64) for group, ids in out.items()}
 
 
+def channel_slices():
+    """``{channel: (start, stop)}`` flat slices into the ``flatten`` order."""
+    out, start = {}, 0
+    for name in CHANNEL_ORDER:
+        size = int(np.prod(channel_grid(name)))
+        out[name] = (start, start + size)
+        start += size
+    return out
+
+
+def mirror_name(name):
+    """The channel that ``name`` becomes under the bilateral mirror."""
+    return name[:-1] + ("r" if name.endswith("_l") else "l")
+
+
 def mirror_maps(maps):
     """Mirror a channel map dict: left and right swap, width flips (bilateral symmetry)."""
     out = {}
     for name in CHANNEL_ORDER:
-        other = name[:-1] + ("r" if name.endswith("_l") else "l")
-        out[name] = np.asarray(maps[other])[..., ::-1]
+        out[name] = np.asarray(maps[mirror_name(name)])[..., ::-1]
     return out
+
+
+def mirror_flat(vector):
+    """Mirror a flat or batched current vector: swap eyes and flip each map's width."""
+    vector = np.asarray(vector)
+    out = np.empty_like(vector)
+    slices = channel_slices()
+    for name, (start, stop) in slices.items():
+        nx, ny = channel_grid(name)
+        other_start, other_stop = slices[mirror_name(name)]
+        block = vector[..., other_start:other_stop].reshape(*vector.shape[:-1], nx, ny)
+        out[..., start:stop] = block[..., ::-1].reshape(*vector.shape[:-1], nx * ny)
+    return out
+
+
+def mirror_eyes(stacks, mask):
+    """Mirror the masked eye stacks (width flip, swap the two eye halves) in place."""
+    stacks = np.array(stacks)
+    mask = np.asarray(mask)
+    f = stacks.shape[1] // 2
+    flipped = stacks[mask, :, :, ::-1]
+    stacks[mask] = np.concatenate([flipped[:, f:], flipped[:, :f]], axis=1)
+    return stacks
 
 
 def flat_dim():

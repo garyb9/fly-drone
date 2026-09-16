@@ -138,3 +138,28 @@ def test_numpy_flatten_unflatten_round_trip_and_is_file(tmp_path):
     assert version.startswith("learned-v6:") and SpatialEncoder.is_file(
         tmp_path / "v6.pt"
     )
+
+
+def test_mirror_flat_matches_mirror_maps():
+    out = {
+        name: np.arange(
+            int(np.prod(spatial_encoder.channel_grid(name))), dtype=np.float32
+        ).reshape(spatial_encoder.channel_grid(name))
+        for name in CHANNEL_ORDER
+    }
+    flat = spatial_encoder.flatten_np(out)
+    np.testing.assert_array_equal(
+        spatial_encoder.mirror_flat(flat),
+        spatial_encoder.flatten_np(spatial_encoder.mirror_maps(out)),
+    )
+
+
+def test_mirror_eyes_swaps_halves_and_flips_width():
+    rng = np.random.default_rng(8)
+    stacks = rng.integers(0, 256, (4, 6, 48, 64), dtype=np.uint8)
+    mask = np.array([True, False, True, False])
+    out = spatial_encoder.mirror_eyes(stacks, mask)
+    mirrored = stacks[:, :, :, ::-1]
+    expected = np.concatenate([mirrored[mask][:, 3:], mirrored[mask][:, :3]], axis=1)
+    np.testing.assert_array_equal(out[mask], expected)
+    np.testing.assert_array_equal(out[~mask], stacks[~mask])

@@ -26,6 +26,15 @@ CUE_TO_CHANNELS = {
 UNSEEDED = ("tm4_l", "tm4_r", "t2_l", "t2_r")
 
 
+def mirror_targets(targets):
+    """Mirror a target-map dict: left and right swap, width flips (bilateral symmetry)."""
+    out = {}
+    for name in targets:
+        other = name[:-1] + ("r" if name.endswith("_l") else "l")
+        out[name] = np.asarray(targets[other])[..., ::-1]
+    return out
+
+
 def v4_cues_to_targets(cues, maps, neutral=1.0):
     """Build per-patch target maps from v4 cues.
 

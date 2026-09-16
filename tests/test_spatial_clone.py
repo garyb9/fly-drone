@@ -46,3 +46,37 @@ def test_neutral_baseline_is_configurable(maps):
     targets = spatial_clone.v4_cues_to_targets(np.zeros(4), maps, neutral=0.5)
     for channel in spatial_clone.UNSEEDED:
         np.testing.assert_allclose(targets[channel], 0.5)
+
+
+def test_mirror_targets_swaps_eyes_and_flips_width(maps):
+    cues = np.array([1.5, 0.25, 0.75, 0.0], np.float32)
+    targets = spatial_clone.v4_cues_to_targets(cues, maps)
+    mirrored = spatial_clone.mirror_targets(targets)
+    for channel in targets:
+        other = channel[:-1] + ("r" if channel.endswith("_l") else "l")
+        np.testing.assert_array_equal(mirrored[channel], targets[other][..., ::-1])
+
+
+def test_fit_spatial_clone_writes_a_loadable_v6_encoder(tmp_path):
+    from fly_drone.brain import ENCODER_VERSION
+    from fly_drone.spatial_encoder import CHANNEL_ORDER, SpatialEncoder
+
+    rng = np.random.default_rng(0)
+    n = 200
+    path = tmp_path / "clone.npz"
+    np.savez(
+        path,
+        stacks=rng.integers(0, 256, (n, 6, 48, 64), dtype=np.uint8),
+        cues=rng.uniform(0, 2, (n, 4)).astype(np.float32),
+        flight=np.repeat(np.arange(20), n // 20).astype(np.int32),
+        encoder_version=ENCODER_VERSION,
+    )
+    from fly_drone.sac import fit_spatial_clone
+
+    report = fit_spatial_clone(
+        [path], tmp_path / "fit", steps=5, batch=16, device="cpu"
+    )
+    assert set(report["held_out"]) == set(CHANNEL_ORDER)
+    assert set(report["groups"]) == {"light", "motion", "loom"}
+    saved = SpatialEncoder.load(tmp_path / "fit" / "encoder.pt")
+    assert saved.version == report["version"]

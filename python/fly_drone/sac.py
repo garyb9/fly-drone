@@ -646,6 +646,109 @@ def init_decoder(paths, encoder, output, steps=4000, device="auto"):
     return report
 
 
+def fit_spatial_clone(
+    paths, output, steps=60000, batch=256, holdout=0.1, device=None, seed=0
+):
+    """Supervised copy of v4's cues onto the v6 spatial encoder (spec §4.1).
+
+    Reuses the v5 clone flights: each frame's v4 cues are broadcast onto the spatial maps by
+    ``spatial_clone.v4_cues_to_targets``. Tm4/T2 have no v4 analogue and stay neutral. The
+    bilateral mirror of the v5 fit carries over (eyes mirrored, target maps swapped/flipped).
+    """
+    from . import spatial_clone
+    from .brain import DATA, ENCODER_VERSION
+    from .encoder import MIRROR_PROB
+    from .retinotopy import build_default_maps
+    from .spatial_encoder import (
+        CHANNEL_ORDER,
+        SpatialEncoder,
+        SpatialEncoderNet,
+        flatten,
+        mirror_eyes,
+        mirror_flat,
+    )
+
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    stacks, cues, flights = [], [], []
+    for i, p in enumerate(paths):
+        d = np.load(p)
+        if str(d["encoder_version"]) != ENCODER_VERSION:
+            raise ValueError(f"{p}: not collected on encoder v4")
+        stacks.append(d["stacks"])
+        cues.append(d["cues"])
+        flights.append(d["flight"].astype(np.int64) + i * 1_000_000)
+    stacks = np.concatenate(stacks)
+    cues = np.concatenate(cues)
+    flights = np.concatenate(flights)
+    cells = json.loads((Path(DATA) / "cells.json").read_text())
+    maps = build_default_maps(cells)
+    target_maps = spatial_clone.v4_cues_to_targets(cues, maps)
+    target_flat = np.concatenate(
+        [target_maps[name].reshape(len(cues), -1) for name in CHANNEL_ORDER], axis=1
+    ).astype(np.float32)
+
+    rng = np.random.default_rng(72 + seed)
+    unique = np.unique(flights)
+    held = rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False)
+    test = np.isin(flights, held)
+    train_ids, test_ids = np.flatnonzero(~test), np.flatnonzero(test)
+
+    net = SpatialEncoderNet().to(device).train()
+    opt = torch.optim.Adam(net.parameters(), lr=3e-4)
+
+    def predict(eyes):
+        x = torch.as_tensor(eyes, dtype=torch.float32, device=device) / 255.0
+        return torch.tanh(flatten(net(x))) + 1.0
+
+    for _ in range(steps):
+        ids = rng.choice(train_ids, batch)
+        eyes = stacks[ids].copy()
+        targets = target_flat[ids].copy()
+        mask = rng.random(len(ids)) < MIRROR_PROB
+        if mask.any():
+            eyes = mirror_eyes(eyes, mask)
+            targets[mask] = mirror_flat(targets[mask])
+        loss = (predict(eyes) - torch.as_tensor(targets, device=device)).square().mean()
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+
+    net.eval()
+    with torch.no_grad():
+        pred = np.concatenate(
+            [
+                predict(stacks[test_ids[i : i + 1024]]).cpu().numpy()
+                for i in range(0, len(test_ids), 1024)
+            ]
+        )
+    truth = target_flat[test_ids]
+
+    def _stats(p, t):
+        r = (
+            float(np.corrcoef(p, t)[0, 1])
+            if p.std() > 1e-9 and t.std() > 1e-9
+            else None
+        )
+        return {"mse": float(np.mean((p - t) ** 2)), "r": r}
+
+    report = {"frames": int(len(stacks)), "held_out_flights": int(len(held))}
+    report["held_out"] = {
+        name: _stats(pred[:, i], truth[:, i]) for i, name in enumerate(CHANNEL_ORDER)
+    }
+    from .spatial_encoder import group_slices
+
+    report["groups"] = {
+        group: _stats(pred[:, idx].ravel(), truth[:, idx].ravel())
+        for group, idx in group_slices().items()
+    }
+    out = Path(output)
+    out.mkdir(parents=True, exist_ok=True)
+    report["version"] = SpatialEncoder(net).save(out / "encoder.pt")
+    report["paths"] = [str(p) for p in paths]
+    (out / "clone.json").write_text(json.dumps(report, indent=2))
+    return report
+
+
 def export_checkpoint(checkpoint, learner, output, encoder=None, device="auto"):
     """Deployable artifact from any SAC `.zip` (a round output or a CheckpointCallback
     checkpoint): `encoder.pt` for `learner="encoder"`, or a parity-checked `decoder.json`
