@@ -6,7 +6,13 @@ import { applyCssTokens } from "./theme/apply-css-tokens";
 import { PALETTE, hexToInt } from "./theme/tokens";
 import { THEME } from "./scene/theme";
 import { applyRoom, createAxisGizmo, createGlowDecal, type Room } from "./scene/world";
-import { buildDrone, type Airframe, type AirframeId } from "./scene/drone";
+import {
+  buildDrone,
+  DEFAULT_EYES,
+  type Airframe,
+  type AirframeId,
+  type EyeGeometry,
+} from "./scene/drone";
 import { renderFlightView } from "./ui/flightView";
 import { renderHudPinned } from "./ui/hudPinned";
 import { renderDrawer } from "./ui/drawer";
@@ -27,6 +33,7 @@ type Metadata = {
   cells: Cell[];
   links: number[][];
   groups: string[];
+  cameras?: { count: number; splay: number; fovy_deg: number; pos: number[] };
   neurons: number;
   features: number;
   policy: string;
@@ -103,6 +110,12 @@ type Frame = {
   cameras: string[];
   real_time_factor: number;
   missed_deadlines: number;
+  budget?: {
+    tick_ms_p50: number | null;
+    tick_ms_p95: number | null;
+    target_ms: number;
+    samples: number;
+  };
   error?: string;
   task: string;
   ablation: string;
@@ -244,7 +257,8 @@ world.scene.add(drone);
 // Crazyflie CF2X, so the shell is deliberately larger than the simulated collision body.
 const AIRFRAME_KEY = "fly-drone.airframe";
 let airframeId: AirframeId = localStorage.getItem(AIRFRAME_KEY) === "B" ? "B" : "A";
-let airframe: Airframe = buildDrone(airframeId);
+let eyeGeometry: EyeGeometry = DEFAULT_EYES;
+let airframe: Airframe = buildDrone(airframeId, eyeGeometry);
 drone.add(airframe.group);
 function setAirframe(id: AirframeId) {
   airframe.group.removeFromParent();
@@ -255,7 +269,7 @@ function setAirframe(id: AirframeId) {
     else mesh.material?.dispose();
   });
   airframeId = id;
-  airframe = buildDrone(id);
+  airframe = buildDrone(id, eyeGeometry);
   airframe.fov.visible = el("toggle-fov").classList.contains("active");
   airframe.guards.visible = el("toggle-guards").classList.contains("active");
   drone.add(airframe.group);
@@ -463,6 +477,13 @@ function setupBrain(m: Metadata) {
   initialized = true;
   el("mode").textContent =
     m.policy === "trained" ? "CONNECTOME POLICY" : "PID BASELINE · BRAIN OBSERVING";
+  if (
+    m.cameras &&
+    (m.cameras.splay !== eyeGeometry.splay || m.cameras.fovy_deg !== eyeGeometry.fovyDeg)
+  ) {
+    eyeGeometry = { splay: m.cameras.splay, fovyDeg: m.cameras.fovy_deg };
+    setAirframe(airframeId);
+  }
   renderGroupLegend(m);
   updateRoom(m.room);
   void loadReports();
@@ -773,6 +794,23 @@ function update(f: Frame) {
     ]),
     22000,
   );
+  const budget = f.budget;
+  const p50 = budget?.tick_ms_p50 ?? null;
+  const p95 = budget?.tick_ms_p95 ?? null;
+  const budgetTarget = budget?.target_ms ?? 5;
+  meters(
+    "budget",
+    p50 === null || p95 === null
+      ? []
+      : [
+          ["tick p50", p50, `${p50.toFixed(2)} / ${budgetTarget.toFixed(0)} ms`],
+          ["tick p95", p95, `${p95.toFixed(2)} / ${budgetTarget.toFixed(0)} ms`],
+        ],
+    budgetTarget,
+  );
+  el("budget-note").textContent = budget?.samples
+    ? `${budget.samples} samples · ${f.real_time_factor.toFixed(2)}× real time · ${f.missed_deadlines} missed deadlines`
+    : "No trained decoder loaded — nothing to time.";
   el("command").textContent =
     `Motion [m/s, rad/s]: ${f.command.map((v) => v.toFixed(2)).join(" · ")}`;
   updateRoamHud(f);

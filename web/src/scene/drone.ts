@@ -10,6 +10,11 @@ import { THEME } from "./theme";
 export const EYE_SPLAY = 0.75;
 export const EYE_FOVY = (75 * Math.PI) / 180;
 
+// Eye geometry as reported by the plant (metadata.cameras). Defaults mirror plant.py so the
+// viewer is honest even before the server's numbers arrive.
+export type EyeGeometry = { splay: number; fovyDeg: number };
+export const DEFAULT_EYES: EyeGeometry = { splay: EYE_SPLAY, fovyDeg: (EYE_FOVY * 180) / Math.PI };
+
 export type AirframeId = "A" | "B";
 
 export type AirframeSpec = {
@@ -155,12 +160,14 @@ export type Airframe = {
 
 // Built in the drone's local Z-up frame (X forward, Y left, Z up) to match the old
 // placeholder body and the MuJoCo body frame.
-export function buildAirframe(spec: AirframeSpec): Airframe {
+export function buildAirframe(spec: AirframeSpec, eyes: EyeGeometry = DEFAULT_EYES): Airframe {
+  const splay = eyes.splay;
+  const halfFov = (eyes.fovyDeg * Math.PI) / 180 / 2;
   const group = new THREE.Group();
   const rotors: THREE.Group[] = [];
   const guards = new THREE.Group();
   const fov = new THREE.Group();
-  const eyes: THREE.Vector3[] = [];
+  const eyePoints: THREE.Vector3[] = [];
   const half = spec.diagonal / 2;
   const [bw, bd, bh] = spec.body;
   const z0 = 0.02;
@@ -292,7 +299,7 @@ export function buildAirframe(spec: AirframeSpec): Airframe {
 
   for (const side of [1, -1] as const) {
     const eye = new THREE.Vector3(spec.camX, side * spec.camY, z0 + 0.008);
-    eyes.push(eye);
+    eyePoints.push(eye);
     group.add(
       at(box(spec.camSize * 1.6, 0.004, 0.004, alu), eye.x - spec.camSize * 0.75, eye.y, eye.z),
     );
@@ -339,13 +346,9 @@ export function buildAirframe(spec: AirframeSpec): Airframe {
       ]),
     );
 
-    const cone = fovCone(
-      spec.diagonal * 1.3,
-      EYE_FOVY / 2,
-      side > 0 ? THEME.amber : THEME.velocity,
-    );
+    const cone = fovCone(spec.diagonal * 1.3, halfFov, side > 0 ? THEME.amber : THEME.velocity);
     cone.position.copy(eye);
-    cone.rotation.z = side * EYE_SPLAY;
+    cone.rotation.z = side * splay;
     fov.add(cone);
   }
   group.add(fov);
@@ -416,9 +419,9 @@ export function buildAirframe(spec: AirframeSpec): Airframe {
     );
   }
 
-  return { group, rotors, guards, fov, eyes };
+  return { group, rotors, guards, fov, eyes: eyePoints };
 }
 
-export function buildDrone(id: AirframeId): Airframe {
-  return buildAirframe(SPECS[id]);
+export function buildDrone(id: AirframeId, eyes: EyeGeometry = DEFAULT_EYES): Airframe {
+  return buildAirframe(SPECS[id], eyes);
 }

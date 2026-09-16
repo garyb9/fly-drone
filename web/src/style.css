@@ -260,7 +260,7 @@ button.primary {
 }
 .signal-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
   padding: 16px 18px;
 }
@@ -326,6 +326,9 @@ h3 {
 }
 #motors .meter i {
   background: #d9a373;
+}
+#budget .meter {
+  grid-template-columns: 46px 1fr 74px;
 }
 .controls {
   display: flex;

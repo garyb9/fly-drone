@@ -204,6 +204,7 @@ class Session:
                 "cells": [cells[i] for i in ids],
                 "links": links,
                 "groups": env.brain.groups,
+                "cameras": env.plant.cameras(),
                 "neurons": len(cells),
                 "features": len(env.brain.feature_ids),
                 "policy": "trained" if self.policy else "PID baseline",
@@ -222,6 +223,9 @@ class Session:
             paused = False
             seq = 0
             deadline = time.perf_counter()
+            # Rolling decision cost (encoder + connectome tick) for the compute-budget HUD.
+            # 5 ms is the per-40 ms frame budget from docs/hardware-estimate.md §2.
+            tick_times: deque[float] = deque(maxlen=50)
             start = deadline
             missed = 0
             last_error = None
@@ -345,6 +349,10 @@ class Session:
                         command = np.zeros(4)
                         explained = None
                     _, _, done, truncated, info = env.step(command)
+                    # env.step runs the connectome; it reports the per-brain-tick cost so the
+                    # HUD compares like with like (docs/hardware-estimate.md §2, 5 ms/tick).
+                    if env.last_brain_ticks:
+                        tick_times.append(env.last_brain_ms / env.last_brain_ticks)
                     tracker.update(info)
                     for r in env.trace:
                         fly.step(r)
@@ -400,6 +408,16 @@ class Session:
                     },
                     "real_time_factor": env.plant.data.time / max(0.001, now - start),
                     "missed_deadlines": missed,
+                    "budget": {
+                        "tick_ms_p50": float(np.percentile(tick_times, 50))
+                        if tick_times
+                        else None,
+                        "tick_ms_p95": float(np.percentile(tick_times, 95))
+                        if tick_times
+                        else None,
+                        "target_ms": 5.0,
+                        "samples": len(tick_times),
+                    },
                     "policy_status": policy_status,
                     "attribution": explained,
                     "free_roam": None

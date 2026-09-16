@@ -28,6 +28,11 @@ class DronePlant(BaseAviary):
         self, vision=True, motor_tau=0.025, drag=True, eye_splay=0.75, arena=None
     ):
         self.eye_splay = float(eye_splay)
+        # Camera extrinsics/intrinsics, kept as the authored strings so build_xml() can
+        # interpolate them without changing the generated MJCF, and exposed as numbers
+        # through cameras() for the viewer's FOV cones.
+        self.eye_pos = "0.035 0 0.008"
+        self.eye_fovy = "75"
         self.motor_tau = float(motor_tau)
         if self.motor_tau < 0:
             raise ValueError("motor_tau must be nonnegative")
@@ -83,8 +88,8 @@ class DronePlant(BaseAviary):
                 body,
                 "camera",
                 name=name,
-                pos="0.035 0 0.008",
-                fovy="75",
+                pos=self.eye_pos,
+                fovy=self.eye_fovy,
                 xyaxes=f"{math.sin(angle)} {-math.cos(angle)} 0 0 0 1",
             )
         if self.arena is None:
@@ -337,6 +342,15 @@ class DronePlant(BaseAviary):
         self.actual[:] = self.HOVER_RPM
         self.hold = self.pos[0].copy()
         self.yaw_target = float(self.rpy[0, 2])
+
+    def cameras(self):
+        """Eye extrinsics/intrinsics for the viewer, so its FOV cones match the sim."""
+        return {
+            "count": 2,
+            "splay": self.eye_splay,
+            "fovy_deg": float(self.eye_fovy),
+            "pos": [float(v) for v in self.eye_pos.split()],
+        }
 
     def room(self):
         """Static room geometry for the viewer, read from the compiled model (Z-up m)."""

@@ -1,3 +1,5 @@
+import time
+
 import gymnasium as gym
 import mujoco
 import numpy as np
@@ -95,6 +97,10 @@ class ConnectomeEnv(gym.Env):
         self.command = np.zeros(4)
         self.trace = []
         self.interventions = {}
+        # Connectome cost of the last step(), measured around brain.step() only so the
+        # viewer's compute-budget HUD can compare it to the 5 ms per-tick budget.
+        self.last_brain_ms = 0.0
+        self.last_brain_ticks = 0
         self.previous_bearing = 0.0
         self.previous_distance = 0.0
         self.launch = None
@@ -376,12 +382,17 @@ class ConnectomeEnv(gym.Env):
         self._move_objects()
         self._sense()
         self.trace = []
+        brain_ms = 0.0
         for _ in range(8):
             for idx, value in self.interventions.items():
                 self.brain.core.stimulate([idx], value)
+            brain_t0 = time.perf_counter()
             self.brain.step()
+            brain_ms += (time.perf_counter() - brain_t0) * 1000.0
             self.plant.advance(self.command)
             self.trace.append(self.brain.read())
+        self.last_brain_ms = brain_ms
+        self.last_brain_ticks = 8
         self.frames += 1
         if self.roam is not None:
             result = self._step_roam(action)
