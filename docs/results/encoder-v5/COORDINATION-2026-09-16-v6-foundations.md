@@ -35,12 +35,12 @@ until the pipeline stops or a window is named. Specifically held back:
 | `a78b4f0` | `python/fly_drone/retinotopy.py` + `tests/test_retinotopy.py` |
 | `ef34d90` | `python/fly_drone/spatial_encoder.py` + `tests/test_spatial_encoder.py` (the v6 conv net, `learned-v6:`) |
 | `5946d77` | Coordination-note update |
-| pending | `python/fly_drone/predictive.py` + `tests/test_predictive.py` (auxiliary predictive objective) |
+| `e667a9d` | `python/fly_drone/predictive.py` + `tests/test_predictive.py` (auxiliary predictive objective) |
 
-These are **new files only**. The pipeline does not import `retinotopy` or `spatial_encoder`, and
-its T15 E4 pytest runs only `test_arena.py::test_legacy_room_mjcf_unchanged` and `test_env.py -k
-"legacy or replay_is_bit_identical"`, so the new test files are not collected by the run. Full suite
-184 passed, `ruff` clean.
+These are **new files only**. The pipeline does not import `retinotopy`, `spatial_encoder` or
+`predictive`, and its T15 E4 pytest runs only `test_arena.py::test_legacy_room_mjcf_unchanged` and
+`test_env.py -k "legacy or replay_is_bit_identical"`, so the new test files are not collected by the
+run. Full suite 192 passed, `ruff` clean.
 
 ## 4. What v6 is, in one paragraph
 
