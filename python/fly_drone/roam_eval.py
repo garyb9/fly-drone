@@ -382,12 +382,18 @@ def roc_auc(scores, labels):
 
 def encoder_scores(currents, threat, beacon):
     from .sac import LIGHT, LOOM
+    from .spatial_encoder import flat_dim, group_slices
 
     currents = np.asarray(currents, dtype=float)
     threat = np.asarray(threat)
     keep = threat >= 0
-    light = currents[keep][:, LIGHT].mean(1)
-    loom = currents[keep][:, LOOM].max(1)
+    if currents.shape[1] == flat_dim():  # v6 spatial: score the named groups
+        groups = group_slices()
+        light_ids, loom_ids = groups["light"], groups["loom"]
+    else:
+        light_ids, loom_ids = LIGHT, LOOM
+    light = currents[keep][:, light_ids].mean(1)
+    loom = currents[keep][:, loom_ids].max(1)
     is_threat = threat[keep] == 1
     seen = np.asarray(beacon, dtype=bool)[keep]
     auc = {

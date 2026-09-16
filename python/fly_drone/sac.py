@@ -749,6 +749,19 @@ def fit_spatial_clone(
     return report
 
 
+def _encoder_version(path):
+    """The deployed version string of a v5 or v6 encoder file."""
+    from .brain import _is_spatial
+
+    if _is_spatial(path):
+        from .spatial_encoder import SpatialEncoder
+
+        return SpatialEncoder.load(path).version
+    from .encoder import LearnedEncoder
+
+    return LearnedEncoder.load(path).version
+
+
 def export_checkpoint(checkpoint, learner, output, encoder=None, device="auto"):
     """Deployable artifact from any SAC `.zip` (a round output or a CheckpointCallback
     checkpoint): `encoder.pt` for `learner="encoder"`, or a parity-checked `decoder.json`
@@ -764,7 +777,14 @@ def export_checkpoint(checkpoint, learner, output, encoder=None, device="auto"):
     model = SAC.load(checkpoint, device=device, buffer_size=1)
     out = Path(output)
     if learner == "encoder":
-        version = LearnedEncoder.from_actor(model.actor).save(out)
+        from .spatial_policy import SpatialActor
+
+        if isinstance(model.actor, SpatialActor):
+            from .spatial_encoder import SpatialEncoder
+
+            version = SpatialEncoder.from_actor(model.actor).save(out)
+        else:
+            version = LearnedEncoder.from_actor(model.actor).save(out)
         return {"learner": "encoder", "encoder_version": version, "output": str(out)}
     if learner == "decoder":
         if encoder is None:
@@ -800,8 +820,6 @@ def repin_decoder(source, encoder, output):
 
     Refuses any source JSON whose `output` or `layers` it cannot copy verbatim.
     """
-    from .encoder import LearnedEncoder
-
     data = json.loads(Path(source).read_text())
     missing = _DECODER_FIELDS - data.keys()
     if missing:
@@ -819,16 +837,16 @@ def repin_decoder(source, encoder, output):
         if len(layer["weights"]) != len(layer["bias"]):
             raise ValueError(f"{source}: layer {i} weights/bias shape mismatch")
 
-    new_encoder = LearnedEncoder.load(encoder)
+    new_version = _encoder_version(encoder)
     pinned = dict(data)
     pinned["repinned_from"] = data["encoder_version"]
-    pinned["encoder_version"] = new_encoder.version
+    pinned["encoder_version"] = new_version
     out = Path(output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(pinned, indent=2))
     return {
         "output": str(out),
-        "encoder_version": new_encoder.version,
+        "encoder_version": new_version,
         "repinned_from": data["encoder_version"],
     }
 
@@ -937,13 +955,15 @@ class ResumeCheckpoint(BaseCallback):
         return True
 
 
-def _factory(learner, rank, seed, decoder, encoder, level):
+def _factory(learner, rank, seed, decoder, encoder, level, spatial=False):
     def make():
         from stable_baselines3.common.monitor import Monitor
 
         torch.set_num_threads(1)
         env = Monitor(
-            SacRoamEnv(learner, decoder=decoder, encoder=encoder, level=level)
+            SacRoamEnv(
+                learner, decoder=decoder, encoder=encoder, level=level, spatial=spatial
+            )
         )
         env.reset(seed=seed + rank)
         return env
@@ -970,6 +990,7 @@ def train_round(
     resume=False,
     resume_every=50_000,
     keep_resume=False,
+    spatial=False,
 ):
     """One SAC round for one learner; the other half is frozen inside the environment.
 
@@ -1002,7 +1023,8 @@ def train_round(
     decoder = str(Path(decoder).resolve()) if decoder else None
     encoder = str(Path(encoder).resolve()) if encoder else None
     factories = [
-        _factory(learner, r, seed, decoder, encoder, level) for r in range(workers)
+        _factory(learner, r, seed, decoder, encoder, level, spatial)
+        for r in range(workers)
     ]
     # Each env owns a full brain and renderer; spawn keeps EGL state per process.
     vec = (
@@ -1060,6 +1082,7 @@ def train_round(
                 actor_warmup,
                 n_step,
                 optimize_memory,
+                spatial,
             )
             if init is not None:
                 if learner != "encoder":
@@ -1067,8 +1090,11 @@ def train_round(
                         "a .pt init is the v4 clone for the first encoder round"
                     )
                 state = torch.load(init, map_location="cpu", weights_only=True)
-                model.actor.features_extractor.load_state_dict(state["extractor"])
-                model.actor.mu.load_state_dict(state["mu"])
+                if spatial:
+                    model.actor.features_extractor.net.load_state_dict(state["net"])
+                else:
+                    model.actor.features_extractor.load_state_dict(state["extractor"])
+                    model.actor.mu.load_state_dict(state["mu"])
                 with torch.no_grad():
                     model.actor.log_std.weight.zero_()
                     model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
@@ -1115,13 +1141,23 @@ def train_round(
             "actor_warmup": int(model.actor_warmup),
             "n_step": int(n_step),
             "optimize_memory": bool(optimize_memory),
+            "spatial": bool(spatial),
             "resumed_from": resumed_from,
             "snapshot": str(snapshot) if snapshot.exists() else None,
         }
         if learner == "encoder":
-            report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(
-                out / "encoder.pt"
-            )
+            from .spatial_policy import SpatialActor
+
+            if isinstance(model.actor, SpatialActor):
+                from .spatial_encoder import SpatialEncoder
+
+                report["encoder_version"] = SpatialEncoder.from_actor(model.actor).save(
+                    out / "encoder.pt"
+                )
+            else:
+                report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(
+                    out / "encoder.pt"
+                )
     finally:
         vec.close()
     # Built after the workers are gone: parity/export only needs the actor's weights.

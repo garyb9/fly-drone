@@ -71,3 +71,62 @@ def test_v6_policy_builds_with_the_spatial_actor():
     assert isinstance(model.actor, SpatialActor)
     assert isinstance(model.actor.mu, torch.nn.Identity)
     assert model.action_space.shape == (flat_dim(),)
+
+
+def test_v6_export_checkpoint_round_trips(tmp_path):
+    from fly_drone.sac import export_checkpoint
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    model = build_sac(
+        "encoder",
+        SpacesOnlyEnv("encoder", spatial=True),
+        buffer_size=1,
+        device="cpu",
+        spatial=True,
+    )
+    model.save(tmp_path / "encoder")
+    report = export_checkpoint(
+        str(tmp_path / "encoder.zip"), "encoder", tmp_path / "e.pt"
+    )
+    assert report["encoder_version"].startswith("learned-v6:")
+    assert SpatialEncoder.load(tmp_path / "e.pt").version == report["encoder_version"]
+
+
+def test_repin_decoder_pins_the_v6_version(tmp_path):
+    from fly_drone.sac import repin_decoder
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    enc = SpatialEncoder.fresh(seed=0)
+    enc.save(tmp_path / "e.pt")
+    n = len(BrainRuntime().feature_ids)
+    src = tmp_path / "dec.json"
+    src.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "encoder_version": ENCODER_VERSION,
+                "dataset_hash": "h",
+                "feature_ids": [0] * n,
+                "mean": [0.0] * n,
+                "scale": [1.0] * n,
+                "layers": [{"weights": [[0.0] * n] * 4, "bias": [0.0] * 4}],
+                "action_limits": [0.7, 0.5, 0.3, 0.8],
+                "output": "tanh",
+            }
+        )
+    )
+    out = repin_decoder(src, tmp_path / "e.pt", tmp_path / "pinned.json")
+    assert out["encoder_version"] == enc.version
+
+
+def test_encoder_scores_uses_the_v6_groups():
+    from fly_drone.roam_eval import encoder_scores
+    from fly_drone.spatial_encoder import group_slices
+
+    currents = np.zeros((4, flat_dim()), np.float32)
+    loom = group_slices()["loom"]
+    currents[0, loom] = 2.0
+    currents[1, loom] = 2.0
+    scores = encoder_scores(currents, [1, 1, 0, -1], [False, False, True, False])
+    assert scores["E1"]["loom_auc"] == pytest.approx(1.0)
+    assert scores["E1"]["passed"] is True

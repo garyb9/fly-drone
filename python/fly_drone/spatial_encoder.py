@@ -243,6 +243,12 @@ class SpatialEncoder:
         return cls(SpatialEncoderNet())
 
     @classmethod
+    def from_actor(cls, actor):
+        import copy
+
+        return cls(copy.deepcopy(actor.features_extractor.net))
+
+    @classmethod
     def load(cls, path):
         torch.set_num_threads(1)
         state = torch.load(path, map_location="cpu", weights_only=True)
