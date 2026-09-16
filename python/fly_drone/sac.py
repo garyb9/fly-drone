@@ -647,13 +647,23 @@ def init_decoder(paths, encoder, output, steps=4000, device="auto"):
 
 
 def fit_spatial_clone(
-    paths, output, steps=60000, batch=256, holdout=0.1, device=None, seed=0
+    paths,
+    output,
+    steps=60000,
+    batch=256,
+    holdout=0.1,
+    device=None,
+    seed=0,
+    seed_motion=True,
 ):
     """Supervised copy of v4's cues onto the v6 spatial encoder (spec §4.1).
 
     Reuses the v5 clone flights: each frame's v4 cues are broadcast onto the spatial maps by
-    ``spatial_clone.v4_cues_to_targets``. Tm4/T2 have no v4 analogue and stay neutral. The
-    bilateral mirror of the v5 fit carries over (eyes mirrored, target maps swapped/flipped).
+    ``spatial_clone.v4_cues_to_targets``. With ``seed_motion`` (default) the v4 loom cue also
+    seeds the Tm4/T2 maps, so the clone drives the M1b primary motion channel and the direct
+    LC4/LPLC2 route; set it False to leave Tm4/T2 neutral. The bilateral mirror of the v5 fit
+    carries over (eyes mirrored, target maps swapped/flipped), as does the rare-frame
+    oversampling.
     """
     from . import spatial_clone
     from .brain import DATA, ENCODER_VERSION
@@ -683,7 +693,7 @@ def fit_spatial_clone(
     flights = np.concatenate(flights)
     cells = json.loads((Path(DATA) / "cells.json").read_text())
     maps = build_default_maps(cells)
-    target_maps = spatial_clone.v4_cues_to_targets(cues, maps)
+    target_maps = spatial_clone.v4_cues_to_targets(cues, maps, seed_motion=seed_motion)
     target_flat = np.concatenate(
         [target_maps[name].reshape(len(cues), -1) for name in CHANNEL_ORDER], axis=1
     ).astype(np.float32)
@@ -738,7 +748,11 @@ def fit_spatial_clone(
         return {"mse": float(np.mean((p - t) ** 2)), "r": r}
 
     slices = channel_slices()
-    report = {"frames": int(len(stacks)), "held_out_flights": int(len(held))}
+    report = {
+        "frames": int(len(stacks)),
+        "held_out_flights": int(len(held)),
+        "seed_motion": bool(seed_motion),
+    }
     report["held_out"] = {
         name: _stats(
             pred[:, slices[name][0] : slices[name][1]].ravel(),

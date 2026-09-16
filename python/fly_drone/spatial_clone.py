@@ -22,8 +22,18 @@ CUE_TO_CHANNELS = {
     CUE_LOOM_R: ("lc4_r", "lplc2_r"),
 }
 
-# Channels with no v4 analogue; left at the neutral baseline.
+# Channels with no v4 analogue; left at the neutral baseline unless seed_motion is set.
 UNSEEDED = ("tm4_l", "tm4_r", "t2_l", "t2_r")
+
+# The M1b primary motion channel (Tm4) and wide-field T2. v4's loom cue is a global scalar, so
+# with seed_motion the clone broadcasts it onto these maps too and the connectome's loom circuit
+# gets driven from init (F2 option a, handoff 2026-09-16).
+MOTION_TO_CUE = {
+    "tm4_l": CUE_LOOM_L,
+    "tm4_r": CUE_LOOM_R,
+    "t2_l": CUE_LOOM_L,
+    "t2_r": CUE_LOOM_R,
+}
 
 
 def mirror_targets(targets):
@@ -35,11 +45,12 @@ def mirror_targets(targets):
     return out
 
 
-def v4_cues_to_targets(cues, maps, neutral=1.0):
+def v4_cues_to_targets(cues, maps, neutral=1.0, seed_motion=False):
     """Build per-patch target maps from v4 cues.
 
     ``cues`` is ``(4,)`` for one frame or ``(N, 4)`` for a batch; returns a dict
-    ``channel -> (nx, ny)`` or ``(N, nx, ny)`` array in ``[0, 2]``.
+    ``channel -> (nx, ny)`` or ``(N, nx, ny)`` array in ``[0, 2]``. With ``seed_motion``
+    the v4 loom cue also seeds the Tm4/T2 maps; otherwise they stay at ``neutral``.
     """
     cues = np.asarray(cues, dtype=np.float32)
     batch = cues.ndim == 2
@@ -55,6 +66,10 @@ def v4_cues_to_targets(cues, maps, neutral=1.0):
             out[channel] = block if batch else block[0]
     for channel in UNSEEDED:
         nx, ny = maps[channel].nx, maps[channel].ny
-        block = np.full((n, nx, ny), float(neutral), np.float32)
+        if seed_motion and channel in MOTION_TO_CUE:
+            value = cues[:, MOTION_TO_CUE[channel]].reshape(n, 1, 1)
+            block = np.broadcast_to(value, (n, nx, ny)).astype(np.float32).copy()
+        else:
+            block = np.full((n, nx, ny), float(neutral), np.float32)
         out[channel] = block if batch else block[0]
     return out

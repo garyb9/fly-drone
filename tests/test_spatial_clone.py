@@ -48,6 +48,13 @@ def test_neutral_baseline_is_configurable(maps):
         np.testing.assert_allclose(targets[channel], 0.5)
 
 
+def test_seed_motion_broadcasts_the_loom_cue(maps):
+    cues = np.array([1.5, 0.25, 0.75, 0.1], np.float32)
+    seeded = spatial_clone.v4_cues_to_targets(cues, maps, seed_motion=True)
+    for channel, cue in spatial_clone.MOTION_TO_CUE.items():
+        np.testing.assert_allclose(seeded[channel], cues[cue])
+
+
 def test_mirror_targets_swaps_eyes_and_flips_width(maps):
     cues = np.array([1.5, 0.25, 0.75, 0.0], np.float32)
     targets = spatial_clone.v4_cues_to_targets(cues, maps)

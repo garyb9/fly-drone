@@ -137,6 +137,11 @@ def main():
         action="store_true",
         help="fit the v6 spatial encoder (v4 cues -> per-patch target maps)",
     )
+    p.add_argument(
+        "--no-seed-motion",
+        action="store_true",
+        help="v6: leave Tm4/T2 neutral instead of seeding them from the v4 loom cue",
+    )
     p = sub.add_parser("sac-init-decoder")
     p.add_argument("data", nargs="+", help="stage-1 DAgger .npz files")
     p.add_argument("--encoder", required=True)
@@ -252,7 +257,10 @@ def main():
         elif args.command == "encoder-clone":
             if args.spatial:
                 result = sac.fit_spatial_clone(
-                    args.data, args.output, 60000 if args.steps is None else args.steps
+                    args.data,
+                    args.output,
+                    60000 if args.steps is None else args.steps,
+                    seed_motion=not args.no_seed_motion,
                 )
             else:
                 result = encoder.fit_clone(

@@ -345,9 +345,17 @@ Each population's cells are assigned to patches by a 2D PCA of their positions
 
 **Clone initialisation.** `encoder-clone --spatial` (`sac.fit_spatial_clone`) broadcasts the v4
 cues onto the maps (`spatial_clone.v4_cues_to_targets`): `light_l/r` seed the mi1/tm3 maps and
-`loom_l/r` the direct lc4/lplc2 maps; Tm4/T2 start neutral and are left to SAC. It reuses the v5
-clone flights, and carries the mirror augmentation (eyes mirrored, target maps swapped/flipped).
-`clone.json` reports per-channel and per-group held-out MSE/r.
+`loom_l/r` the direct lc4/lplc2 maps. With `seed_motion` (default) the same v4 loom cue also seeds
+the Tm4/T2 maps, so the clone drives the M1b primary motion channel as well as the direct route;
+`--no-seed-motion` leaves them neutral and lets SAC discover them. It reuses the v5 clone flights,
+carries the mirror augmentation (eyes mirrored, target maps swapped/flipped) and the v5 rare-frame
+oversampling (loom-active + light-side thirds). `clone.json` reports per-channel and per-group
+held-out MSE/r.
+
+**Whole-eye context.** `SpatialEncoderNet` adds a pooled-feature → per-channel-constant term to every
+map (`global_head`). Without it the conv trunk's receptive field is local (~17 px) and cannot
+represent v4's globally pooled light/loom cue; the clone then underfits (light r ≈ 0.4). With it the
+clone reaches light r 0.998 / loom r 0.934 (v5: 0.978 / 0.962).
 
 **Identity and metabolic cost.** Version `"learned-v6:"` + the weights hash; the v6 encoder's
 `loom`/`light` group means replace the v5 index lists in the metabolic cost and in E1/E2

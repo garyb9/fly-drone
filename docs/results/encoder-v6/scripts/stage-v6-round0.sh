@@ -24,7 +24,7 @@ $FD roam-screen runs/v6/round0/decoder.json --encoder runs/v6/clone/encoder.pt \
     --level 2 --seeds 30 --seed-base 9000 --workers 6 \
     --output runs/v6/round0/gate30-round0.json
 got=$(bpm runs/v6/round0/gate30-round0.json)
-ref=$(bpm runs/v5/round0/gate30-v4-it0.json)
+ref=$(bpm docs/results/encoder-v5/run-records/gate30-v4-it0.json)
 log "gate30: round0=$got v4_ref=$ref gate=0.8x=$($PY -c "print(0.8*$ref)")"
 if $PY -c "import sys;sys.exit(0 if $got >= 0.8*$ref else 1)"; then
     log "GATE PASS"
