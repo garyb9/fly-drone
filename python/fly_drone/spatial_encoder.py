@@ -172,6 +172,24 @@ def unflatten(vector):
     return out
 
 
+def flatten_np(maps):
+    """NumPy twin of ``flatten`` for a single sample: dict of maps -> ``(flat_dim(),)``."""
+    return np.concatenate(
+        [np.asarray(maps[name], dtype=np.float32).reshape(-1) for name in CHANNEL_ORDER]
+    )
+
+
+def unflatten_np(vector):
+    """NumPy twin of ``unflatten`` for a single sample: ``(flat_dim(),)`` -> dict of maps."""
+    vector = np.asarray(vector, dtype=np.float32)
+    out, start = {}, 0
+    for name in CHANNEL_ORDER:
+        nx, ny = channel_grid(name)
+        out[name] = vector[start : start + nx * ny].reshape(nx, ny)
+        start += nx * ny
+    return out
+
+
 class SpatialEncoder:
     """Deployable encoder: eye stack -> current maps in [0, 2]."""
 
@@ -194,6 +212,12 @@ class SpatialEncoder:
         enc = cls.fresh()
         enc.net.load_state_dict(state["net"])
         return enc
+
+    @classmethod
+    def is_file(cls, path):
+        """True when ``path`` holds a v6 spatial net (as opposed to a v5 encoder file)."""
+        state = torch.load(path, map_location="cpu", weights_only=True)
+        return isinstance(state, dict) and "net" in state
 
     def state(self):
         return {"net": self.net.state_dict()}

@@ -38,6 +38,17 @@ def luma_u8(images):
     return np.round(y).astype(np.uint8)
 
 
+def _is_spatial(encoder):
+    """True when the runtime should use the v6 per-patch spatial input path."""
+    if isinstance(encoder, str) and encoder == "external":
+        return False
+    from .spatial_encoder import SpatialEncoder
+
+    if isinstance(encoder, SpatialEncoder):
+        return True
+    return isinstance(encoder, (str, Path)) and SpatialEncoder.is_file(encoder)
+
+
 class FrameStack:
     """The learned encoder's own recent frames; an empty stack repeats the first frame."""
 
@@ -72,16 +83,25 @@ class BrainRuntime:
             raise ValueError("manifest neuron count mismatch")
         self.cells = json.loads((self.data / "cells.json").read_text())
         groups = json.loads((self.data / "groups.json").read_text())
+        # Group names are index targets for cells[i]["group"]; the viewer colours its
+        # anatomical cloud and legend from this list.
+        self.groups = groups["groups"]
         sensory = json.loads((self.data / "sensory-mappings.json").read_text())[
             "inputs"
         ]
         self.encoder = encoder
         self.pathway_ids = {}
+        self.maps = None
+        self.roles = None
+        self.current_maps = None
         if encoder is None:
             self.encoder_version = ENCODER_VERSION
             self.input_ids = {k: sensory[k] for k in ("light_l", "light_r")}
             for side in ("l", "r"):
                 self.input_ids["looming_" + side] = self._cells(side, ("LC4", "LPLC2"))
+            self.current_dim = len(self.input_ids)
+        elif _is_spatial(encoder):
+            self.current_dim = self._load_v6(encoder)
         else:
             if isinstance(encoder, str) and encoder == "external":
                 self.encoder_version = LEARNED_EXTERNAL
@@ -99,6 +119,7 @@ class BrainRuntime:
                     self.pathway_ids[f"{pathway}_{side}"] = sum(
                         (self.input_ids[f"{t}_{side}"] for t in types), []
                     )
+            self.current_dim = len(V5_CHANNELS)
         if any(not ids for ids in self.input_ids.values()):
             raise ValueError("required sensory role is empty")
         self.inputs = {k: self.core.input_role(k, v) for k, v in self.input_ids.items()}
@@ -141,8 +162,45 @@ class BrainRuntime:
             if names[c["group"]] in ("descending_neuron", "vnc_motor")
         ]
         self.tick = 0
-        self.cues = np.zeros(len(self.input_ids), dtype=np.float32)
+        self.cues = np.zeros(self.current_dim, dtype=np.float32)
         self.stack = FrameStack()
+
+    def _load_v6(self, encoder):
+        from .retinotopy import build_default_maps, define_roles
+        from .spatial_encoder import (
+            CHANNEL_ORDER,
+            GROUP_CHANNELS,
+            SpatialEncoder,
+            flat_dim,
+        )
+
+        if not isinstance(encoder, SpatialEncoder):
+            encoder = SpatialEncoder.load(encoder)
+        self.encoder = encoder
+        self.encoder_version = encoder.version
+        self.maps = build_default_maps(self.cells)
+        self.roles = {
+            channel: define_roles(
+                self.core, self.maps[channel], namespace=f"v6_{channel}"
+            )
+            for channel in CHANNEL_ORDER
+        }
+        self.input_ids = {
+            channel: list(self.maps[channel].all_cells()) for channel in CHANNEL_ORDER
+        }
+        self.current_maps = {
+            channel: np.zeros(
+                (self.maps[channel].nx, self.maps[channel].ny), np.float32
+            )
+            for channel in CHANNEL_ORDER
+        }
+        pathway_names = {"light": "light", "motion": "motion", "loom": "looming"}
+        for group, prefixes in GROUP_CHANNELS.items():
+            for side in ("l", "r"):
+                self.pathway_ids[f"{pathway_names[group]}_{side}"] = sum(
+                    (self.input_ids[f"{prefix}_{side}"] for prefix in prefixes), []
+                )
+        return flat_dim()
 
     def _cells(self, side, types):
         return [
@@ -160,6 +218,9 @@ class BrainRuntime:
         self.core.bias(self.tonic, 0.85)
         self.tick = 0
         self.cues[:] = 0
+        if self.current_maps is not None:
+            for grid in self.current_maps.values():
+                grid[:] = 0.0
         self.stack.clear()
 
     def sense(self, images):
@@ -181,6 +242,10 @@ class BrainRuntime:
         if currents.shape != self.cues.shape:
             raise ValueError(f"expected {self.cues.shape[0]} currents")
         self.cues = currents
+        if self.current_maps is not None:
+            from .spatial_encoder import unflatten_np
+
+            self.current_maps = unflatten_np(currents)
         return self.cues
 
     def push_frame(self, images):
@@ -189,13 +254,25 @@ class BrainRuntime:
     def encode_stack(self):
         """Learned encoder: currents from the stack. External: the learner already set them."""
         if self.learned and not isinstance(self.encoder, str):
-            self.set_currents(self.encoder.currents(self.stack.array()))
+            currents = self.encoder.currents(self.stack.array())
+            if self.current_maps is not None:
+                from .spatial_encoder import flatten_np
+
+                self.current_maps = currents
+                currents = flatten_np(currents)
+            self.set_currents(currents)
         return self.cues
 
     def step(self, ticks=1):
         for _ in range(ticks):
-            for role, value in zip(self.inputs.values(), self.cues, strict=True):
-                self.core.inject(role, float(value))
+            if self.current_maps is not None:
+                from .retinotopy import apply_map
+
+                for channel, roles in self.roles.items():
+                    apply_map(self.core, roles, self.current_maps[channel])
+            else:
+                for role, value in zip(self.inputs.values(), self.cues, strict=True):
+                    self.core.inject(role, float(value))
             self.core.step(1)
             self.tick += 1
         return self.features()
@@ -237,3 +314,6 @@ class BrainRuntime:
         """Forget previous frames so a respawn does not read as dark-area growth."""
         self.core.clear_vision_history()
         self.stack.clear()
+        if self.current_maps is not None:
+            for grid in self.current_maps.values():
+                grid[:] = 0.0

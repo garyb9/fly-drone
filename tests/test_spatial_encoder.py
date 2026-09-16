@@ -124,3 +124,17 @@ def test_mirror_maps_swaps_and_flips_eyes():
     for name in CHANNEL_ORDER:
         other = name[:-1] + ("r" if name.endswith("_l") else "l")
         np.testing.assert_array_equal(mirrored[name], out[other][:, ::-1])
+
+
+def test_numpy_flatten_unflatten_round_trip_and_is_file(tmp_path):
+    enc = SpatialEncoder.fresh(seed=6)
+    maps = enc.currents(_stack(7))
+    flat = spatial_encoder.flatten_np(maps)
+    assert flat.shape == (spatial_encoder.flat_dim(),)
+    back = spatial_encoder.unflatten_np(flat)
+    for name in CHANNEL_ORDER:
+        np.testing.assert_array_equal(back[name], maps[name])
+    version = enc.save(tmp_path / "v6.pt")
+    assert version.startswith("learned-v6:") and SpatialEncoder.is_file(
+        tmp_path / "v6.pt"
+    )
