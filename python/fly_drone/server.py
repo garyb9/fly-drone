@@ -203,6 +203,7 @@ class Session:
                 "ids": ids,
                 "cells": [cells[i] for i in ids],
                 "links": links,
+                "groups": env.brain.groups,
                 "neurons": len(cells),
                 "features": len(env.brain.feature_ids),
                 "policy": "trained" if self.policy else "PID baseline",

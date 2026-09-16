@@ -14,11 +14,19 @@ import { renderFooter } from "./ui/footer";
 
 applyCssTokens();
 
-type Cell = { id: string; type: string; side: string; position: number[]; measured: boolean };
+type Cell = {
+  id: string;
+  type: string;
+  side: string;
+  group?: number;
+  position: number[];
+  measured: boolean;
+};
 type Metadata = {
   ids: number[];
   cells: Cell[];
   links: number[][];
+  groups: string[];
   neurons: number;
   features: number;
   policy: string;
@@ -293,6 +301,11 @@ brain.scene.background = new THREE.Color(0x0d171e);
 const flyview = view("fly", [4, 2.5, 4], [0, 1, 0]);
 flyview.scene.background = new THREE.Color(LEGACY_VIEWPORT_BG);
 flyview.scene.add(new THREE.GridHelper(6, 12, 0x35535b, 0x20313a));
+// Cool rim light separates the dark chitin from the dark background; the shared key light
+// alone left the body reading as a silhouette.
+const flyRim = new THREE.DirectionalLight(0x6fe2ff, 1.4);
+flyRim.position.set(-3, 2.5, -3);
+flyview.scene.add(flyRim);
 const wings: { node: THREE.Object3D; rest: number; sign: number }[] = [];
 const fly = new THREE.Group();
 flyview.scene.add(fly);
@@ -308,6 +321,19 @@ new GLTFLoader().load(
     model.scale.setScalar(0.9 / Math.max(size.x, size.y, size.z));
     fly.add(model);
     g.scene.traverse((n) => {
+      const mesh = n as THREE.Mesh;
+      if (mesh.isMesh) {
+        const m = mesh.material as THREE.MeshStandardMaterial;
+        if (m && "roughness" in m) {
+          m.roughness = Math.max(m.roughness, 0.55);
+          m.metalness = Math.min(m.metalness, 0.1);
+        }
+        if (n.name === "l_wing" || n.name === "r_wing") {
+          m.transparent = true;
+          m.opacity = 0.92;
+          m.side = THREE.DoubleSide;
+        }
+      }
       if (n.name === "l_wing" || n.name === "r_wing")
         wings.push({ node: n, rest: n.rotation.x, sign: n.name === "l_wing" ? 1 : -1 });
     });
@@ -321,6 +347,30 @@ let metadata: Metadata | undefined,
   latest: Frame | undefined,
   points: THREE.Points | undefined,
   lines: THREE.LineSegments | undefined;
+// Per-rendered-cell anatomical group and its base colour; activity is lerped on top of
+// this base each frame so the cloud reads as anatomy when quiet and as activity when hot.
+let cellBaseColors: THREE.Color[] = [];
+const tmpColor = new THREE.Color();
+const GROUP_DEFAULT = new THREE.Color(0x3b7483);
+function groupColor(index: number): THREE.Color {
+  // Golden-angle hue stepping gives stable, well-separated colours across the 27 groups.
+  return new THREE.Color().setHSL(((index * 137.508) % 360) / 360, 0.5, 0.62);
+}
+// Lists the anatomical groups present among the rendered cells, biggest first. Counts are
+// of rendered (subset) cells, not the full 166,700, so the legend is indicative, not a census.
+function renderGroupLegend(m: Metadata) {
+  const host = document.getElementById("group-legend");
+  if (!host) return;
+  const present = new Map<number, number>();
+  for (const c of m.cells) present.set(c.group ?? 0, (present.get(c.group ?? 0) ?? 0) + 1);
+  host.innerHTML = [...present.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([g, n]) => {
+      const name = (m.groups[g] ?? `group ${g}`).replace(/_/g, " ");
+      return `<span title="${n} rendered cells"><i style="background:#${groupColor(g).getHexString()}"></i>${name}</span>`;
+    })
+    .join("");
+}
 let socket: WebSocket,
   following = false,
   cameraMode: "orbit" | "fpv" | "tpv" = "orbit",
@@ -361,6 +411,7 @@ function setupBrain(m: Metadata) {
     (lines.material as THREE.Material).dispose();
   }
   const positions = m.cells.flatMap((c) => c.position);
+  cellBaseColors = m.cells.map((c) => groupColor(c.group ?? 0));
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute(
@@ -412,6 +463,7 @@ function setupBrain(m: Metadata) {
   initialized = true;
   el("mode").textContent =
     m.policy === "trained" ? "CONNECTOME POLICY" : "PID BASELINE · BRAIN OBSERVING";
+  renderGroupLegend(m);
   updateRoom(m.room);
   void loadReports();
 }
@@ -636,9 +688,16 @@ function update(f: Frame) {
   fly.quaternion.copy(quaternion(f.fly.quaternion));
   flyview.camera.position.add(flyDelta);
   flyview.controls.target.copy(fly.position);
+  const powerL = f.readouts["power_l"] ?? 0,
+    powerR = f.readouts["power_r"] ?? 0;
+  // Beat frequency and amplitude follow wing power, so the shell visibly works harder when
+  // the descending/motor neurons drive it harder. This is a cosmetic envelope, not a
+  // calibrated wingbeat model.
+  const beatAmp = 0.22 + 0.55 * Math.max(powerL, powerR);
   for (const w of wings) {
-    const power = f.readouts[w.sign === 1 ? "power_l" : "power_r"] ?? 0;
-    w.node.rotation.x = w.rest + w.sign * Math.sin(f.time * 2 * Math.PI * 8) * power * 0.6;
+    const power = w.sign === 1 ? powerL : powerR;
+    const phase = f.time * 2 * Math.PI * (7 + 7 * power);
+    w.node.rotation.x = w.rest + w.sign * beatAmp * (Math.sin(phase) + 0.2 * Math.sin(phase * 2));
   }
   if (cameraMode === "fpv") {
     const cam = airframe.eyes[0];
@@ -663,16 +722,17 @@ function update(f: Frame) {
   }
   if (points && metadata) {
     const attr = points.geometry.getAttribute("color");
-    const base = new THREE.Color(0x3b7483),
-      hot = new THREE.Color(ACTIVITY_HOT);
+    const hot = new THREE.Color(ACTIVITY_HOT);
     f.activity.forEach((v, i) => {
-      const c = base.clone().lerp(hot, Math.min(1, v * 3));
+      const c = tmpColor.copy(cellBaseColors[i] ?? GROUP_DEFAULT).lerp(hot, Math.min(1, v * 3));
       attr.setXYZ(i, c.r, c.g, c.b);
     });
     attr.needsUpdate = true;
     const lc = lines!.geometry.getAttribute("color");
     metadata.links.forEach(([a], i) => {
-      const c = base.clone().lerp(hot, Math.min(1, f.activity[a] * 3));
+      const c = tmpColor
+        .copy(cellBaseColors[a] ?? GROUP_DEFAULT)
+        .lerp(hot, Math.min(1, f.activity[a] * 3));
       lc.setXYZ(i * 2, c.r, c.g, c.b);
       lc.setXYZ(i * 2 + 1, c.r, c.g, c.b);
     });
