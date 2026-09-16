@@ -344,7 +344,10 @@ class Session:
                         policy_status = "loaded"
                     if policy_status == "loaded":
                         command = env.brain.infer(observed) / env.plant.limits
-                        explained = attributor.explain(observed)
+                        # Attribution is a debug view costing ~90 ms/frame; the viewer does
+                        # not read it yet, so refresh it about once a second, not every frame.
+                        if attributor is not None and seq % 25 == 0:
+                            explained = attributor.explain(observed)
                     else:
                         command = np.zeros(4)
                         explained = None

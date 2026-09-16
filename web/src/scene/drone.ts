@@ -118,8 +118,10 @@ function boltRing(
 function fovCone(len: number, halfAngle: number, color: number): THREE.Group {
   const r = Math.tan(halfAngle) * len;
   const geo = new THREE.ConeGeometry(r, len, 40, 1, true);
+  // ConeGeometry opens along +Y, so move the apex to the origin and roll +Y onto +X:
+  // a -90° roll would point the base at -X and read as eyes in the back of the airframe.
   geo.translate(0, -len / 2, 0);
-  geo.rotateZ(-Math.PI / 2);
+  geo.rotateZ(Math.PI / 2);
   const group = new THREE.Group();
   group.add(
     new THREE.Mesh(
@@ -300,6 +302,9 @@ export function buildAirframe(spec: AirframeSpec, eyes: EyeGeometry = DEFAULT_EY
   for (const side of [1, -1] as const) {
     const eye = new THREE.Vector3(spec.camX, side * spec.camY, z0 + 0.008);
     eyePoints.push(eye);
+    // Left (+Y) is amber, right (-Y) is cyan; the camera housing, lens hood and FOV cone
+    // all carry the colour so a cone can be traced back to the eye that casts it.
+    const eyeColor = side > 0 ? THEME.amber : THEME.velocity;
     group.add(
       at(box(spec.camSize * 1.6, 0.004, 0.004, alu), eye.x - spec.camSize * 0.75, eye.y, eye.z),
     );
@@ -309,7 +314,7 @@ export function buildAirframe(spec: AirframeSpec, eyes: EyeGeometry = DEFAULT_EY
           spec.camSize,
           spec.camSize * 0.9,
           spec.camSize * 0.9,
-          mat(0x10181c, { roughness: 0.4 }),
+          mat(eyeColor, { metalness: 0.4, roughness: 0.45 }),
         ),
         eye.x,
         eye.y,
@@ -326,7 +331,7 @@ export function buildAirframe(spec: AirframeSpec, eyes: EyeGeometry = DEFAULT_EY
     group.add(at(lens, eye.x + spec.camSize * 0.75, eye.y, eye.z));
     const hood = new THREE.Mesh(
       new THREE.TorusGeometry(spec.camSize * 0.36, spec.camSize * 0.06, 8, 20),
-      mat(EXTRA.dark),
+      mat(eyeColor),
     );
     hood.rotation.y = Math.PI / 2;
     group.add(at(hood, eye.x + spec.camSize * 0.95, eye.y, eye.z));
@@ -346,7 +351,7 @@ export function buildAirframe(spec: AirframeSpec, eyes: EyeGeometry = DEFAULT_EY
       ]),
     );
 
-    const cone = fovCone(spec.diagonal * 1.3, halfFov, side > 0 ? THEME.amber : THEME.velocity);
+    const cone = fovCone(spec.diagonal * 1.3, halfFov, eyeColor);
     cone.position.copy(eye);
     cone.rotation.z = side * splay;
     fov.add(cone);

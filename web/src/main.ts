@@ -256,6 +256,7 @@ world.scene.add(drone);
 // onboard companion). Built in the drone's local Z-up frame; the flight plant is still the
 // Crazyflie CF2X, so the shell is deliberately larger than the simulated collision body.
 const AIRFRAME_KEY = "fly-drone.airframe";
+const LANDED_KEY = "fly-drone.landed";
 let airframeId: AirframeId = localStorage.getItem(AIRFRAME_KEY) === "B" ? "B" : "A";
 let eyeGeometry: EyeGeometry = DEFAULT_EYES;
 let airframe: Airframe = buildDrone(airframeId, eyeGeometry);
@@ -395,6 +396,13 @@ const WORLD_HOME = { position: [2.5, 2.2, 3.2], target: [0.3, 0.8, 0] };
 const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
 const vector = (v: number[]) => new THREE.Vector3(v[0], v[2], -v[1]);
 const quaternion = (v: number[]) => new THREE.Quaternion(v[1], v[2], v[3], v[0]);
+// Server frames arrive at the sim's real-time rate (well under the display refresh), so the
+// drone and moving objects are eased toward each new pose instead of snapping. A time-constant
+// smoother behaves the same under variable frame rates and adds only ~60 ms of visible lag.
+const droneTarget = { pos: new THREE.Vector3(), quat: new THREE.Quaternion() };
+const targetTarget = new THREE.Vector3();
+const obstacleTarget = new THREE.Vector3();
+const POSE_TAU = 0.06;
 function meters(id: string, values: [string, number, string][], max = 1) {
   el(id).innerHTML = values
     .map(
@@ -469,10 +477,14 @@ function setupBrain(m: Metadata) {
     taskSelect.append(option);
   });
   // Land on free roam by default when a decoder is actually loaded for it (otherwise the
-  // drone would just hold still there); only on first connect, not on every reconnect.
-  if (!initialized && m.task_policy_status?.free_roam === "loaded") {
-    taskSelect.value = "free_roam";
-    runTrial();
+  // drone would just hold still there). Once per browser session: a reload should attach to
+  // the running simulation (same episode, tick continues) rather than restart it.
+  if (!initialized && sessionStorage.getItem(LANDED_KEY) !== "1") {
+    sessionStorage.setItem(LANDED_KEY, "1");
+    if (m.task_policy_status?.free_roam === "loaded") {
+      taskSelect.value = "free_roam";
+      runTrial();
+    }
   }
   initialized = true;
   el("mode").textContent =
@@ -563,6 +575,10 @@ function renderSeeds() {
     grid.append(button);
   }
 }
+// Object layout (pillars, beacons, threats, arena spawns) is seeded by the reset seed. The
+// live viewer advances to a fresh seed after every run so consecutive runs differ; the field
+// stays visible and editable when a specific seed is wanted.
+const randomSeed = () => Math.floor(Math.random() * 1_000_000);
 function runTrial() {
   const message: Record<string, unknown> = {
     op: "reset",
@@ -572,6 +588,7 @@ function runTrial() {
   };
   if (replayPolicy) message.policy = replayPolicy;
   send(message);
+  (el("seed") as HTMLInputElement).value = String(randomSeed());
 }
 // Exaggerates one second of travel so low speeds (a few tenths of a m/s) are still visible as
 // short arrows rather than points, while clamping so a fast dodge doesn't dwarf the arena.
@@ -696,14 +713,11 @@ function update(f: Frame) {
   latest = f;
   el("status").textContent = f.paused ? "Simulation paused" : "Local simulation connected";
   el("dot").classList.add("live");
-  drone.position.copy(vector(f.state.position));
-  locator.position.set(drone.position.x, 0.003, drone.position.z);
-  glowDecal.position.set(drone.position.x, 0.002, drone.position.z);
-  drone.quaternion.copy(rotation).multiply(quaternion(f.state.quaternion));
+  droneTarget.pos.copy(vector(f.state.position));
+  droneTarget.quat.copy(rotation).multiply(quaternion(f.state.quaternion));
   airframe.rotors.forEach((r, i) => (r.rotation.z = f.state.rotor_phase[i]));
-  updateDebugVectors(f);
-  target.position.copy(vector(f.state.target));
-  obstacle.position.copy(vector(f.state.obstacle));
+  targetTarget.copy(vector(f.state.target));
+  obstacleTarget.copy(vector(f.state.obstacle));
   const flyDelta = new THREE.Vector3().fromArray(f.fly.position).sub(fly.position);
   fly.position.fromArray(f.fly.position);
   fly.quaternion.copy(quaternion(f.fly.quaternion));
@@ -719,27 +733,6 @@ function update(f: Frame) {
     const power = w.sign === 1 ? powerL : powerR;
     const phase = f.time * 2 * Math.PI * (7 + 7 * power);
     w.node.rotation.x = w.rest + w.sign * beatAmp * (Math.sin(phase) + 0.2 * Math.sin(phase * 2));
-  }
-  if (cameraMode === "fpv") {
-    const cam = airframe.eyes[0];
-    const eye = new THREE.Vector3(cam.x, 0, cam.z)
-      .applyQuaternion(drone.quaternion)
-      .add(drone.position);
-    const ahead = new THREE.Vector3(1, 0, 0).applyQuaternion(drone.quaternion).add(eye);
-    world.camera.position.copy(eye);
-    world.camera.up.set(0, 1, 0);
-    world.camera.lookAt(ahead);
-    world.controls.target.copy(ahead);
-  } else if (cameraMode === "tpv") {
-    const chase = new THREE.Vector3(-0.7, 0.32, 0)
-      .applyQuaternion(drone.quaternion)
-      .add(drone.position);
-    world.camera.position.copy(chase);
-    world.camera.up.set(0, 1, 0);
-    world.camera.lookAt(drone.position);
-    world.controls.target.copy(drone.position);
-  } else if (following) {
-    world.controls.target.copy(drone.position);
   }
   if (points && metadata) {
     const attr = points.geometry.getAttribute("color");
@@ -966,12 +959,48 @@ document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((btn) => {
 });
 el("drawer-collapse").onclick = () =>
   setDrawerCollapsed(!el("drawer").classList.contains("collapsed"));
-function render() {
+function applyCameraMode() {
+  if (cameraMode === "fpv") {
+    const cam = airframe.eyes[0];
+    const eye = new THREE.Vector3(cam.x, 0, cam.z)
+      .applyQuaternion(drone.quaternion)
+      .add(drone.position);
+    const ahead = new THREE.Vector3(1, 0, 0).applyQuaternion(drone.quaternion).add(eye);
+    world.camera.position.copy(eye);
+    world.camera.up.set(0, 1, 0);
+    world.camera.lookAt(ahead);
+    world.controls.target.copy(ahead);
+  } else if (cameraMode === "tpv") {
+    const chase = new THREE.Vector3(-0.7, 0.32, 0)
+      .applyQuaternion(drone.quaternion)
+      .add(drone.position);
+    world.camera.position.copy(chase);
+    world.camera.up.set(0, 1, 0);
+    world.camera.lookAt(drone.position);
+    world.controls.target.copy(drone.position);
+  } else if (following) {
+    world.controls.target.copy(drone.position);
+  }
+}
+let lastRender = performance.now();
+function render(now = performance.now()) {
   requestAnimationFrame(render);
+  const dt = Math.min(0.1, (now - lastRender) / 1000);
+  lastRender = now;
+  const k = 1 - Math.exp(-dt / POSE_TAU);
+  drone.position.lerp(droneTarget.pos, k);
+  drone.quaternion.slerp(droneTarget.quat, k);
+  target.position.lerp(targetTarget, k);
+  obstacle.position.lerp(obstacleTarget, k);
+  locator.position.set(drone.position.x, 0.003, drone.position.z);
+  glowDecal.position.set(drone.position.x, 0.002, drone.position.z);
+  if (latest) updateDebugVectors(latest);
+  applyCameraMode();
   for (const v of [world, brain, flyview]) {
     v.controls.update();
     v.renderer.render(v.scene, v.camera);
   }
 }
+(el("seed") as HTMLInputElement).value = String(randomSeed());
 connect();
 render();
