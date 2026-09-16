@@ -291,6 +291,43 @@ class BrainRuntime:
     def read(self):
         return {k: self.core.readout(v) for k, v in self.readouts.items()}
 
+    def sensory_groups(self):
+        """Mean current per sensory group and side, for any encoder version.
+
+        v4: ``light_l/r``, ``loom_l/r``. v5: the same, averaged over Mi1/Tm3 and LC4/LPLC2.
+        v6: also ``motion_l/r`` (Tm4/T2). The viewer renders this instead of the raw cue
+        vector, whose length and meaning change with the encoder version.
+        """
+        if self.current_maps is not None:
+            from .spatial_encoder import CHANNEL_ORDER, GROUP_CHANNELS
+
+            means = {ch: float(np.mean(self.current_maps[ch])) for ch in CHANNEL_ORDER}
+            return {
+                f"{group}_{side}": float(
+                    np.mean([means[f"{prefix}_{side}"] for prefix in prefixes])
+                )
+                for group, prefixes in GROUP_CHANNELS.items()
+                for side in ("l", "r")
+            }
+        if self.learned:
+            means = {ch: float(self.cues[i]) for i, ch in enumerate(V5_CHANNELS)}
+            return {
+                f"{group}_{side}": float(
+                    np.mean([means[f"{prefix}_{side}"] for prefix in prefixes])
+                )
+                for group, prefixes in (
+                    ("light", ("mi1", "tm3")),
+                    ("loom", ("lc4", "lplc2")),
+                )
+                for side in ("l", "r")
+            }
+        return {
+            "light_l": float(self.cues[0]),
+            "light_r": float(self.cues[1]),
+            "loom_l": float(self.cues[2]),
+            "loom_r": float(self.cues[3]),
+        }
+
     def load_policy(self, path, check_encoder=True):
         text = Path(path).read_text()
         version = json.loads(text)["encoder_version"]

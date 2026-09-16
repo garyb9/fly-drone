@@ -63,6 +63,35 @@ def test_v4_role_set_is_unchanged():
     assert brain.current_maps is None and brain.cues.shape == (4,)
 
 
+def test_sensory_groups_v6_follow_the_current_maps(v6):
+    from fly_drone.spatial_encoder import channel_slices
+
+    v6.reset(3)
+    vector = np.zeros(flat_dim(), np.float32)
+    slices = channel_slices()
+    for channel, value in (
+        ("mi1_l", 1.0),
+        ("tm3_l", 1.0),
+        ("mi1_r", 0.5),
+        ("tm3_r", 0.5),
+    ):
+        start, stop = slices[channel]
+        vector[start:stop] = value
+    v6.set_currents(vector)
+    groups = v6.sensory_groups()
+    assert set(groups) == {
+        "light_l",
+        "light_r",
+        "motion_l",
+        "motion_r",
+        "loom_l",
+        "loom_r",
+    }
+    assert groups["light_l"] == pytest.approx(1.0)
+    assert groups["light_r"] == pytest.approx(0.5)
+    assert groups["loom_l"] == pytest.approx(0.0)
+
+
 def test_frame_transform_changes_the_stack_but_not_the_v4_path():
     from fly_drone.env import ConnectomeEnv
 

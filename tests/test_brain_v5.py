@@ -120,6 +120,17 @@ def test_pathway_silencing_names_work_on_v5(v5):
     v5.core.restore()
 
 
+def test_sensory_groups_on_v4_and_v5(v4, v5):
+    assert set(v4.sensory_groups()) == {"light_l", "light_r", "loom_l", "loom_r"}
+    v5.set_currents(np.array([1.0, 2.0, 1.0, 2.0, 0.0, 0.5, 0.0, 0.5]))
+    groups = v5.sensory_groups()
+    assert set(groups) == {"light_l", "light_r", "loom_l", "loom_r"}
+    assert groups["light_l"] == pytest.approx(1.0)
+    assert groups["light_r"] == pytest.approx(2.0)
+    assert groups["loom_l"] == pytest.approx(0.0)
+    assert groups["loom_r"] == pytest.approx(0.5)
+
+
 def test_learned_env_settles_on_zero_and_encodes_the_previous_end_of_step_frame(
     tmp_path,
 ):

@@ -391,6 +391,7 @@ class Session:
                     "activity": env.brain.core.activity(ids),
                     "readouts": env.brain.read(),
                     "cues": env.brain.cues.tolist(),
+                    "sensory": env.brain.sensory_groups(),
                     "command": env.command.tolist(),
                     "cameras": camera,
                     "error": last_error,

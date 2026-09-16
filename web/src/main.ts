@@ -65,6 +65,7 @@ type Frame = {
   activity: number[];
   readouts: Record<string, number>;
   cues: number[];
+  sensory?: Record<string, number>;
   command: number[];
   cameras: string[];
   real_time_factor: number;
@@ -558,14 +559,18 @@ function update(f: Frame) {
   f.cameras.forEach(
     (c, i) => ((el(`eye${i}`) as HTMLImageElement).src = `data:image/jpeg;base64,${c}`),
   );
-  meters(
-    "cues",
-    f.cues.map((v, i) => [["light L", "light R", "loom L", "loom R"][i], v, v.toFixed(2)]),
-    2,
-  );
+  const sensory = f.sensory;
+  const sensoryRows: [string, number, string][] = sensory
+    ? Object.entries(sensory).map(([k, v]) => [k.replace(/_/g, " "), v, v.toFixed(3)])
+    : f.cues.map((v, i) => [
+        ["light L", "light R", "loom L", "loom R"][i] ?? `cue ${i}`,
+        v,
+        v.toFixed(2),
+      ]);
+  meters("cues", sensoryRows, 2);
   meters(
     "readouts",
-    ["power_l", "power_r", "steer_l", "steer_r"].map((k) => [
+    ["power_l", "power_r", "steer_l", "steer_r", "escape", "wing_l", "wing_r"].map((k) => [
       k.replace("_", " "),
       f.readouts[k] ?? 0,
       (f.readouts[k] ?? 0).toFixed(3),
