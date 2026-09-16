@@ -566,3 +566,29 @@ def test_resumed_round_carries_the_saved_alpha(tmp_path):
     model.save(tmp_path / "m")
     loaded = WarmupSAC.load(tmp_path / "m.zip", device="cpu", buffer_size=1)
     assert float(torch.exp(loaded.log_ent_coef).detach()) == pytest.approx(0.003)
+
+
+def test_probe_logger_records_log_std_and_detects_a_constant_action():
+    from fly_drone.sac import ProbeLogger
+    from stable_baselines3.common.logger import Logger
+
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    model.set_logger(Logger(folder=None, output_formats=[]))
+    model.num_timesteps = 0
+    callback = ProbeLogger(every=1, batch=8, seed=0)
+    callback.init_callback(model)
+    with torch.no_grad():
+        model.actor.log_std.weight.zero_()
+        model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
+    assert callback._on_step()
+    values = model.logger.name_to_value
+    assert values["probe/log_std_mean"] == pytest.approx(WARM_START_LOG_STD)
+    assert values["probe/action_state_std"] > 0  # a fresh actor varies with the state
+    with torch.no_grad():
+        for param in model.actor.mu.parameters():
+            param.zero_()
+    assert callback._on_step()
+    # A mean that no longer depends on the observation is the round-1 collapse signature.
+    assert model.logger.name_to_value["probe/action_state_std"] == pytest.approx(
+        0.0, abs=1e-6
+    )

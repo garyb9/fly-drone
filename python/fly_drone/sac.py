@@ -616,6 +616,54 @@ class MetabolicLogger(BaseCallback):
         return True
 
 
+class ProbeLogger(BaseCallback):
+    """Records actor exploration and probe statistics the standard SAC logs omit.
+
+    On a fixed observation batch (sampled once, seeded, from the training observation space) it
+    records the mean clamped `log_std`, the deterministic action's mean level, and its variation
+    across states. The round-1 encoder's deployed mean collapsed to a constant while `log_std`
+    stayed in range, so `log_std` alone would not have caught it; `probe/action_state_std -> 0`
+    does (docs/results/encoder-v5/PHASE0-DIAGNOSTICS-2026-09-16.md).
+    """
+
+    def __init__(self, every=1000, batch=64, seed=0):
+        super().__init__()
+        self.every = int(every)
+        self.batch = int(batch)
+        self.seed = int(seed)
+        self.probe = None
+
+    def _make_probe(self):
+        space = self.training_env.observation_space
+        rng = np.random.default_rng(self.seed)
+        probe = {}
+        for key, sub in space.spaces.items():
+            low = np.where(np.isfinite(sub.low), sub.low, -1.0)
+            high = np.where(np.isfinite(sub.high), sub.high, 1.0)
+            probe[key] = rng.uniform(low, high, (self.batch, *sub.shape)).astype(
+                sub.dtype
+            )
+        return probe
+
+    def _on_step(self):
+        if self.model.num_timesteps % self.every:
+            return True
+        if self.probe is None:
+            self.probe = self._make_probe()
+        probe = {
+            k: torch.as_tensor(v, device=self.model.device)
+            for k, v in self.probe.items()
+        }
+        actor = self.model.actor
+        with torch.no_grad():
+            mean, log_std, _ = actor.get_action_dist_params(probe)
+            tanh_mean = torch.tanh(mean)
+        self.logger.record("probe/log_std_mean", float(log_std.mean()))
+        self.logger.record("probe/action_mean", float(tanh_mean.mean()))
+        self.logger.record("probe/action_state_std", float(tanh_mean.std(0).mean()))
+        return True
+
+
 def _factory(learner, rank, seed, decoder, encoder, level):
     def make():
         from stable_baselines3.common.monitor import Monitor
@@ -716,6 +764,7 @@ def train_round(
                     name_prefix=learner,
                 ),
                 MetabolicLogger(),
+                ProbeLogger(),
             ]
         )
         model.learn(
