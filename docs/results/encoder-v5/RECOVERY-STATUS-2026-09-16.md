@@ -61,10 +61,10 @@ buffer copy (~5.3 GB at 100k) and is deleted when the round completes on its own
 
 ## 5. What is left before the re-run
 
-1. **v4 fixed-probe E1 reference**: run `fly-drone encoder-checks --policy <v4 actor>` (teacher
-   controller) once and store the number (`runs/v5/e1-v4-fixed.json`, back it up under
-   `docs/results/encoder-v5/run-records/`). The pre-2026-09-16 v4 baseline was 0.687 policy-flown;
-   the fixed-probe number will differ and must be reported alongside, not used to relax the 0.8 bar.
+1. **v4 fixed-probe E1 reference** — done. `runs/v5/e1-v4-fixed.json`, teacher controller, 50
+   seeds: E1 loom AUC **0.732** (fail ≥0.8; the policy-flown baseline was 0.687), E2 pass. Archived
+   with the policy-flown run under `docs/results/encoder-v5/run-records/`. The fixed probe raises
+   the number but still misses the bar; it is reported alongside and never used to move the 0.8.
 2. **Phase 1f**: full `pytest` + ruff are already green after Pack 2 (170 passed); re-run once
    more if anything above changes.
 3. **Phase 1.5**: re-plan Task 13 in `pipeline13-15.sh` — shorter rounds with a mid-round
