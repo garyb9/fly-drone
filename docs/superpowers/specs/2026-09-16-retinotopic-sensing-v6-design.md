@@ -120,6 +120,10 @@ lateralised effect on the connectome's loom/escape output. The injection target 
   cached mapper; a decoder pinned to a v6 encoder cannot run against another.
 - **Injection cost:** ~400 `inject` calls per 40 ms frame over precomputed roles — negligible next
   to the whole-brain LIF step. The bottleneck stays CPU simulation, not the encoder.
+- **Code (additive so far):** `python/fly_drone/retinotopy.py` (position -> patch roles) and
+  `python/fly_drone/spatial_encoder.py` (the `learned-v6:` conv net with frame-difference inputs,
+  emitting the patch maps; 432 currents/frame). Both are standalone — no `brain.py` wiring yet, so
+  the v5 path is untouched. Wiring lands with M2.
 
 ### 4.1 Clone / warm start
 
@@ -192,6 +196,9 @@ compute; the expensive items are the extra training rounds.
   `scripts/input_candidate_scan.py`, `scripts/spatial_lateralization.py` — M1b propagation and
   lateralisation assays.
 - `runs/probe/retinotopy/{report.json,*.png}`, `runs/probe/spatial_assay.json` (git-ignored).
+- `python/fly_drone/retinotopy.py` + `tests/test_retinotopy.py` — the mapper and its tests.
+- `python/fly_drone/spatial_encoder.py` + `tests/test_spatial_encoder.py` — the v6 network and its
+  tests (frame-difference inputs, per-channel map shapes/bounds, `learned-v6:` version, flatten).
 
 ## 10. Open decisions
 
