@@ -67,10 +67,10 @@ buffer copy (~5.3 GB at 100k) and is deleted when the round completes on its own
    the number but still misses the bar; it is reported alongside and never used to move the 0.8.
 2. **Phase 1f**: full `pytest` + ruff are already green after Pack 2 (170 passed); re-run once
    more if anything above changes.
-3. **Phase 1.5**: re-plan Task 13 in `pipeline13-15.sh` — shorter rounds with a mid-round
-   checkpoint validation (tooling: `sac-export --learner … <ckpt.zip>` → repin/validate) and an
-   explicit abort on degeneration; lengths informed by the D2/D3 timing (collapse was visible by
-   the 100 k checkpoint).
+3. **Phase 1.5** — done. The encoder round is staged in `pipeline13-15.sh`: stage A to 100k
+   (`--keep-resume`), mid-round validation of the frozen previous decoder + 100k encoder, a
+   `mid_gate` reusing `ROUND_GATE['min_beacon_fraction']`, then stage B to 350k (`--resume`). A
+   blind encoder now costs 100k frames and stops the ladder, keeping the previous round.
 4. **Phase 2**: re-run Task 13 from round 0 — **needs fresh user approval**. It will differ from
    rounds 1–2 collectively (α init, target entropy, log_std clamp, 200 k buffer, guard), so gains
    will be attributed to the bundle, not single fixes.

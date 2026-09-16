@@ -153,6 +153,11 @@ def main():
         help="continue a round from its resume/ snapshot instead of starting over",
     )
     p.add_argument(
+        "--keep-resume",
+        action="store_true",
+        help="keep the resume/ snapshot after a successful round (for a staged run)",
+    )
+    p.add_argument(
         "--actor-warmup",
         type=int,
         default=None,
@@ -236,6 +241,7 @@ def main():
                 n_step=args.n_step,
                 optimize_memory=args.optimize_memory,
                 resume=args.resume,
+                keep_resume=args.keep_resume,
             )
         elif args.command == "sac-export":
             if args.repin_decoder:

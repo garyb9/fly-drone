@@ -466,6 +466,28 @@ def test_train_round_resumes_from_a_snapshot(tmp_path, monkeypatch):
     assert second["frames"] == 40  # `frames` is the round total, not extra steps
 
 
+def test_keep_resume_leaves_the_snapshot_for_a_second_stage(tmp_path):
+    decoder0 = zero_actor(tmp_path / "decoder0.json", BrainRuntime())
+    LearnedEncoder.fresh(seed=7).save(tmp_path / "clone.pt")
+    out = tmp_path / "round"
+    report = train_round(
+        "encoder",
+        out,
+        20,
+        decoder=decoder0,
+        init=tmp_path / "clone.pt",
+        workers=1,
+        buffer_size=50,
+        device="cpu",
+        learning_starts=5,
+        resume_every=10,
+        keep_resume=True,
+    )
+    assert (out / "resume" / "model.zip").exists()
+    assert (out / "resume" / "buffer.pkl").exists()
+    assert report["snapshot"] == str(out / "resume")
+
+
 def small_warmup_model(actor_warmup):
     from stable_baselines3.common.logger import Logger
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Tasks 13-15 compute pipeline (user approved autonomous run through Task 15, 2026-09-15).
 # T13: alternating encoder/decoder SAC rounds with the plan's stop rule; T14: bypass + E3; T15: evaluation + E1/E2 + E4.
+# Phase 1.5 (2026-09-16, after the round-1 encoder collapse): the encoder round is staged. The
+# first 100k frames stop at a checkpoint (keep-resume), a mid-round validation catches a blind
+# encoder within ~100k frames instead of a full 350k round, and only then does stage B continue.
+# The mid gate reuses ROUND_GATE's foraging threshold; no new threshold is introduced.
 set -euo pipefail
 cd /home/gb/projects/fly-drone
 FD="env -u PYTHONPATH .venv/bin/fly-drone"
@@ -12,6 +16,9 @@ declare -A ENC DEC
 ENC[0]=runs/v5/clone/encoder.pt
 DEC[0]=runs/v5/round0/decoder.json
 START=${START_ROUND:-1}
+ENC_MID_FRAMES=${ENC_MID_FRAMES:-100000}
+ENC_FRAMES=${ENC_FRAMES:-350000}
+DEC_FRAMES=${DEC_FRAMES:-150000}
 
 # Round selection guard (2026-09-16): a round must keep foraging, dodge on sight (ghost) and keep
 # E2 semantics to count. Prints "<eligible> <best_eligible_index>" for rounds 0..k.
@@ -20,11 +27,22 @@ guard() {
 import json, sys
 from fly_drone.roam_eval import pick_best_round, round_eligible
 k = int(sys.argv[1])
-vals = []
-for i in range(k + 1):
-    p = 'runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json'
-    vals.append(json.load(open(p)))
+vals = [json.load(open('runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json')) for i in range(k + 1)]
 print(int(round_eligible(vals[k], vals[0])), pick_best_round(vals))" "$1"
+}
+
+# Mid-round gate: abort the ladder if the 100k encoder is blind (foraging collapsed). This is the
+# same fraction of round 0 the round gate uses, so it cannot fail a healthy round that the
+# post-round gate would pass.
+mid_gate() {
+    $PY -c "
+import json, sys
+from fly_drone.roam_eval import ROUND_GATE
+mid = json.load(open(sys.argv[1]))['beacons_per_min']
+base = json.load(open('runs/v5/round0/validation.json'))['beacons_per_min']
+floor = ROUND_GATE['min_beacon_fraction'] * base
+print(f'mid beacons/min {mid} (floor {floor:.2f})')
+sys.exit(0 if mid is not None and mid >= floor else 1)" "$1"
 }
 
 last=0
@@ -36,11 +54,25 @@ for k in 1 2 3; do
         ENC_INIT=runs/v5/round$((k - 1))/encoder/encoder.zip
     fi
     if [ "$k" -ge "$START" ]; then
-        log "T13 round $k encoder SAC"
-        $FD sac-round encoder --output runs/v5/round$k/encoder --frames 350000 --decoder $PREV_DEC --init $ENC_INIT \
+        log "T13 round $k encoder SAC stage A (to $ENC_MID_FRAMES, keeping the snapshot)"
+        $FD sac-round encoder --output runs/v5/round$k/encoder --frames $ENC_MID_FRAMES --decoder $PREV_DEC --init $ENC_INIT \
+            --workers 6 --keep-resume > runs/v5/round$k-encoder-a.log 2>&1
+        log "T13 round $k mid-round validation (frozen partner + 100k encoder)"
+        mkdir -p runs/v5/round$k/mid
+        $FD sac-export --learner encoder --checkpoint runs/v5/round$k/encoder/resume/model.zip \
+            --output runs/v5/round$k/mid/encoder.pt > runs/v5/round$k-mid-export.log 2>&1
+        $FD sac-validate --decoder $PREV_DEC --encoder runs/v5/round$k/mid/encoder.pt \
+            --output runs/v5/round$k/mid/validation.json
+        if ! mid_gate runs/v5/round$k/mid/validation.json; then
+            rm -rf runs/v5/round$k/encoder/resume  # drop the one-shot snapshot
+            log "T13 STOP RULE: round $k encoder is blind by the $ENC_MID_FRAMES checkpoint; keeping round $((k - 1))"
+            break
+        fi
+        log "T13 round $k encoder SAC stage B (continue to $ENC_FRAMES)"
+        $FD sac-round encoder --output runs/v5/round$k/encoder --frames $ENC_FRAMES --decoder $PREV_DEC --init $ENC_INIT --resume \
             --workers 6 > runs/v5/round$k-encoder.log 2>&1
         log "T13 round $k decoder SAC"
-        $FD sac-round decoder --output runs/v5/round$k/decoder --frames 150000 \
+        $FD sac-round decoder --output runs/v5/round$k/decoder --frames $DEC_FRAMES \
             --encoder runs/v5/round$k/encoder/encoder.pt --init $PREV_DEC_ZIP --workers 6 > runs/v5/round$k-decoder.log 2>&1
         log "T13 round $k validate"
         $FD sac-validate --decoder runs/v5/round$k/decoder/decoder.json --encoder runs/v5/round$k/encoder/encoder.pt \
@@ -54,10 +86,7 @@ for k in 1 2 3; do
 import json, sys
 from fly_drone.roam_eval import round_gate_report
 last = int(sys.argv[1])
-vals = []
-for i in range(last + 1):
-    p = 'runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json'
-    vals.append(json.load(open(p)))
+vals = [json.load(open('runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json')) for i in range(last + 1)]
 for r in round_gate_report(vals):
     print('T13 table', r)" "$last"
     log "T13 round $k eligible=$elig best_eligible=$best_so_far"
@@ -76,10 +105,7 @@ best=$($PY -c "
 import json, sys
 from fly_drone.roam_eval import pick_best_round
 last = int(sys.argv[1])
-vals = []
-for i in range(last + 1):
-    p = 'runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json'
-    vals.append(json.load(open(p)))
+vals = [json.load(open('runs/v5/round0/validation.json' if i == 0 else f'runs/v5/round{i}/validation.json')) for i in range(last + 1)]
 print(pick_best_round(vals))" "$last")
 mkdir -p runs/v5/final
 cp "${ENC[$best]}" runs/v5/final/encoder.pt

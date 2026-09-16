@@ -809,6 +809,7 @@ def train_round(
     optimize_memory=False,
     resume=False,
     resume_every=50_000,
+    keep_resume=False,
 ):
     """One SAC round for one learner; the other half is frozen inside the environment.
 
@@ -935,8 +936,10 @@ def train_round(
             reset_num_timesteps=resumed_from is None,
         )
         model.save(out / learner)
-        if snapshot.exists():  # the round finished; the one-shot buffer is not needed
-            shutil.rmtree(snapshot)
+        if snapshot.exists() and not keep_resume:
+            shutil.rmtree(
+                snapshot
+            )  # the round finished; the one-shot buffer is not needed
         report = {
             "learner": learner,
             "frames": int(model.num_timesteps),
@@ -950,6 +953,7 @@ def train_round(
             "n_step": int(n_step),
             "optimize_memory": bool(optimize_memory),
             "resumed_from": resumed_from,
+            "snapshot": str(snapshot) if snapshot.exists() else None,
         }
         if learner == "encoder":
             report["encoder_version"] = LearnedEncoder.from_actor(model.actor).save(
