@@ -6,6 +6,7 @@ geometry of objects the eyes can currently see (honest-labels rule).
 """
 
 import json
+import math
 from pathlib import Path
 
 import gymnasium as gym
@@ -16,7 +17,7 @@ from gymnasium import spaces
 from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from stable_baselines3.sac.policies import MultiInputPolicy
+from stable_baselines3.sac.policies import Actor, MultiInputPolicy
 from torch import nn
 
 from .brain import V5_CHANNELS, BrainRuntime
@@ -39,6 +40,20 @@ BAND_GREY = (0.0, 0.15)
 # the first frames of every round (SB3 `num_timesteps`, summed over workers), so an untrained
 # critic cannot wreck the warm-started actor (the v4 clone or the round-0 decoder).
 ACTOR_WARMUP_FRAMES = 50_000
+
+# Post-warm-up exploration regime (design §8.6, added after the round-1 collapse). The DAgger
+# warm start sets log_std = WARM_START_LOG_STD on every action dimension; exploration is pinned to
+# that scale. SB3's auto-alpha default (init 1.0, target -dim A) let the entropy bonus collapse the
+# encoder's deterministic mean to the action-space centre while alpha was still ~1 — a blind
+# encoder with constant currents (docs/results/encoder-v5/PHASE0-DIAGNOSTICS-2026-09-16.md).
+WARM_START_LOG_STD = -2.5
+# Sigma in [e^-4, e^-1]: the warm start sits inside, SB3's own cap of +2 (sigma ~ 7.4) does not.
+LOG_STD_MIN = -4.0
+LOG_STD_MAX = -1.0
+# Target (differential) entropy per dimension at the warm-start sigma: 0.5·ln(2πe) + log_std.
+TARGET_ENTROPY_PER_DIM = 0.5 * math.log(2.0 * math.pi * math.e) + WARM_START_LOG_STD
+# Auto-alpha initial value; SB3's 1.0 dwarfs the ~0.05/step reward. Alpha stays adaptive.
+ENT_COEF_INIT = 0.01
 
 
 def visible_geometry(env):
@@ -210,6 +225,24 @@ class CriticExtractor(BaseFeaturesExtractor):
         return torch.cat(parts, 1)
 
 
+class ClampedActor(Actor):
+    """SAC actor whose `log_std` is clamped to [LOG_STD_MIN, LOG_STD_MAX].
+
+    SB3's own cap allows `log_std = +2` (sigma ~ 7.4); a tanh-squashed actor at that spread
+    saturates and loses control of its mean. Keeping sigma near the warm start leaves the mean in
+    control, which is where the deployed encoder's currents come from (`encoder.py:138`).
+    """
+
+    def get_action_dist_params(self, obs):
+        features = self.extract_features(obs, self.features_extractor)
+        latent_pi = self.latent_pi(features)
+        mean_actions = self.mu(latent_pi)
+        if self.use_sde:
+            return mean_actions, self.log_std, dict(latent_sde=latent_pi)
+        log_std = torch.clamp(self.log_std(latent_pi), LOG_STD_MIN, LOG_STD_MAX)
+        return mean_actions, log_std, {}
+
+
 class AsymmetricSACPolicy(MultiInputPolicy):
     """SAC policy whose actor reads one deployable key while the critic reads every key."""
 
@@ -222,7 +255,8 @@ class AsymmetricSACPolicy(MultiInputPolicy):
             extractor = EyesExtractor(self.observation_space)
         else:
             extractor = KeyNormalizer(self.observation_space, self.actor_key)
-        return super().make_actor(extractor)
+        actor_kwargs = self._update_features_extractor(self.actor_kwargs, extractor)
+        return ClampedActor(**actor_kwargs).to(self.device)
 
     def make_critic(self, features_extractor=None):
         return super().make_critic(CriticExtractor(self.observation_space))
@@ -282,6 +316,7 @@ def build_sac(
     learning_starts=5_000,
     actor_warmup=ACTOR_WARMUP_FRAMES,
 ):
+    action_dim = int(np.prod(env.action_space.shape))
     return WarmupSAC(
         AsymmetricSACPolicy,
         env,
@@ -293,6 +328,9 @@ def build_sac(
         gradient_steps=2,
         gamma=0.99,
         learning_rate=3e-4,
+        # Post-warm-up exploration: small initial alpha pinned to the warm-start sigma (design §8.6).
+        ent_coef=f"auto_{ENT_COEF_INIT}",
+        target_entropy=action_dim * TARGET_ENTROPY_PER_DIM,
         seed=seed,
         device=device,
         verbose=1,
@@ -435,7 +473,7 @@ def warm_start_decoder(
     with torch.no_grad():
         # Start SAC exploration narrow around the cloned behaviour.
         actor.log_std.weight.zero_()
-        actor.log_std.bias.fill_(-2.5)
+        actor.log_std.bias.fill_(WARM_START_LOG_STD)
         for split, mask in (("train", ~test), ("held_out", test)):
             ids = np.flatnonzero(mask)
             errs = [
@@ -666,7 +704,7 @@ def train_round(
                 model.actor.mu.load_state_dict(state["mu"])
                 with torch.no_grad():
                     model.actor.log_std.weight.zero_()
-                    model.actor.log_std.bias.fill_(-2.5)
+                    model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
         if learner == "encoder":
             stats = json.loads(Path(decoder).read_text())
             set_dn_stats(model, stats["mean"], stats["scale"])

@@ -12,8 +12,14 @@ from fly_drone.encoder import LearnedEncoder
 from fly_drone.env import ConnectomeEnv
 from fly_drone.sac import (
     ACTOR_WARMUP_FRAMES,
+    ENT_COEF_INIT,
     GEOMETRY,
+    LOG_STD_MAX,
+    LOG_STD_MIN,
+    TARGET_ENTROPY_PER_DIM,
+    WARM_START_LOG_STD,
     AsymmetricSACPolicy,
+    ClampedActor,
     SacRoamEnv,
     SpacesOnlyEnv,
     WarmupSAC,
@@ -517,3 +523,46 @@ def test_train_round_rejects_a_missing_frozen_partner_before_spawning(tmp_path):
         with pytest.raises(ValueError, match="frozen encoder"):
             train_round(learner, tmp_path / learner, 10, decoder="x.json")
     assert not any(tmp_path.iterdir())
+
+
+def test_fresh_round_starts_at_the_small_alpha_and_warm_start_target_entropy():
+    assert LOG_STD_MIN < WARM_START_LOG_STD < LOG_STD_MAX
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    assert isinstance(model.actor, ClampedActor)
+    assert float(torch.exp(model.log_ent_coef).detach()) == pytest.approx(ENT_COEF_INIT)
+    dim = int(np.prod(model.action_space.shape))
+    assert dim == 4
+    assert model.target_entropy == pytest.approx(dim * TARGET_ENTROPY_PER_DIM)
+    encoder = build_sac(
+        "encoder", SpacesOnlyEnv("encoder"), buffer_size=1, device="cpu"
+    )
+    assert encoder.target_entropy == pytest.approx(8 * TARGET_ENTROPY_PER_DIM)
+
+
+def test_clamped_actor_holds_log_std_inside_the_configured_band():
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    space = model.observation_space
+    obs = {
+        k: torch.as_tensor(np.stack([space[k].sample() for _ in range(3)]))
+        for k in space.spaces
+    }
+    with torch.no_grad():
+        model.actor.log_std.weight.zero_()
+        model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
+        _, mid, _ = model.actor.get_action_dist_params(obs)
+        model.actor.log_std.bias.fill_(5.0)  # SB3's own cap allows +2
+        _, high, _ = model.actor.get_action_dist_params(obs)
+        model.actor.log_std.bias.fill_(-10.0)
+        _, low, _ = model.actor.get_action_dist_params(obs)
+    assert float(mid.min()) == pytest.approx(WARM_START_LOG_STD)
+    assert float(high.max()) == pytest.approx(LOG_STD_MAX)
+    assert float(low.min()) == pytest.approx(LOG_STD_MIN)
+
+
+def test_resumed_round_carries_the_saved_alpha(tmp_path):
+    model = small_warmup_model(actor_warmup=0)
+    with torch.no_grad():
+        model.log_ent_coef.fill_(torch.log(torch.tensor(0.003)))
+    model.save(tmp_path / "m")
+    loaded = WarmupSAC.load(tmp_path / "m.zip", device="cpu", buffer_size=1)
+    assert float(torch.exp(loaded.log_ent_coef).detach()) == pytest.approx(0.003)
