@@ -658,7 +658,8 @@ main {
 .bottom-bar {
   position: absolute;
   left: 16px;
-  right: 300px;
+  /* Right edge lines up with the pinned right column (24px inset + 260px width). */
+  right: 284px;
   bottom: 14px;
   z-index: 12;
   display: flex;
@@ -675,9 +676,29 @@ main {
   min-width: 0;
   flex: none;
 }
-.bar-group h3 {
-  margin: 0 0 8px;
+.bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 9px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #1f323b;
+}
+.bar-head h3 {
+  margin: 0;
   font-size: 9px;
+}
+.bar-head-meta {
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #6f8994;
+  white-space: nowrap;
+}
+.bar-head-meta b {
+  color: var(--bp-amber);
+  font-weight: 600;
 }
 .bar-grid {
   display: grid;
@@ -690,25 +711,63 @@ main {
   min-width: 0;
 }
 /* Controls and camera live in one card as two stacked rows/layers. */
-.bar-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 .bar-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
   gap: 6px 18px;
   align-items: start;
 }
+.bar-row-controls {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.bar-cell {
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 1px solid #1f323b;
+}
+.bar-cell:first-child {
+  padding-left: 0;
+  border-left: none;
+}
 .bar-row-camera {
   grid-template-columns: 104px 1fr;
-  align-items: center;
-  border-top: 1px solid #223640;
+  margin-top: 10px;
   padding-top: 10px;
+  border-top: 1px solid #1f323b;
 }
 .bar-row-camera .bar-label {
+  margin-top: 2px;
   margin-bottom: 0;
+}
+.bar-clusters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.bar-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bar-cluster em {
+  font-style: normal;
+  font-size: 7px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: #5f7a86;
+}
+.bar-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1f323b;
+  font-size: 8px;
+  color: #78929e;
+}
+.bar-foot #error {
+  text-align: right;
+  color: #5f7a86;
 }
 .bottom-bar .meter {
   grid-template-columns: 46px 1fr 40px;
@@ -731,7 +790,7 @@ main {
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: #78929e;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .bar-note {
   display: block;
@@ -741,36 +800,13 @@ main {
   margin-top: 6px;
   max-width: 190px;
 }
-.bar-status {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 9px;
-  color: #89a4af;
-  max-width: 250px;
-}
-.bar-meta {
-  color: #acc5ce;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.bar-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 6px;
-  min-width: 0;
-}
-.bar-buttons button {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .bottom-bar button {
   font-size: 9px;
-  padding: 6px 8px;
+  padding: 6px 9px;
 }
 .bottom-bar .button-row {
   flex-wrap: wrap;
+  gap: 5px;
 }
 .bottom-bar button.active {
   background: var(--bp-success);
@@ -944,7 +980,7 @@ main {
     height: 150px;
   }
   .bottom-bar {
-    right: 250px;
+    right: 234px;
   }
 }
 @media (max-width: 700px) {
@@ -957,7 +993,7 @@ main {
     gap: 8px;
   }
   .bottom-bar {
-    right: 152px;
+    right: 138px;
   }
   .hud-pinned #brain {
     height: 90px;
