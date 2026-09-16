@@ -7,6 +7,17 @@ from pathlib import Path
 from .env import TASKS
 
 
+def _infer_spatial(learner, encoder, init):
+    """Whether a round runs the v6 spatial encoder, from the frozen partner it names."""
+    from .brain import _is_spatial
+
+    if learner == "decoder" and encoder:
+        return _is_spatial(encoder)
+    if learner == "encoder" and init and str(init).endswith(".pt"):
+        return _is_spatial(init)
+    return False
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fly connectome drone laboratory")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -120,7 +131,12 @@ def main():
     p = sub.add_parser("encoder-clone")
     p.add_argument("data", nargs="+")
     p.add_argument("--output", required=True)
-    p.add_argument("--steps", type=int, default=20000)
+    p.add_argument("--steps", type=int, default=None)
+    p.add_argument(
+        "--spatial",
+        action="store_true",
+        help="fit the v6 spatial encoder (v4 cues -> per-patch target maps)",
+    )
     p = sub.add_parser("sac-init-decoder")
     p.add_argument("data", nargs="+", help="stage-1 DAgger .npz files")
     p.add_argument("--encoder", required=True)
@@ -164,6 +180,12 @@ def main():
         help="frames of critic-only training at the start of the round "
         "(default sac.ACTOR_WARMUP_FRAMES = 50000; 0 disables)",
     )
+    p.add_argument(
+        "--spatial",
+        action="store_true",
+        help="v6 spatial encoder path (inferred for a decoder round from --encoder, "
+        "and for an encoder round from a .pt --init)",
+    )
     p = sub.add_parser("sac-export")
     p.add_argument(
         "checkpoint",
@@ -197,7 +219,16 @@ def main():
     p.add_argument("--seconds", type=float, default=120)
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--controller", choices=["teacher", "policy"], default="teacher")
+    p = sub.add_parser("spatial-maps")
+    p.add_argument("--output", default="runs/probe/maps")
+    p.add_argument("--encoder", default=None, help="learned-v6 .pt to visualise")
     args = parser.parse_args()
+    if args.command == "spatial-maps":
+        from . import maps
+
+        result = maps.run(args.output, args.encoder)
+        print(json.dumps({"flat_dim": result["flat_dim"], "output": result["output"]}))
+        return
     if args.command in (
         "encoder-collect",
         "encoder-clone",
@@ -219,10 +250,20 @@ def main():
                 args.level,
             )
         elif args.command == "encoder-clone":
-            result = encoder.fit_clone(args.data, args.output, args.steps)
+            if args.spatial:
+                result = sac.fit_spatial_clone(
+                    args.data, args.output, 60000 if args.steps is None else args.steps
+                )
+            else:
+                result = encoder.fit_clone(
+                    args.data, args.output, 20000 if args.steps is None else args.steps
+                )
         elif args.command == "sac-init-decoder":
             result = sac.init_decoder(args.data, args.encoder, args.output, args.steps)
         elif args.command == "sac-round":
+            spatial = args.spatial or _infer_spatial(
+                args.learner, args.encoder, args.init
+            )
             result = sac.train_round(
                 args.learner,
                 args.output,
@@ -242,6 +283,7 @@ def main():
                 optimize_memory=args.optimize_memory,
                 resume=args.resume,
                 keep_resume=args.keep_resume,
+                spatial=spatial,
             )
         elif args.command == "sac-export":
             if args.repin_decoder:

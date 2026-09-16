@@ -163,3 +163,12 @@ def test_mirror_eyes_swaps_halves_and_flips_width():
     expected = np.concatenate([mirrored[mask][:, 3:], mirrored[mask][:, :3]], axis=1)
     np.testing.assert_array_equal(out[mask], expected)
     np.testing.assert_array_equal(out[~mask], stacks[~mask])
+
+
+def test_spatial_maps_summary_covers_every_channel(tmp_path):
+    from fly_drone import maps
+
+    result = maps.run(tmp_path / "maps", None)
+    assert len(result["rows"]) == len(CHANNEL_ORDER)
+    assert result["flat_dim"] == spatial_encoder.flat_dim()
+    assert (tmp_path / "maps" / "summary.json").exists()

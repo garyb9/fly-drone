@@ -130,3 +130,15 @@ def test_encoder_scores_uses_the_v6_groups():
     scores = encoder_scores(currents, [1, 1, 0, -1], [False, False, True, False])
     assert scores["E1"]["loom_auc"] == pytest.approx(1.0)
     assert scores["E1"]["passed"] is True
+
+
+def test_infer_spatial_detects_v6_encoders(tmp_path):
+    from fly_drone.cli import _infer_spatial
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    path = tmp_path / "e.pt"
+    SpatialEncoder.fresh(seed=0).save(path)
+    assert _infer_spatial("decoder", str(path), None) is True
+    assert _infer_spatial("encoder", None, str(path)) is True
+    assert _infer_spatial("encoder", None, "runs/x.zip") is False
+    assert _infer_spatial("encoder", None, None) is False
