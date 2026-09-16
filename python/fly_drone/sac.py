@@ -407,6 +407,23 @@ def build_sac(
     )
 
 
+def apply_entropy_regime(model, action_dim):
+    """Pin a loaded model to the post-warm-up entropy regime (design §8.6).
+
+    `WarmupSAC.load` restores the saved `ent_coef`, `target_entropy` and alpha, so a model saved
+    before the regime landed (the round-0 decoder, or any round chained off it) keeps the old
+    automatic schedule — alpha 1.0 at unfreeze, target entropy ``-dim``. A fresh round always
+    starts pinned to the warm-start sigma, so loaded rounds are reset to match; `--resume` keeps
+    its own evolved alpha and does not call this.
+    """
+    model.ent_coef = f"auto_{ENT_COEF_INIT}"
+    model.target_entropy = float(action_dim) * TARGET_ENTROPY_PER_DIM
+    if model.log_ent_coef is not None:
+        with torch.no_grad():
+            model.log_ent_coef.fill_(math.log(ENT_COEF_INIT))
+    return model
+
+
 def set_dn_stats(model, mean, scale):
     """Standardise DN traces the same way in the actor, the critic and the target critic."""
     mean = torch.as_tensor(np.asarray(mean), dtype=torch.float32)
@@ -886,6 +903,9 @@ def train_round(
                 actor_warmup=int(actor_warmup),
                 **buffer_kwargs,
             )
+            # The .zip carries the regime it was trained under; every fresh round uses the pinned
+            # one (design §8.6), so an older round-0/DAgger init cannot silently restore `auto`.
+            apply_entropy_regime(model, int(np.prod(vec.action_space.shape)))
         else:
             model = build_sac(
                 learner,

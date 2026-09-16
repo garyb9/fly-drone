@@ -654,6 +654,27 @@ def test_resumed_round_carries_the_saved_alpha(tmp_path):
     assert float(torch.exp(loaded.log_ent_coef).detach()) == pytest.approx(0.003)
 
 
+def test_apply_entropy_regime_overrides_an_old_saved_schedule(tmp_path):
+    from fly_drone.sac import apply_entropy_regime
+
+    model = build_sac("decoder", SpacesOnlyEnv("decoder"), buffer_size=1, device="cpu")
+    # A model saved before the regime landed: automatic schedule, alpha pinned at 1.0.
+    model.ent_coef = "auto"
+    model.target_entropy = -4.0
+    with torch.no_grad():
+        model.log_ent_coef.fill_(0.0)
+    model.save(tmp_path / "old")
+
+    loaded = WarmupSAC.load(tmp_path / "old.zip", device="cpu", buffer_size=1)
+    assert float(torch.exp(loaded.log_ent_coef).detach()) == pytest.approx(1.0)
+    apply_entropy_regime(loaded, 4)
+    assert loaded.ent_coef == f"auto_{ENT_COEF_INIT}"
+    assert loaded.target_entropy == pytest.approx(4 * TARGET_ENTROPY_PER_DIM)
+    assert float(torch.exp(loaded.log_ent_coef).detach()) == pytest.approx(
+        ENT_COEF_INIT
+    )
+
+
 def test_probe_logger_records_log_std_and_detects_a_constant_action():
     from fly_drone.sac import ProbeLogger
     from stable_baselines3.common.logger import Logger
