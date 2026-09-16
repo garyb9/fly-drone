@@ -15,7 +15,7 @@ import {
 } from "./scene/drone";
 import { renderFlightView } from "./ui/flightView";
 import { renderHudPinned } from "./ui/hudPinned";
-import { renderDrawer } from "./ui/drawer";
+import { renderBottomBar } from "./ui/bottomBar";
 import { renderFooter } from "./ui/footer";
 
 applyCssTokens();
@@ -42,47 +42,6 @@ type Metadata = {
   ablations: string[];
   room: Room;
   task_policy_status: Record<string, "loaded" | "none">;
-};
-type FreeRoamEvent = {
-  type: string;
-  time: number;
-  side?: number;
-  count?: number;
-  kinds?: Record<string, number>;
-  min_distance?: number;
-  hit?: boolean;
-  dodged?: boolean;
-};
-type FreeRoam = {
-  level: number;
-  beacons: number;
-  collisions: number;
-  collision_kinds: Record<string, number>;
-  threats_finished: number;
-  threats_dodged: number;
-  threats_hit: number;
-  visited_cells: number;
-  beacon_visible: boolean;
-  clearance: number;
-  ghost: boolean;
-  silenced: string[];
-  events: FreeRoamEvent[];
-};
-type Outcome = {
-  bearing: number;
-  obstacle_distance: number;
-  launched: boolean;
-  displacement: number;
-  result: { success: boolean; terminated: boolean; collision: boolean } | null;
-};
-type ReportRun = { seed: number; success: boolean; side: string };
-type Report = {
-  path: string;
-  policy: string;
-  task: string;
-  seconds: number | null;
-  acceptance: Record<string, boolean | number>;
-  modes: Record<string, ReportRun[]>;
 };
 type Frame = {
   seq: number;
@@ -122,14 +81,6 @@ type Frame = {
   seed: number;
   active_policy: string | null;
   policy_status?: "none" | "loaded" | "limits mismatch";
-  outcome: Outcome;
-  free_roam: FreeRoam | null;
-};
-// Without a flying decoder every motion command is zero: say so instead of looking stuck.
-const HOLDING: Record<string, string> = {
-  none: "DRONE HOLDING — no decoder loaded for this task",
-  "limits mismatch":
-    "DRONE HOLDING — no decoder trained for this task yet (loaded one is for another room)",
 };
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
@@ -137,7 +88,7 @@ app.innerHTML = `
 ${renderFlightView()}
 <div class="hud-layer">
 ${renderHudPinned()}
-${renderDrawer()}
+${renderBottomBar()}
 </div>
 </main>
 ${renderFooter()}`;
@@ -371,26 +322,9 @@ function groupColor(index: number): THREE.Color {
   // Golden-angle hue stepping gives stable, well-separated colours across the 27 groups.
   return new THREE.Color().setHSL(((index * 137.508) % 360) / 360, 0.5, 0.62);
 }
-// Lists the anatomical groups present among the rendered cells, biggest first. Counts are
-// of rendered (subset) cells, not the full 166,700, so the legend is indicative, not a census.
-function renderGroupLegend(m: Metadata) {
-  const host = document.getElementById("group-legend");
-  if (!host) return;
-  const present = new Map<number, number>();
-  for (const c of m.cells) present.set(c.group ?? 0, (present.get(c.group ?? 0) ?? 0) + 1);
-  host.innerHTML = [...present.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([g, n]) => {
-      const name = (m.groups[g] ?? `group ${g}`).replace(/_/g, " ");
-      return `<span title="${n} rendered cells"><i style="background:#${groupColor(g).getHexString()}"></i>${name}</span>`;
-    })
-    .join("");
-}
 let socket: WebSocket,
   following = false,
   cameraMode: "orbit" | "fpv" | "tpv" = "orbit",
-  reports: Report[] = [],
-  replayPolicy: string | undefined,
   initialized = false;
 const WORLD_HOME = { position: [2.5, 2.2, 3.2], target: [0.3, 0.8, 0] };
 const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
@@ -460,30 +394,13 @@ function setupBrain(m: Metadata) {
   brain.controls.target.copy(bounds.getCenter(new THREE.Vector3()));
   brain.camera.position.copy(brain.controls.target).add(new THREE.Vector3(0, 0.2, 5));
   brain.controls.update();
-  const select = el("neuron") as HTMLSelectElement;
-  select.replaceChildren();
-  m.cells.forEach((c, i) => {
-    const option = document.createElement("option");
-    option.value = String(m.ids[i]);
-    option.textContent = `${c.type} · ${c.side} · ${c.id}`;
-    select.append(option);
-  });
-  const taskSelect = el("task") as HTMLSelectElement;
-  taskSelect.replaceChildren();
-  m.tasks.forEach((t) => {
-    const option = document.createElement("option");
-    option.value = t;
-    option.textContent = TASK_LABELS[t] ?? t;
-    taskSelect.append(option);
-  });
   // Land on free roam by default when a decoder is actually loaded for it (otherwise the
   // drone would just hold still there). Once per browser session: a reload should attach to
   // the running simulation (same episode, tick continues) rather than restart it.
   if (!initialized && sessionStorage.getItem(LANDED_KEY) !== "1") {
     sessionStorage.setItem(LANDED_KEY, "1");
     if (m.task_policy_status?.free_roam === "loaded") {
-      taskSelect.value = "free_roam";
-      runTrial();
+      send({ op: "reset", task: "free_roam", seed: randomSeed() });
     }
   }
   initialized = true;
@@ -496,99 +413,14 @@ function setupBrain(m: Metadata) {
     eyeGeometry = { splay: m.cameras.splay, fovyDeg: m.cameras.fovy_deg };
     setAirframe(airframeId);
   }
-  renderGroupLegend(m);
   updateRoom(m.room);
-  void loadReports();
-}
-const select = (id: string) => el(id) as HTMLSelectElement;
-const CONDITIONS: Record<string, string> = {
-  none: "INTACT",
-  zero: "ZEROED FEATURES",
-  sensory: "VISION SILENCED",
-  shuffle: "SHUFFLED FEATURES",
-};
-// Uppercase values feed the #trial summary directly; "visual"/"looming" must keep
-// their exact existing strings — scripts/browser-check.mjs asserts on them literally.
-const TASK_LABELS: Record<string, string> = {
-  visual: "Steer to target",
-  looming: "Dodge obstacle",
-  approach: "Approach target",
-  track: "Track orbiting target",
-  steer_dodge: "Steer and dodge",
-  escape: "Climb to escape",
-  free_roam: "Free roam",
-};
-const TASK_TRIAL_LABEL: Record<string, string> = {
-  visual: "STEER TO TARGET",
-  looming: "DODGE OBSTACLE",
-  approach: "APPROACH TARGET",
-  track: "TRACK TARGET",
-  steer_dodge: "STEER AND DODGE",
-  escape: "CLIMB TO ESCAPE",
-  free_roam: "FREE ROAM",
-};
-async function loadReports() {
-  try {
-    reports = await (await fetch("/api/reports")).json();
-  } catch {
-    reports = [];
-  }
-  const picker = select("report");
-  picker.replaceChildren();
-  const none = document.createElement("option");
-  none.value = "";
-  none.textContent = reports.length ? "Choose an evaluation report" : "No reports under runs/";
-  picker.append(none);
-  reports.forEach((r, i) => {
-    const option = document.createElement("option");
-    option.value = String(i);
-    option.textContent = `${r.task} · ${r.path}`;
-    picker.append(option);
-  });
-  renderSeeds();
-}
-function renderSeeds() {
-  const grid = el("seeds");
-  grid.replaceChildren();
-  const report = reports[Number(select("report").value)];
-  if (!select("report").value || !report) {
-    el("report-summary").textContent = "";
-    replayPolicy = undefined;
-    return;
-  }
-  replayPolicy = report.policy;
-  select("task").value = report.task;
-  const mode = select("ablation").value;
-  const runs = report.modes[mode] ?? [];
-  const passed = runs.filter((r) => r.success).length;
-  el("report-summary").textContent =
-    `${report.policy} · ${mode}: ${passed}/${runs.length} passed. Click a seed to replay it.`;
-  for (const run of runs) {
-    const button = document.createElement("button");
-    button.className = run.success ? "seed pass" : "seed fail";
-    button.textContent = String(run.seed);
-    button.title = `${run.success ? "passed" : "failed"} · ${run.side ?? ""}`;
-    button.onclick = () => {
-      (el("seed") as HTMLInputElement).value = String(run.seed);
-      runTrial();
-    };
-    grid.append(button);
-  }
 }
 // Object layout (pillars, beacons, threats, arena spawns) is seeded by the reset seed. The
-// live viewer advances to a fresh seed after every run so consecutive runs differ; the field
-// stays visible and editable when a specific seed is wanted.
+// live viewer starts every run on a fresh seed so consecutive runs differ.
 const randomSeed = () => Math.floor(Math.random() * 1_000_000);
 function runTrial() {
-  const message: Record<string, unknown> = {
-    op: "reset",
-    seed: Number((el("seed") as HTMLInputElement).value) || 0,
-    task: select("task").value,
-    ablation: select("ablation").value,
-  };
-  if (replayPolicy) message.policy = replayPolicy;
-  send(message);
-  (el("seed") as HTMLInputElement).value = String(randomSeed());
+  // No task/ablation selector any more: reset the server's current task with a new seed.
+  send({ op: "reset", seed: randomSeed() });
 }
 // Exaggerates one second of travel so low speeds (a few tenths of a m/s) are still visible as
 // short arrows rather than points, while clamping so a fast dodge doesn't dwarf the arena.
@@ -669,45 +501,6 @@ function updateAttitudeGauges(f: Frame) {
   const av = f.state.angular_velocity;
   el("turn-rate").textContent =
     av?.length === 3 ? `${((Math.hypot(...av) * 180) / Math.PI).toFixed(0)}°/s` : "—";
-}
-function describeRoamEvent(e: FreeRoamEvent): string {
-  const t = e.time.toFixed(1);
-  switch (e.type) {
-    case "beacon_collected":
-      return `<p class="roam-log-entry ok">${t}s · beacon collected (${e.count})</p>`;
-    case "collision":
-      return `<p class="roam-log-entry warn">${t}s · collision: ${Object.keys(e.kinds ?? {}).join(", ") || "?"}</p>`;
-    case "threat_launched":
-      return `<p class="roam-log-entry warn">${t}s · threat launched (${(e.side ?? 0) > 0 ? "left" : "right"})</p>`;
-    case "threat_hit":
-      return `<p class="roam-log-entry warn">${t}s · threat hit</p>`;
-    case "threat_passed":
-      return `<p class="roam-log-entry ok">${t}s · threat dodged</p>`;
-    default:
-      return `<p class="roam-log-entry">${t}s · ${e.type}</p>`;
-  }
-}
-function updateRoamHud(f: Frame) {
-  const hud = el("roam-hud");
-  const r = f.free_roam;
-  el("roam-tab").hidden = !r;
-  if (!r) {
-    hud.hidden = true;
-    return;
-  }
-  // Only the active tab's panel should be visible — updateRoamHud runs every frame
-  // regardless of which tab is selected, so it must defer to switchTab's choice
-  // instead of force-showing itself over whatever panel is actually open.
-  const activeTab = document.querySelector<HTMLButtonElement>(".tab-btn.active")?.dataset.tab;
-  hud.hidden = activeTab !== "roam";
-  const minutes = Math.max(f.time / 60, 1 / 60);
-  el("roam-level").textContent = `LEVEL ${r.level}`;
-  el("roam-beacons").textContent = (r.beacons / minutes).toFixed(2);
-  el("roam-collisions").textContent = (r.collisions / minutes).toFixed(2);
-  el("roam-dodged").textContent = String(r.threats_dodged);
-  el("roam-hit").textContent = String(r.threats_hit);
-  el("roam-cells").textContent = String(r.visited_cells);
-  el("roam-log").innerHTML = r.events.slice().reverse().map(describeRoamEvent).join("");
 }
 function update(f: Frame) {
   latest = f;
@@ -806,38 +599,9 @@ function update(f: Frame) {
     : "No trained decoder loaded — nothing to time.";
   el("command").textContent =
     `Motion [m/s, rad/s]: ${f.command.map((v) => v.toFixed(2)).join(" · ")}`;
-  updateRoamHud(f);
   el("error").textContent =
     f.error ??
     `${f.missed_deadlines} missed frame deadlines · Full graph running · Fly panel uses modeled dynamics`;
-  if (f.task) {
-    el("trial").textContent =
-      `SEED ${f.seed} · ${TASK_TRIAL_LABEL[f.task] ?? f.task.toUpperCase()} · ${CONDITIONS[f.ablation] ?? f.ablation.toUpperCase()}${f.policy_status === "loaded" && f.active_policy ? ` · ${f.active_policy}` : " · NO DECODER"}`;
-    const holding = HOLDING[f.policy_status ?? (f.active_policy ? "loaded" : "none")];
-    if (holding) {
-      el("outcome").textContent = holding;
-      el("outcome").className = "outcome fail";
-      return;
-    }
-    const o = f.outcome;
-    const live =
-      f.task === "looming"
-        ? `obstacle ${o.obstacle_distance.toFixed(2)} m${o.launched ? " (launched)" : ""} · drift ${o.displacement.toFixed(2)} m`
-        : `target bearing ${o.bearing.toFixed(2)} rad`;
-    const verdict = o.result
-      ? o.result.success
-        ? " · PASSED"
-        : o.result.collision
-          ? " · FAILED (collision)"
-          : " · FAILED"
-      : "";
-    el("outcome").textContent = `Outcome: ${live}${verdict}`;
-    el("outcome").className = o.result
-      ? o.result.success
-        ? "outcome pass"
-        : "outcome fail"
-      : "outcome";
-  }
 }
 function connect() {
   socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
@@ -862,9 +626,6 @@ function send(message: object) {
 }
 el("pause").onclick = () => send({ op: "pause", value: !latest?.paused });
 el("reset").onclick = () => runTrial();
-el("run").onclick = () => runTrial();
-select("report").onchange = () => renderSeeds();
-select("ablation").onchange = () => renderSeeds();
 function setCameraMode(mode: "orbit" | "fpv" | "tpv") {
   cameraMode = cameraMode === mode ? "orbit" : mode;
   world.controls.enabled = cameraMode === "orbit";
@@ -917,13 +678,6 @@ el("cam-orbit").onclick = () => {
   world.controls.autoRotateSpeed = 0.8;
   el("cam-orbit").classList.toggle("active", on);
 };
-document
-  .querySelectorAll<HTMLButtonElement>("[data-op]")
-  .forEach(
-    (b) =>
-      (b.onclick = () =>
-        send({ op: b.dataset.op, index: Number((el("neuron") as HTMLSelectElement).value) })),
-  );
 document.querySelectorAll<HTMLButtonElement>("[data-target]").forEach(
   (b) =>
     (b.onclick = () =>
@@ -937,28 +691,6 @@ el("loom").onclick = () => {
   send({ op: "objects", obstacle: [Math.min(3.5, p[0] + 0.65), p[1], Math.max(0.3, p[2])] });
 };
 el("clear").onclick = () => send({ op: "objects", obstacle: [2, -2, 1] });
-function setDrawerCollapsed(collapsed: boolean) {
-  el("drawer").classList.toggle("collapsed", collapsed);
-  el("drawer-collapse").querySelector("i")!.textContent = collapsed ? "›" : "‹";
-}
-function switchTab(name: string) {
-  document
-    .querySelectorAll<HTMLElement>(".drawer-body [data-panel]")
-    .forEach((panel) => (panel.hidden = panel.dataset.panel !== name));
-  document
-    .querySelectorAll<HTMLButtonElement>(".tab-btn")
-    .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === name));
-  setDrawerCollapsed(false);
-}
-document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((btn) => {
-  btn.onclick = () => {
-    if (btn.classList.contains("active"))
-      setDrawerCollapsed(!el("drawer").classList.contains("collapsed"));
-    else switchTab(btn.dataset.tab!);
-  };
-});
-el("drawer-collapse").onclick = () =>
-  setDrawerCollapsed(!el("drawer").classList.contains("collapsed"));
 function applyCameraMode() {
   if (cameraMode === "fpv") {
     const cam = airframe.eyes[0];
@@ -1001,6 +733,5 @@ function render(now = performance.now()) {
     v.renderer.render(v.scene, v.camera);
   }
 }
-(el("seed") as HTMLInputElement).value = String(randomSeed());
 connect();
 render();

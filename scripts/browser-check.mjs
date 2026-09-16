@@ -38,14 +38,6 @@ try {
 
   await page.goto(url);
   await connected(page);
-  // The server may default to free_roam (continuous, auto-respawning) when a decoder is
-  // loaded for it. The checks below assume a finite trial that pauses on completion, so
-  // pin a known starting task regardless of what the server landed on.
-  await page.selectOption("#task", "visual");
-  await page.getByRole("button", { name: "Run trial" }).click();
-  await page.waitForFunction(() =>
-    (document.querySelector("#trial")?.textContent ?? "").includes("STEER TO TARGET"),
-  );
   await page.waitForFunction(() => document.querySelectorAll("#motors .meter").length === 4);
   await page.screenshot({ path: join(tmpdir(), "fly-drone-desktop.png") });
   passed.push("connect + render");
@@ -59,12 +51,8 @@ try {
   }
   passed.push("motor telemetry (actual/commanded RPM near hover)");
 
-  // Pause/Reset/target/obstacle controls live in the drawer's "Signals" tab, alongside
-  // the sensory/neural/motor telemetry.
-  await page.getByRole("button", { name: "Signals", exact: true }).click();
-  if (await page.getByRole("button", { name: "Pause", exact: true }).count()) {
-    await page.getByRole("button", { name: "Pause", exact: true }).click();
-  }
+  // The bottom control bar is the only controls surface now (the left drawer is gone).
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
   await page.waitForFunction(
     () => document.querySelector("#status")?.textContent === "Simulation paused",
   );
@@ -96,13 +84,13 @@ try {
   await page.getByRole("button", { name: "Move aside" }).click();
   passed.push("target and obstacle placement");
 
-  // Neuron intervention buttons live in the drawer's "Brain" tab.
-  await page.getByRole("button", { name: "Brain", exact: true }).click();
-  for (const op of ["Pulse", "Hold", "Silence", "Restore"]) {
-    await page.getByRole("button", { name: op, exact: true }).click();
-  }
-  await page.getByRole("button", { name: "Trials", exact: true }).click();
-  passed.push("neuron interventions");
+  await page.getByRole("button", { name: "B · 450 mm" }).click();
+  await page.getByRole("button", { name: "Eye FOV" }).click();
+  await page.getByRole("button", { name: "Guards" }).click();
+  await page.getByRole("button", { name: "3rd person" }).click();
+  await page.getByRole("button", { name: "1st person" }).click();
+  await page.getByRole("button", { name: "Reset view" }).click();
+  passed.push("airframe and camera controls");
 
   const episode = await text(page, "#episode");
   const beforeReload = await tickOf(page);
@@ -114,24 +102,6 @@ try {
   );
   assert.equal(await text(page, "#episode"), episode);
   passed.push("reconnect keeps the running simulation (same episode, tick continues)");
-
-  await page.selectOption("#task", "looming");
-  await page.selectOption("#ablation", "sensory");
-  await page.fill("#seed", "1003");
-  await page.getByRole("button", { name: "Run trial" }).click();
-  await page.waitForFunction(() => {
-    const trial = document.querySelector("#trial")?.textContent ?? "";
-    return (
-      trial.includes("SEED 1003") &&
-      trial.includes("DODGE OBSTACLE") &&
-      trial.includes("VISION SILENCED")
-    );
-  });
-  await page.waitForFunction(() =>
-    (document.querySelector("#outcome")?.textContent ?? "").includes("obstacle"),
-  );
-  assert.ok((await page.locator("#report option").count()) >= 1);
-  passed.push("trial reset with seed/task/ablation and live looming outcome");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: join(tmpdir(), "fly-drone-mobile.png"), fullPage: true });

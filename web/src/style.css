@@ -621,6 +621,144 @@ main {
 .eyes-panel .eyes {
   justify-content: center;
 }
+/* Telemetry moved out of the world's bottom-left corner to the top of the pinned right
+   column, which is the only always-visible surface after the left drawer was removed. */
+.telemetry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  border: 1px solid #293b44;
+  border-radius: 10px;
+  background: var(--bp-card);
+  padding: 10px 12px;
+  width: 100%;
+}
+.telemetry span {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.2px;
+  color: #88a0ac;
+}
+.telemetry strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.telemetry small {
+  font-size: 9px;
+  color: #78929e;
+}
+.telemetry-wide {
+  grid-column: span 2;
+}
+/* One comprehensive control bar replaces the left drawer and the old bottom-left camera
+   controls. It scrolls internally on narrow screens so the page never scrolls sideways. */
+.bottom-bar {
+  position: absolute;
+  left: 16px;
+  right: 300px;
+  bottom: 14px;
+  z-index: 12;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  overflow-x: auto;
+  pointer-events: auto;
+}
+.bar-group {
+  border: 1px solid #293b44;
+  border-radius: 10px;
+  background: rgba(13, 23, 30, 0.94);
+  padding: 8px 12px 10px;
+  min-width: 0;
+  flex: none;
+}
+.bar-group h3 {
+  margin: 0 0 8px;
+}
+.bar-grid {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(2, minmax(150px, auto));
+  gap: 6px 18px;
+  align-items: start;
+}
+.bar-group-signals .bar-grid,
+.bar-group-controls .bar-grid {
+  grid-template-columns: repeat(2, minmax(160px, auto));
+}
+.bottom-bar .meter {
+  grid-template-columns: 46px 1fr 40px;
+  gap: 5px;
+  margin: 6px 0;
+}
+.bottom-bar #motors .meter {
+  grid-template-columns: 18px 1fr 74px;
+}
+.bottom-bar #budget .meter {
+  grid-template-columns: 40px 1fr 68px;
+}
+.bottom-bar .meters {
+  min-width: 128px;
+}
+.bar-label {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #78929e;
+  margin-bottom: 4px;
+}
+.bar-note {
+  display: block;
+  font-style: normal;
+  font-size: 7px;
+  color: #89a4af;
+  margin-top: 6px;
+  max-width: 190px;
+}
+.bar-status {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 8px;
+  color: #89a4af;
+  max-width: 250px;
+}
+.bar-meta {
+  color: #acc5ce;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.bar-group-camera {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.bar-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+.bar-buttons button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bottom-bar button {
+  font-size: 8px;
+  padding: 6px 8px;
+}
+.bottom-bar .button-row {
+  flex-wrap: wrap;
+}
+.bottom-bar button.active {
+  background: var(--bp-success);
+  color: #112c2c;
+  border-color: var(--bp-success);
+}
 .drawer-rail {
   position: absolute;
   top: 0;
@@ -787,6 +925,9 @@ main {
   .hud-pinned #brain {
     height: 150px;
   }
+  .bottom-bar {
+    right: 250px;
+  }
 }
 @media (max-width: 700px) {
   /* The drawer becomes a bottom sheet, so the pinned brain/eyes stack can hug the
@@ -796,6 +937,9 @@ main {
     top: 8px;
     width: 130px;
     gap: 8px;
+  }
+  .bottom-bar {
+    right: 152px;
   }
   .hud-pinned #brain {
     height: 90px;
