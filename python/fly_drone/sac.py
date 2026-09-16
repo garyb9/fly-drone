@@ -57,6 +57,30 @@ TARGET_ENTROPY_PER_DIM = 0.5 * math.log(2.0 * math.pi * math.e) + WARM_START_LOG
 # Auto-alpha initial value; SB3's 1.0 dwarfs the ~0.05/step reward. Alpha stays adaptive.
 ENT_COEF_INIT = 0.01
 
+# Encoder-round stabilisation (added 2026-09-16 after the v6 round-1 encoder collapsed with its
+# light channels saturated at 2.0). The frozen decoder lets an encoder drift into a degenerate
+# saturation that scores slightly better; a decaying anchor to the reference encoder's currents on
+# the same frames plus a hinge on the bounds keeps it near the cloned skill while SAC shapes the
+# maps. Weights are small so they do not swamp the ~0.05/step task reward.
+ANCHOR_WEIGHT = 0.05
+ANCHOR_DECAY_FRAMES = 100_000  # per environment, linear to zero
+SATURATION_WEIGHT = 0.05
+SATURATION_LO = 0.2
+SATURATION_HI = 1.8
+
+
+def anchor_penalty(currents, reference):
+    """Mean squared deviation of the encoder's currents from a reference encoder's."""
+    return float(np.mean((np.asarray(currents) - np.asarray(reference)) ** 2))
+
+
+def saturation_penalty(currents, lo=SATURATION_LO, hi=SATURATION_HI):
+    """Hinge on currents near the [0, 2] bounds, so a channel cannot pin at an extreme."""
+    c = np.asarray(currents, dtype=float)
+    over = np.maximum(c - hi, 0.0)
+    under = np.maximum(lo - c, 0.0)
+    return float(np.mean(over**2 + under**2))
+
 
 def visible_geometry(env):
     """Threat and beacon in the body frame, only while visible; zeros otherwise."""
@@ -118,6 +142,10 @@ class SacRoamEnv(gym.Env):
         lambda_loom=LAMBDA_LOOM,
         lambda_light=LAMBDA_LIGHT,
         spatial=False,
+        anchor=None,
+        anchor_weight=ANCHOR_WEIGHT,
+        saturation_weight=SATURATION_WEIGHT,
+        anchor_decay=ANCHOR_DECAY_FRAMES,
     ):
         if learner not in LEARNERS:
             raise ValueError(f"learner must be one of {LEARNERS}")
@@ -142,6 +170,23 @@ class SacRoamEnv(gym.Env):
         self.learner = learner
         self.lambda_loom = lambda_loom
         self.lambda_light = lambda_light
+        if anchor is not None and not (self.spatial and learner == "encoder"):
+            raise ValueError(
+                "an encoder anchor is only used by the spatial encoder learner"
+            )
+        self.anchor = None
+        if anchor is not None:
+            from .spatial_encoder import SpatialEncoder
+
+            self.anchor = (
+                anchor
+                if isinstance(anchor, SpatialEncoder)
+                else SpatialEncoder.load(anchor)
+            )
+        self.anchor_weight = float(anchor_weight)
+        self.saturation_weight = float(saturation_weight)
+        self.anchor_decay = max(1, int(anchor_decay))
+        self._anchored_steps = 0
         self.env = ConnectomeEnv(
             task="free_roam", level=level, respawn=True, brain=brain
         )
@@ -188,6 +233,7 @@ class SacRoamEnv(gym.Env):
         action = np.clip(np.asarray(action, dtype=np.float32), -1, 1)
         brain = self.env.brain
         cost = loom_cost = light_cost = 0.0
+        anchor_cost = saturation_cost = 0.0
         if self.learner == "encoder":
             currents = brain.set_currents(action + 1.0)
             velocity = brain.infer(self.features) / self.env.plant.limits
@@ -202,6 +248,19 @@ class SacRoamEnv(gym.Env):
                 loom_cost = self.lambda_loom * float(currents[LOOM].mean())
                 light_cost = self.lambda_light * float(currents[LIGHT].mean())
             cost = loom_cost + light_cost
+            if self.anchor is not None:
+                from .spatial_encoder import flatten_np
+
+                reference = flatten_np(self.anchor.currents(brain.stack.array()))
+                decay = max(0.0, 1.0 - self._anchored_steps / self.anchor_decay)
+                anchor_cost = (
+                    self.anchor_weight * decay * anchor_penalty(currents, reference)
+                )
+                saturation_cost = (
+                    self.saturation_weight * decay * saturation_penalty(currents)
+                )
+                cost += anchor_cost + saturation_cost
+                self._anchored_steps += 1
         else:
             velocity = action
         self.features, reward, terminated, truncated, info = self.env.step(
@@ -210,6 +269,8 @@ class SacRoamEnv(gym.Env):
         info["metabolic_cost"] = cost
         info["loom_cost"] = loom_cost
         info["light_cost"] = light_cost
+        info["anchor_cost"] = anchor_cost
+        info["saturation_cost"] = saturation_cost
         return self._obs(), float(reward - cost), terminated, truncated, info
 
     def close(self):
@@ -879,7 +940,13 @@ def repin_decoder(source, encoder, output):
 class MetabolicLogger(BaseCallback):
     def _on_step(self):
         infos = self.locals["infos"]
-        for key in ("metabolic_cost", "loom_cost", "light_cost"):
+        for key in (
+            "metabolic_cost",
+            "loom_cost",
+            "light_cost",
+            "anchor_cost",
+            "saturation_cost",
+        ):
             values = [info.get(key, 0.0) for info in infos]
             self.logger.record_mean(f"rollout/{key}", float(np.mean(values)))
         return True
@@ -980,14 +1047,19 @@ class ResumeCheckpoint(BaseCallback):
         return True
 
 
-def _factory(learner, rank, seed, decoder, encoder, level, spatial=False):
+def _factory(learner, rank, seed, decoder, encoder, level, spatial=False, anchor=None):
     def make():
         from stable_baselines3.common.monitor import Monitor
 
         torch.set_num_threads(1)
         env = Monitor(
             SacRoamEnv(
-                learner, decoder=decoder, encoder=encoder, level=level, spatial=spatial
+                learner,
+                decoder=decoder,
+                encoder=encoder,
+                level=level,
+                spatial=spatial,
+                anchor=anchor,
             )
         )
         env.reset(seed=seed + rank)
@@ -1016,6 +1088,7 @@ def train_round(
     resume_every=50_000,
     keep_resume=False,
     spatial=False,
+    anchor=None,
 ):
     """One SAC round for one learner; the other half is frozen inside the environment.
 
@@ -1047,8 +1120,15 @@ def train_round(
     resumed_from = None
     decoder = str(Path(decoder).resolve()) if decoder else None
     encoder = str(Path(encoder).resolve()) if encoder else None
+    # Stabilise the spatial encoder round: default the anchor to the encoder it warm-starts from
+    # (the clone for round 1, the previous round's encoder later). The stabiliser only applies to
+    # the v6 spatial encoder learner.
+    if anchor is None and spatial and learner == "encoder":
+        if init is not None and str(init).endswith(".pt"):
+            anchor = str(init)
+    anchor = str(Path(anchor).resolve()) if anchor else None
     factories = [
-        _factory(learner, r, seed, decoder, encoder, level, spatial)
+        _factory(learner, r, seed, decoder, encoder, level, spatial, anchor)
         for r in range(workers)
     ]
     # Each env owns a full brain and renderer; spawn keeps EGL state per process.
@@ -1167,6 +1247,7 @@ def train_round(
             "n_step": int(n_step),
             "optimize_memory": bool(optimize_memory),
             "spatial": bool(spatial),
+            "anchor": anchor,
             "resumed_from": resumed_from,
             "snapshot": str(snapshot) if snapshot.exists() else None,
         }

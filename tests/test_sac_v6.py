@@ -142,3 +142,47 @@ def test_infer_spatial_detects_v6_encoders(tmp_path):
     assert _infer_spatial("encoder", None, str(path)) is True
     assert _infer_spatial("encoder", None, "runs/x.zip") is False
     assert _infer_spatial("encoder", None, None) is False
+
+
+def test_anchor_and_saturation_penalties():
+    from fly_drone.sac import anchor_penalty, saturation_penalty
+
+    assert anchor_penalty([1.0, 1.0], [1.0, 1.0]) == pytest.approx(0.0)
+    assert anchor_penalty([0.0, 0.0], [1.0, 1.0]) == pytest.approx(1.0)
+    assert saturation_penalty([1.0, 1.0]) == pytest.approx(0.0)
+    assert saturation_penalty([2.0, 0.0]) == pytest.approx(0.04)
+
+
+def test_encoder_env_applies_anchor_and_saturation_cost(tmp_path):
+    from fly_drone.sac import SacRoamEnv
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    decoder = zero_actor(tmp_path / "d.json", BrainRuntime())
+    anchor = SpatialEncoder.fresh(seed=1)
+    anchor.save(tmp_path / "a.pt")
+    env = SacRoamEnv(
+        "encoder", decoder=decoder, level=3, spatial=True, anchor=str(tmp_path / "a.pt")
+    )
+    try:
+        env.reset(seed=7)
+        _, _, _, _, info = env.step(np.ones(flat_dim(), np.float32))
+        assert info["anchor_cost"] > 0
+        assert info["saturation_cost"] > 0
+        assert info["metabolic_cost"] >= info["anchor_cost"] + info["saturation_cost"]
+    finally:
+        env.env.close()
+
+
+def test_anchor_rejected_for_non_encoder_learner(tmp_path):
+    from fly_drone.sac import SacRoamEnv
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    SpatialEncoder.fresh(seed=0).save(tmp_path / "e.pt")
+    SpatialEncoder.fresh(seed=1).save(tmp_path / "a.pt")
+    with pytest.raises(ValueError, match="anchor"):
+        SacRoamEnv(
+            "decoder",
+            encoder=str(tmp_path / "e.pt"),
+            spatial=True,
+            anchor=str(tmp_path / "a.pt"),
+        )

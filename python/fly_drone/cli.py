@@ -191,6 +191,11 @@ def main():
         help="v6 spatial encoder path (inferred for a decoder round from --encoder, "
         "and for an encoder round from a .pt --init)",
     )
+    p.add_argument(
+        "--anchor",
+        help="reference encoder .pt the encoder round is anchored to (v6 encoder rounds; "
+        "defaults to --init)",
+    )
     p = sub.add_parser("sac-export")
     p.add_argument(
         "checkpoint",
@@ -292,6 +297,7 @@ def main():
                 resume=args.resume,
                 keep_resume=args.keep_resume,
                 spatial=spatial,
+                anchor=args.anchor,
             )
         elif args.command == "sac-export":
             if args.repin_decoder:
