@@ -297,6 +297,14 @@ $$
 with $\gamma = 0.99$, batch 256, 2 gradient steps per environment step, and a replay buffer of
 100,000 transitions. Commands: [`../training.md`](../training.md) §9.
 
+**Encoder v6 (retinotopic).** The v5 8-scalar encoder was found unable to carry loom selectivity
+(E1 0.686 vs the 0.8 bar) and the Phase-2 ladder did not forage. v6 replaces the 8 uniform scalars
+with **per-patch current maps**: a CNN over each eye's luma stack (plus explicit frame
+differences) drives `12×8` maps for Tm4/T2 (motion/loom) and Mi1/Tm3 (light), and `4×3` maps for
+the direct LC4/LPLC2 route — 816 currents/frame injected patch by patch, so the connectome's own
+optic lobe computes motion and looming. The connectome, the decoder and `ACCEPTANCE` are
+unchanged; v6 is `learned-v6:` and additive. See [`../sensory-model.md`](../sensory-model.md) §7.
+
 ## 8. Proving the brain is flying: evaluation
 
 `fly-drone evaluate --task free_roam` flies 50 held-out seeds for 120 s under seven brain conditions:
@@ -323,7 +331,7 @@ dodge rate says nothing about the brain.
 | ------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------- |
 | Visual steering (trial room)         | ✅ accepted     | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                                                 |
 | Looming avoidance (trial room)       | ✅ accepted     | 96%, balanced 0.92                                                                                            |
-| 0 · Encoder v4 sufficiency           | 🟡 v5 chosen    | gate failed (385 false loom escapes/8 min, level 0.49 vs 0.44); v5 code in place, training pending (§7.3–7.4) |
+| 0 · Encoder v4 sufficiency           | 🟡 v5/v6 chosen | gate failed (385 false loom escapes/8 min, level 0.49 vs 0.44); v5 code + rounds done (E1 0.686, no foraging), v6 retinotopic code landed, training pending (§7.4) |
 | 1 · Viewer diagnostics               | ✅              | axes, heading, velocity, command vectors                                                                      |
 | 2 · Body step response               | ✅              | vertical 0.69 s vs lateral 1.48 s to 80%                                                                      |
 | 3 · Teacher redesign                 | ✅              | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast                           |

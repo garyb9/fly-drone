@@ -467,3 +467,29 @@ Copy `evaluation.json`, `e1-e2.json`, `e1-v4-baseline.json`, `e3.json` and every
 E3 comparison and E4 in [`validation.md`](validation.md), thresholds taken straight from
 `ACCEPTANCE` and `ENCODER_CHECKS`, never rounded in the pass direction. The actor is added to
 `docs/results/accepted-policies.json` only if A1–A6, E1, E2 and E4 all pass and the user agrees.
+
+### 9.6 Encoder v6: retinotopic (spatial) rounds
+
+Design: [`superpowers/specs/2026-09-16-retinotopic-sensing-v6-design.md`](superpowers/specs/2026-09-16-retinotopic-sensing-v6-design.md);
+sensory detail: [`sensory-model.md`](sensory-model.md) §7. The v6 round is the v5 round with the
+8-scalar encoder swapped for the spatial one; the connectome, the decoder and `ACCEPTANCE` are
+unchanged. Add `--spatial` (or let it be inferred from a v6 `--encoder` / `.pt --init`). The
+spatial class is chosen automatically in `build_sac`; `round.json` records `"spatial": true`.
+
+```bash
+# clone warm start: v4 cues -> v6 target maps (reuses the v5 clone flights)
+env -u PYTHONPATH .venv/bin/fly-drone encoder-clone runs/v5/clone/data.npz runs/v5/clone/data2.npz --output runs/v6/clone --spatial
+# round-0 decoder under the v6 clone, then an encoder round and a decoder round
+env -u PYTHONPATH .venv/bin/fly-drone sac-round encoder --output runs/v6/round1/encoder --frames 350000 --decoder runs/v6/round0/decoder.json --init runs/v6/clone/encoder.pt --spatial --workers 6
+env -u PYTHONPATH .venv/bin/fly-drone sac-round decoder --output runs/v6/round1/decoder --frames 150000 --encoder runs/v6/round1/encoder/encoder.pt --init runs/v6/round1/encoder/encoder.zip --workers 6
+```
+
+`sac-export`/`--repin-decoder`/`sac-validate`/`encoder-checks` all detect the v6 encoder from the
+`.pt` (or the actor's `SpatialActor` type), so no extra flag is needed. E1/E2 score the v6
+`loom`/`light` group means; the bars are unchanged and are reported against the v4 baseline. The
+v6 clone fit needs no new collection: the v5 clone `.npz` stores the eye stacks **and** the v4
+cues, and `spatial_clone.v4_cues_to_targets` derives the target maps.
+
+The development plan and its run gates are in
+[`superpowers/plans/2026-09-16-fly-drone-06-retinotopic-encoder.md`](superpowers/plans/2026-09-16-fly-drone-06-retinotopic-encoder.md).
+

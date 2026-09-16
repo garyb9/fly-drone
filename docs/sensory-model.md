@@ -312,3 +312,45 @@ max(`lc4_*`, `lplc2_*`) currents:
 E1 alone would pass if the loom channels just tracked "anything nearby"; E2 forces the light and
 loom channels apart, so a high E1 AUC means the connectome is actually receiving a
 threat-selective loom signal rather than the encoder relabelling one general alarm current.
+
+## 7. Encoder v6 (retinotopic, free roam only)
+
+Design: [`superpowers/specs/2026-09-16-retinotopic-sensing-v6-design.md`](superpowers/specs/2026-09-16-retinotopic-sensing-v6-design.md).
+Code: `python/fly_drone/retinotopy.py` (position → patch map, Rust input roles),
+`python/fly_drone/spatial_encoder.py` (the `learned-v6:` network), `python/fly_drone/brain.py`
+(v6 runtime), `python/fly_drone/sac.py` (`fit_spatial_clone`, v6 env/export). v6 is **additive**:
+v4 and v5 keep loading unchanged, and the connectome is untouched.
+
+**Why.** The v5 8-scalar encoder cannot carry loom selectivity: E1 stalls at 0.686 (v5) / 0.687
+(v4) / 0.732 (fixed probe) against the 0.8 bar, and the Phase-2 ladder did not forage. The M1/M1b
+feasibility gate (2026-09-16) found the injection target: **Tm4** (dense 2D sheet, lateralised,
+sub-region selective), **T2** (wide-field, strongest driver) and the direct **LC4/LPLC2** route;
+Mi1/Tm3/T4/T5 do not propagate to the loom circuit. v6 injects a low-resolution spatial current
+map so the optic lobe computes motion and looming itself, instead of a hand-built global scalar.
+
+**Input.** Unchanged from v5 (`6 × 48 × 64` luma stack), plus explicit **frame differences**: each
+eye's `frames − 1` differences are concatenated as extra input channels with a side flag
+(`SpatialEncoderNet.eye_inputs`). Motion is first-class, not rediscovered by the CNN.
+
+**Network.** A shared `EyeNetV6` (conv 16 @ 5×5 s2 → 32 @ 3×3 s2 → 32 @ 3×3 s2) runs per eye
+(right eye mirrored, side flag −1). A 1×1 spatial head emits a `12 × 8` map for each of
+`mi1/tm3/tm4/t2`; a coarser 4×3 head emits `lc4/lplc2`. Each patch is `tanh(logit) + 1` in `[0, 2]`.
+
+**Channels (12 maps, 816 currents/frame):** spatial `12×8` for `mi1_l/r`, `tm3_l/r`, `tm4_l/r`,
+`t2_l/r` (light + motion) and direct `4×3` for `lc4_l/r`, `lplc2_l/r` (the retained v4 loom route).
+Each population's cells are assigned to patches by a 2D PCA of their positions
+(`retinotopy.build_default_maps`); one Rust input role per occupied patch (~479), injected with
+`retinotopy.apply_map`. Groups (`spatial_encoder.group_slices`): `light` = mi1+tm3,
+`motion` = tm4+t2, `loom` = lc4+lplc2.
+
+**Clone initialisation.** `encoder-clone --spatial` (`sac.fit_spatial_clone`) broadcasts the v4
+cues onto the maps (`spatial_clone.v4_cues_to_targets`): `light_l/r` seed the mi1/tm3 maps and
+`loom_l/r` the direct lc4/lplc2 maps; Tm4/T2 start neutral and are left to SAC. It reuses the v5
+clone flights, and carries the mirror augmentation (eyes mirrored, target maps swapped/flipped).
+`clone.json` reports per-channel and per-group held-out MSE/r.
+
+**Identity and metabolic cost.** Version `"learned-v6:"` + the weights hash; the v6 encoder's
+`loom`/`light` group means replace the v5 index lists in the metabolic cost and in E1/E2
+(`roam_eval.encoder_scores` dispatches on the current-vector width). E1/E2 bars are unchanged, and
+are reported against the v4 baseline (0.687 policy-flown / 0.732 fixed probe).
+
