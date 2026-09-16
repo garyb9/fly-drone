@@ -45,6 +45,37 @@ def channel_grid(name):
     return DIRECT_GRID if prefix in DIRECT_CHANNELS else DEFAULT_GRID
 
 
+# Channel prefixes grouped by function, for metabolic cost, E1/E2 and silencing.
+GROUP_CHANNELS = {
+    "light": ("mi1", "tm3"),
+    "motion": ("tm4", "t2"),
+    "loom": ("lc4", "lplc2"),
+}
+
+
+def group_slices():
+    """Flat indices of each functional group into the ``flatten`` order."""
+    out = {group: [] for group in GROUP_CHANNELS}
+    start = 0
+    for name in CHANNEL_ORDER:
+        size = int(np.prod(channel_grid(name)))
+        prefix = name.rsplit("_", 1)[0]
+        for group, prefixes in GROUP_CHANNELS.items():
+            if prefix in prefixes:
+                out[group].extend(range(start, start + size))
+        start += size
+    return {group: np.asarray(ids, dtype=np.int64) for group, ids in out.items()}
+
+
+def mirror_maps(maps):
+    """Mirror a channel map dict: left and right swap, width flips (bilateral symmetry)."""
+    out = {}
+    for name in CHANNEL_ORDER:
+        other = name[:-1] + ("r" if name.endswith("_l") else "l")
+        out[name] = np.asarray(maps[other])[..., ::-1]
+    return out
+
+
 def flat_dim():
     return sum(int(np.prod(channel_grid(name))) for name in CHANNEL_ORDER)
 

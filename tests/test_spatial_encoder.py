@@ -101,3 +101,26 @@ def test_flatten_unflatten_round_trip():
     back = spatial_encoder.unflatten(flat)
     for name in CHANNEL_ORDER:
         assert torch.allclose(back[name], raw[name])
+
+
+def test_group_slices_partition_the_flat_vector():
+    slices = spatial_encoder.group_slices()
+    merged = np.concatenate([slices[group] for group in slices])
+    assert sorted(merged.tolist()) == list(range(spatial_encoder.flat_dim()))
+    assert set(slices) == {"light", "motion", "loom"}
+    assert len(slices["light"]) == 4 * 12 * 8
+    assert len(slices["motion"]) == 4 * 12 * 8
+    assert len(slices["loom"]) == 4 * 4 * 3
+
+
+def test_mirror_maps_swaps_and_flips_eyes():
+    out = {
+        name: np.arange(
+            int(np.prod(spatial_encoder.channel_grid(name))), dtype=np.float32
+        ).reshape(spatial_encoder.channel_grid(name))
+        for name in CHANNEL_ORDER
+    }
+    mirrored = spatial_encoder.mirror_maps(out)
+    for name in CHANNEL_ORDER:
+        other = name[:-1] + ("r" if name.endswith("_l") else "l")
+        np.testing.assert_array_equal(mirrored[name], out[other][:, ::-1])
