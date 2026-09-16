@@ -90,3 +90,24 @@ each completed step (no agent trailer, per user 2026-09-16).
 - `docs/results/encoder-v5/diag/current_drift.py`, `run_d2_d3.sh`, `d4-current-drift.log` — Phase 0 tools
 - `runs/v5/diag/{d1,d2,d3,d2-100k,d2-150k,d3-50k,d3-100k}/` — Phase 0 validations (git-ignored)
 - `runs/v5/round0/` — still the best valid pair (clone encoder + DAgger-it1 decoder, 2.13 bpm)
+
+## 8. v5 training concluded (2026-09-16)
+
+Per the user's decision, the Phase 2 ladder was stopped during round 2's stage A and no further
+v5 training will run. The re-run completed round 1 only, and the guard rejected it (0.00
+beacons/min), so the best eligible v5 pair is unchanged and reproducible:
+
+| | pair | beacons/min | near_dodge | E1 | E2 |
+| --- | --- | --- | --- | --- | --- |
+| final v5 | `runs/v5/round0/decoder.json` + `runs/v5/clone/encoder.pt` | 1.9 | 0.269 | 0.686 fail (0.732 fixed probe) | pass |
+| round 1 (rejected) | `runs/v5/round1/...` | 0.00 | 0.433 | 0.588 fail | pass |
+
+`roam_eval.ACCEPTANCE` is untouched; the E1 miss is recorded as a fail. No training is running and
+no `resume/` snapshots remain, so the shared modules are free for the next iteration. `runs/v5/round2`
+holds stale pre-fix artifacts (the restarted stage A was ~2 min in).
+
+**Net result of the recovery:** the round-1 failure is diagnosed as an encoder output collapse and
+the collapse is fixed (guard, pinned post-warm-up entropy regime, `log_std` clamp, fixed-probe
+diagnostics, staged rounds with a probe gate, and the loaded-round regime override). The v5 scheme
+still does not forage, which matches the M1/M1b finding that the 8-scalar encoder cannot carry loom
+selectivity — the limit is the sensory bandwidth, not the training loop.
