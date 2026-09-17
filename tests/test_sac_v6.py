@@ -223,3 +223,30 @@ def test_spatial_encoder_uses_the_scaled_entropy_alpha():
         spatial=True,
     )
     assert model.ent_coef == f"auto_{ent_coef_init(flat_dim())}"
+
+
+def test_encoder_predictive_head_is_wired_and_trains():
+    from stable_baselines3.common.logger import configure
+
+    from fly_drone.sac import SpacesOnlyEnv, build_sac
+
+    env = SpacesOnlyEnv("encoder", spatial=True)
+    model = build_sac(
+        "encoder",
+        env,
+        buffer_size=64,
+        device="cpu",
+        spatial=True,
+        predictive_weight=1.0,
+    )
+    assert model.predictor is not None
+    # The actor optimizer holds the actor's and the predictor's parameters.
+    assert len(model.actor.optimizer.param_groups) == 2
+    space = env.observation_space
+    for _ in range(8):
+        obs = {k: space[k].sample() for k in space.spaces}
+        nxt = {k: space[k].sample() for k in space.spaces}
+        model.replay_buffer.add(obs, nxt, model.action_space.sample(), 1.0, False, [{}])
+    model.set_logger(configure(None, []))
+    model.num_timesteps = model.actor_warmup  # past the critic-only warm-up
+    model.train(1, batch_size=4)

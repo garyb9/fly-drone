@@ -74,14 +74,19 @@ def ent_coef_init(action_dim):
 
 # Encoder-round stabilisation (added 2026-09-16 after the v6 round-1 encoder collapsed with its
 # light channels saturated at 2.0). The frozen decoder lets an encoder drift into a degenerate
-# saturation that scores slightly better; a decaying anchor to the reference encoder's currents on
-# the same frames plus a hinge on the bounds keeps it near the cloned skill while SAC shapes the
-# maps. Weights are small so they do not swamp the ~0.05/step task reward.
-ANCHOR_WEIGHT = 0.05
-ANCHOR_DECAY_FRAMES = 100_000  # per environment, linear to zero
+# constant output that scores slightly better; a strong anchor to the reference encoder's currents
+# on the same frames plus a hinge on the bounds keeps it near the cloned skill while SAC shapes the
+# maps. Weights stay below the ~0.05/step task reward so they do not swamp it.
+ANCHOR_WEIGHT = 0.5
+ANCHOR_DECAY_FRAMES = 350_000  # per environment, linear to zero over a full round
 SATURATION_WEIGHT = 0.05
 SATURATION_LO = 0.2
 SATURATION_HI = 1.8
+# Predictive auxiliary objective for the v6 encoder (spec §5): predict the next DN trace from the
+# current DN trace plus the injected currents, giving the encoder a dense reward-free gradient that
+# a constant output cannot satisfy. A variance term on the currents directly penalises collapse.
+PREDICTIVE_WEIGHT = 1.0
+PREDICTIVE_VAR_WEIGHT = 1.0
 
 
 def anchor_penalty(currents, reference):
@@ -387,9 +392,25 @@ class WarmupSAC(SAC):
     overrides it (a `.zip` saved by plain SAC otherwise gets the default).
     """
 
-    def __init__(self, *args, actor_warmup=ACTOR_WARMUP_FRAMES, **kwargs):
+    def __init__(
+        self,
+        *args,
+        actor_warmup=ACTOR_WARMUP_FRAMES,
+        predictor=None,
+        predictive_weight=0.0,
+        **kwargs,
+    ):
         self.actor_warmup = int(actor_warmup)
+        self.predictor = predictor
+        self.predictive_weight = float(predictive_weight)
         super().__init__(*args, **kwargs)
+        if self.predictor is not None:
+            self.predictor.to(self.device)
+            # Optimise the predictor with the actor: one backward gives the encoder features their
+            # predictive gradient and the predictor its own.
+            self.actor.optimizer.add_param_group(
+                {"params": list(self.predictor.parameters())}
+            )
 
     @property
     def actor_frozen(self):
@@ -397,9 +418,125 @@ class WarmupSAC(SAC):
 
     def train(self, gradient_steps, batch_size=64):
         self.logger.record("train/actor_frozen", int(self.actor_frozen))
-        if not self.actor_frozen:
+        if self.actor_frozen:
+            self._train_critic_only(gradient_steps, batch_size)
+            return
+        if self.predictor is None or self.predictive_weight <= 0:
             return super().train(gradient_steps, batch_size)
-        self._train_critic_only(gradient_steps, batch_size)
+        self._train_with_predictive(gradient_steps, batch_size)
+
+    def _train_with_predictive(self, gradient_steps, batch_size):
+        """SAC's `train` with the predictive auxiliary loss added to the actor loss.
+
+        Mirrors stable-baselines3 2.9.0 ``SAC.train``; the only change is the auxiliary term and
+        its logging. The encoder features (the currents) must predict the next DN trace from the
+        current one, and their variance is kept up, so a near-constant encoder is directly
+        penalised — the failure the frozen-decoder reward alone does not prevent.
+        """
+        from stable_baselines3.common.utils import polyak_update
+        from torch.nn import functional as F
+
+        from .predictive import variance_loss
+
+        self.policy.set_training_mode(True)
+        optimizers = [self.actor.optimizer, self.critic.optimizer]
+        if self.ent_coef_optimizer is not None:
+            optimizers += [self.ent_coef_optimizer]
+        self._update_learning_rate(optimizers)
+
+        ent_coef_losses, ent_coefs = [], []
+        actor_losses, critic_losses, predictive_losses = [], [], []
+        for gradient_step in range(gradient_steps):
+            replay_data = self.replay_buffer.sample(
+                batch_size, env=self._vec_normalize_env
+            )
+            discounts = (
+                replay_data.discounts
+                if replay_data.discounts is not None
+                else self.gamma
+            )
+            if self.use_sde:
+                self.actor.reset_noise()
+
+            actions_pi, log_prob = self.actor.action_log_prob(replay_data.observations)
+            log_prob = log_prob.reshape(-1, 1)
+
+            ent_coef_loss = None
+            if self.ent_coef_optimizer is not None and self.log_ent_coef is not None:
+                ent_coef = torch.exp(self.log_ent_coef.detach())
+                assert isinstance(self.target_entropy, float)
+                ent_coef_loss = -(
+                    self.log_ent_coef * (log_prob + self.target_entropy).detach()
+                ).mean()
+                ent_coef_losses.append(ent_coef_loss.item())
+            else:
+                ent_coef = self.ent_coef_tensor
+            ent_coefs.append(ent_coef.item())
+
+            if ent_coef_loss is not None and self.ent_coef_optimizer is not None:
+                self.ent_coef_optimizer.zero_grad()
+                ent_coef_loss.backward()
+                self.ent_coef_optimizer.step()
+
+            with torch.no_grad():
+                next_actions, next_log_prob = self.actor.action_log_prob(
+                    replay_data.next_observations
+                )
+                next_q_values = torch.cat(
+                    self.critic_target(replay_data.next_observations, next_actions),
+                    dim=1,
+                )
+                next_q_values, _ = torch.min(next_q_values, dim=1, keepdim=True)
+                next_q_values = next_q_values - ent_coef * next_log_prob.reshape(-1, 1)
+                target_q_values = (
+                    replay_data.rewards
+                    + (1 - replay_data.dones) * discounts * next_q_values
+                )
+
+            current_q_values = self.critic(
+                replay_data.observations, replay_data.actions
+            )
+            critic_loss = 0.5 * sum(
+                F.mse_loss(current_q, target_q_values) for current_q in current_q_values
+            )
+            critic_losses.append(critic_loss.item())
+            self.critic.optimizer.zero_grad()
+            critic_loss.backward()
+            self.critic.optimizer.step()
+
+            q_values_pi = torch.cat(
+                self.critic(replay_data.observations, actions_pi), dim=1
+            )
+            min_qf_pi, _ = torch.min(q_values_pi, dim=1, keepdim=True)
+            actor_loss = (ent_coef * log_prob - min_qf_pi).mean()
+
+            features = self.actor.features_extractor(replay_data.observations)
+            currents = torch.tanh(features)
+            prediction = self.predictor(replay_data.observations["dn"], currents)
+            aux = F.mse_loss(prediction, replay_data.next_observations["dn"])
+            aux = aux + PREDICTIVE_VAR_WEIGHT * variance_loss(currents)
+            predictive_losses.append(float(aux.detach()))
+            actor_loss = actor_loss + self.predictive_weight * aux
+
+            actor_losses.append(float(actor_loss.detach()))
+            self.actor.optimizer.zero_grad()
+            actor_loss.backward()
+            self.actor.optimizer.step()
+
+            if gradient_step % self.target_update_interval == 0:
+                polyak_update(
+                    self.critic.parameters(), self.critic_target.parameters(), self.tau
+                )
+                polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
+
+        self._n_updates += gradient_steps
+        self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
+        self.logger.record("train/ent_coef", np.mean(ent_coefs))
+        self.logger.record("train/actor_loss", np.mean(actor_losses))
+        self.logger.record("train/critic_loss", np.mean(critic_losses))
+        self.logger.record("train/predictive_loss", np.mean(predictive_losses))
+        if len(ent_coef_losses) > 0:
+            self.logger.record("train/ent_coef_loss", np.mean(ent_coef_losses))
 
     def _train_critic_only(self, gradient_steps, batch_size):
         """Critic-only gradient steps: SAC's loop with the actor and entropy losses removed.
@@ -480,6 +617,7 @@ def build_sac(
     n_step=1,
     optimize_memory=False,
     spatial=False,
+    predictive_weight=0.0,
 ):
     action_dim = int(np.prod(env.action_space.shape))
     spatial_encoder = spatial and learner == "encoder"
@@ -490,10 +628,18 @@ def build_sac(
 
         policy_class = SpatialSACPolicy
         pi_arch = []
+    predictor = None
+    if spatial_encoder and predictive_weight > 0:
+        from .predictive import MlpPredictor
+
+        n_dn = int(env.observation_space["dn"].shape[0])
+        predictor = MlpPredictor(n_dn, action_dim, out_dim=n_dn)
     return WarmupSAC(
         policy_class,
         env,
         actor_warmup=actor_warmup,
+        predictor=predictor,
+        predictive_weight=predictive_weight,
         buffer_size=buffer_size,
         replay_buffer_class=FlyDictReplayBuffer,
         replay_buffer_kwargs={"n_steps": int(n_step), "gamma": 0.99},
@@ -1088,6 +1234,21 @@ def _factory(learner, rank, seed, decoder, encoder, level, spatial=False, anchor
     return make
 
 
+def _attach_predictor(model, weight):
+    """(Re)build the predictive head after a `WarmupSAC.load`, which does not restore it."""
+    if weight <= 0:
+        return model
+    from .predictive import MlpPredictor
+
+    action_dim = int(np.prod(model.action_space.shape))
+    n_dn = int(model.observation_space["dn"].shape[0])
+    predictor = MlpPredictor(n_dn, action_dim, out_dim=n_dn).to(model.device)
+    model.predictor = predictor
+    model.predictive_weight = float(weight)
+    model.actor.optimizer.add_param_group({"params": list(predictor.parameters())})
+    return model
+
+
 def train_round(
     learner,
     output,
@@ -1109,6 +1270,7 @@ def train_round(
     keep_resume=False,
     spatial=False,
     anchor=None,
+    predictive_weight=None,
 ):
     """One SAC round for one learner; the other half is frozen inside the environment.
 
@@ -1147,6 +1309,12 @@ def train_round(
         if init is not None and str(init).endswith(".pt"):
             anchor = str(init)
     anchor = str(Path(anchor).resolve()) if anchor else None
+    # The predictive auxiliary objective applies to the spatial encoder round by default.
+    if predictive_weight is None:
+        predictive_weight = (
+            PREDICTIVE_WEIGHT if (spatial and learner == "encoder") else 0.0
+        )
+    predictive_weight = float(predictive_weight)
     factories = [
         _factory(learner, r, seed, decoder, encoder, level, spatial, anchor)
         for r in range(workers)
@@ -1179,6 +1347,7 @@ def train_round(
             )
             model.load_replay_buffer(snapshot / "buffer.pkl")
             resumed_from = int(model.num_timesteps)
+            _attach_predictor(model, predictive_weight)
         elif init is not None and str(init).endswith(".zip"):
             # Fresh replay buffer each round: the frozen partner changed, old transitions are stale.
             # WarmupSAC.load (not SAC.load) keeps train() warm-up-aware; the argument, not
@@ -1196,6 +1365,7 @@ def train_round(
             # The .zip carries the regime it was trained under; every fresh round uses the pinned
             # one (design §8.6), so an older round-0/DAgger init cannot silently restore `auto`.
             apply_entropy_regime(model, int(np.prod(vec.action_space.shape)))
+            _attach_predictor(model, predictive_weight)
         else:
             model = build_sac(
                 learner,
@@ -1208,6 +1378,7 @@ def train_round(
                 n_step,
                 optimize_memory,
                 spatial,
+                predictive_weight,
             )
             if init is not None:
                 if learner != "encoder":
@@ -1268,6 +1439,7 @@ def train_round(
             "optimize_memory": bool(optimize_memory),
             "spatial": bool(spatial),
             "anchor": anchor,
+            "predictive_weight": predictive_weight,
             "resumed_from": resumed_from,
             "snapshot": str(snapshot) if snapshot.exists() else None,
         }
