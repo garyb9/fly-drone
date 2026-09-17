@@ -126,8 +126,11 @@ the failure; no threshold moves.
       smoke result` (`edce7d3`, `babdc4a`).
 
 ### Task 5: One long joint run (gated, needs user approval)
-- [ ] Run to a pre-agreed budget (recommend 300k frames); `sac-validate`; round guard.
-- [ ] **Gates G1–G3.** Stop and report if the guard or E2 fails.
+- [x] 300k-frame joint round, 6 workers (`runs/v6/joint/round1`); `sac-validate`; round guard.
+- [x] **Gates G1–G3: FAIL.** Guard rejects (beacons 0.00, ghost dodge 1.00, E2 fail); E1 union 0.492
+      vs round-0 0.720; E2 fail. Liveness never fired (light 0.81→0.24, loom 0.24→0.20), so a
+      variance floor is necessary but not sufficient. Auto-α drifted 9.76e-5 → 0.048. Reverted to
+      `runs/v6/round0` per O3. Record: [`JOINT-2026-09-17.md`](../../results/encoder-v6/JOINT-2026-09-17.md).
 
 ### Task 6: E3 bypass and the comparison (G4, G5)
 - [x] **6a — v6 bypass support.** `learner_spaces`/`SacRoamEnv` carry the flat 816 currents for a
@@ -135,8 +138,9 @@ the failure; no threshold moves.
       for `bypass`, `CriticExtractor` sizes the currents key from the space, and `distill`'s
       `bypass:` controller accepts `SpatialEncoder` and flattens the currents. Commit:
       `Support the brain-bypass control on the v6 currents`.
-- [ ] **6b — run E3:** `sac-round bypass` on the joint encoder; `roam-screen` full vs bypass;
-      `bypass_comparison`. Then compare against the best alternating pair on guard + E1 union.
+- [ ] **6b — run E3:** skipped — G1 already failed, so the joint-vs-bypass comparison is void.
+- [ ] **Task 7 — open decision** (needs the user): per-head α (O2 fallback) vs decoupled critic vs
+      frozen encoder; see §6 of the joint report.
 
 ### Task 7: Report
 - [ ] Write `docs/results/encoder-v6/JOINT-<date>.md` with G1–G5, all E1/E2 numbers (union/loom/
