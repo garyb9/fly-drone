@@ -148,7 +148,7 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--steps", type=int, default=4000)
     p = sub.add_parser("sac-round")
-    p.add_argument("learner", choices=["encoder", "decoder", "bypass"])
+    p.add_argument("learner", choices=["encoder", "decoder", "bypass", "joint"])
     p.add_argument("--output", required=True)
     p.add_argument("--frames", type=int, required=True)
     p.add_argument("--decoder", help="frozen decoder actor.json (encoder learner)")
@@ -202,7 +202,7 @@ def main():
         nargs="?",
         help="SAC .zip (round output or CheckpointCallback checkpoint)",
     )
-    p.add_argument("--learner", choices=["encoder", "decoder"])
+    p.add_argument("--learner", choices=["encoder", "decoder", "joint"])
     p.add_argument(
         "--encoder", help="frozen encoder .pt (decoder learner, or --repin-decoder)"
     )

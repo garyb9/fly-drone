@@ -152,6 +152,19 @@ the failure; no threshold moves.
    decoder also moves, so the anchor's target (the round-0 clone) may be too conservative. Recommend
    keeping the predictive objective and a weaker anchor (`ANCHOR_WEIGHT=0.1`).
 
+## Decisions (adopted from the recommendation, user 2026-09-17)
+
+- **E1 group:** read on the **union (motion ∪ loom)**; report loom-only and motion-only alongside;
+  the 0.8 bar and the pre-registered loom `passed` are unchanged.
+- **O1:** G2 = union E1 **strictly beats the round-0 union** (baseline to be measured by re-running
+  `encoder-checks` on round 0); G4 (bypass not better) must hold jointly with G2.
+- **O2:** (a) single dimension-scaled α over the 820-dim action first; switch to a per-head α only if
+  the decoder head fails to move after warm-up.
+- **O3:** one joint run of **300k frames**; revert to `runs/v6/round0` (and record the failure) if any
+  of G1–G5 fails.
+- **O4:** keep the predictive objective; weaken the anchor to `ANCHOR_WEIGHT=0.1`.
+- **Task 12** (curriculum) stays after M4.
+
 ## Risks
 
 | Risk | Mitigation |

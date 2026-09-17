@@ -30,7 +30,7 @@ GEOMETRY = 8
 LAMBDA_LOOM = 0.01
 LAMBDA_LIGHT = 0.002
 LEARNERS = ("encoder", "decoder", "bypass")
-ACTOR_KEYS = {"encoder": "eyes", "decoder": "dn", "bypass": "currents"}
+ACTOR_KEYS = {"encoder": "eyes", "decoder": "dn", "bypass": "currents", "joint": "eyes"}
 LIGHT = [V5_CHANNELS.index(c) for c in ("mi1_l", "mi1_r", "tm3_l", "tm3_r")]
 LOOM = [V5_CHANNELS.index(c) for c in ("lc4_l", "lc4_r", "lplc2_l", "lplc2_r")]
 # Flags stay 0/1; body-frame metres are scaled into roughly [-2, 2] for the critic.
@@ -128,6 +128,16 @@ def visible_geometry(env):
 
 def learner_spaces(learner, n_features=2022, spatial=False):
     """Observation (actor key + critic-only keys) and action space for one learner."""
+    if learner == "joint":
+        from .joint_policy import joint_action_dim
+
+        return spaces.Dict(
+            {
+                "geometry": spaces.Box(-np.inf, np.inf, (GEOMETRY,), np.float32),
+                "eyes": eyes_space(),
+                "dn": spaces.Box(0, 1, (n_features,), np.float32),
+            }
+        ), spaces.Box(-1, 1, (joint_action_dim(),), np.float32)
     keys = {"geometry": spaces.Box(-np.inf, np.inf, (GEOMETRY,), np.float32)}
     action = spaces.Box(-1, 1, (4,), np.float32)
     if learner == "encoder":
@@ -291,6 +301,113 @@ class SacRoamEnv(gym.Env):
         info["metabolic_cost"] = cost
         info["loom_cost"] = loom_cost
         info["light_cost"] = light_cost
+        info["anchor_cost"] = anchor_cost
+        info["saturation_cost"] = saturation_cost
+        return self._obs(), float(reward - cost), terminated, truncated, info
+
+    def close(self):
+        self.env.close()
+
+
+class JointRoamEnv(gym.Env):
+    """Encoder and decoder both learned: action = [currents(816), velocity(4)].
+
+    Plan 07 (M4). The connectome is frozen and non-differentiable, so both halves are updated in the
+    same loop against one reward, with no frozen partner. The encoder's currents drive the
+    external-v6 brain; the velocity command drives the plant directly. Stabilisers (metabolic cost,
+    the anchor to the round-0 clone, anti-saturation) apply to the encoder part only.
+    """
+
+    metadata = {}
+
+    def __init__(
+        self,
+        level=3,
+        lambda_loom=LAMBDA_LOOM,
+        lambda_light=LAMBDA_LIGHT,
+        anchor=None,
+        anchor_weight=ANCHOR_WEIGHT,
+        saturation_weight=SATURATION_WEIGHT,
+        anchor_decay=ANCHOR_DECAY_FRAMES,
+    ):
+        from .brain import LEARNED_EXTERNAL_V6
+        from .joint_policy import joint_action_dim
+
+        brain = BrainRuntime(encoder=LEARNED_EXTERNAL_V6)
+        self.env = ConnectomeEnv(
+            task="free_roam", level=level, respawn=True, brain=brain
+        )
+        n = len(brain.feature_ids)
+        self.observation_space = spaces.Dict(
+            {
+                "geometry": spaces.Box(-np.inf, np.inf, (GEOMETRY,), np.float32),
+                "eyes": eyes_space(),
+                "dn": spaces.Box(0, 1, (n,), np.float32),
+            }
+        )
+        self.action_space = spaces.Box(-1, 1, (joint_action_dim(),), np.float32)
+        self.features = np.zeros(n, np.float32)
+        self.lambda_loom = lambda_loom
+        self.lambda_light = lambda_light
+        from .spatial_encoder import SpatialEncoder, group_slices
+
+        self.anchor = SpatialEncoder.load(anchor) if anchor is not None else None
+        self.anchor_weight = float(anchor_weight)
+        self.saturation_weight = float(saturation_weight)
+        self.anchor_decay = max(1, int(anchor_decay))
+        self._anchored_steps = 0
+        self._groups = group_slices()
+
+    def _obs(self):
+        brain = self.env.brain
+        return {
+            "geometry": visible_geometry(self.env),
+            "eyes": brain.stack.array(),
+            "dn": self.features,
+        }
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+        seed = int(seed if seed is not None else self.np_random.integers(0, 2**31))
+        self.features, info = self.env.reset(seed=seed)
+        self._randomise_bands()
+        return self._obs(), info
+
+    def _randomise_bands(self):
+        plant = self.env.plant
+        grey = float(self.np_random.uniform(*BAND_GREY))
+        for g in range(plant.model.ngeom):
+            name = mujoco.mj_id2name(plant.model, mujoco.mjtObj.mjOBJ_GEOM, g) or ""
+            if name.endswith("_band"):
+                plant.model.geom_rgba[g, :3] = grey
+        self.env.brain.stack.clear()
+        self.env.brain.push_frame(self.env._frame())
+
+    def step(self, action):
+        action = np.clip(np.asarray(action, dtype=np.float32), -1, 1)
+        from .joint_policy import split_joint_action
+
+        encoder_action, velocity = split_joint_action(action)
+        brain = self.env.brain
+        currents = brain.set_currents(encoder_action + 1.0)
+        cost = self.lambda_loom * float(currents[self._groups["loom"]].mean())
+        cost += self.lambda_light * float(currents[self._groups["light"]].mean())
+        anchor_cost = saturation_cost = 0.0
+        if self.anchor is not None:
+            from .spatial_encoder import flatten_np
+
+            reference = flatten_np(self.anchor.currents(brain.stack.array()))
+            decay = max(0.0, 1.0 - self._anchored_steps / self.anchor_decay)
+            anchor_cost = (
+                self.anchor_weight * decay * anchor_penalty(currents, reference)
+            )
+            saturation_cost = (
+                self.saturation_weight * decay * saturation_penalty(currents)
+            )
+            cost += anchor_cost + saturation_cost
+            self._anchored_steps += 1
+        self.features, reward, terminated, truncated, info = self.env.step(velocity)
+        info["metabolic_cost"] = cost
         info["anchor_cost"] = anchor_cost
         info["saturation_cost"] = saturation_cost
         return self._obs(), float(reward - cost), terminated, truncated, info
@@ -632,20 +749,26 @@ def build_sac(
     predictive_weight=0.0,
 ):
     action_dim = int(np.prod(env.action_space.shape))
-    spatial_encoder = spatial and learner == "encoder"
-    policy_class = AsymmetricSACPolicy
-    pi_arch = [] if learner == "encoder" else [64, 64]
-    if spatial_encoder:
-        from .spatial_policy import SpatialSACPolicy
+    spatial_encoder = (spatial and learner == "encoder") or learner == "joint"
+    if learner == "joint":
+        from .joint_policy import JointSACPolicy
 
-        policy_class = SpatialSACPolicy
+        policy_class = JointSACPolicy
         pi_arch = []
+    else:
+        policy_class = AsymmetricSACPolicy
+        pi_arch = [] if learner == "encoder" else [64, 64]
+        if spatial and learner == "encoder":
+            from .spatial_policy import SpatialSACPolicy
+
+            policy_class = SpatialSACPolicy
+            pi_arch = []
     predictor = None
     if spatial_encoder and predictive_weight > 0:
         from .predictive import MlpPredictor
 
         n_dn = int(env.observation_space["dn"].shape[0])
-        predictor = MlpPredictor(n_dn, action_dim, out_dim=n_dn)
+        predictor = MlpPredictor(n_dn, _spatial_dim(), out_dim=n_dn)
     return WarmupSAC(
         policy_class,
         env,
@@ -770,6 +893,48 @@ def export_decoder(model, brain, path, limits):
     for x in rng.uniform(0, 1, (32, len(brain.feature_ids))).astype(np.float32):
         obs = {"dn": x, "geometry": np.zeros(GEOMETRY, np.float32)}
         expected = model.predict(obs, deterministic=True)[0] * limits
+        error = max(error, float(np.max(np.abs(expected - brain.infer(x)))))
+    if error > 1e-4:
+        raise RuntimeError(f"Rust policy parity failed: {error}")
+    return error
+
+
+def export_joint_decoder(model, brain, path, limits):
+    """Joint model's velocity head -> Rust decoder JSON (tanh hidden, tanh output) + parity check."""
+    actor = model.actor
+    layers = [
+        {
+            "weights": m.weight.detach().cpu().tolist(),
+            "bias": m.bias.detach().cpu().tolist(),
+        }
+        for m in actor.velocity_head
+        if isinstance(m, nn.Linear)
+    ]
+    norm = actor.velocity_norm
+    limits = np.asarray(limits, dtype=float)
+    payload = {
+        "version": 1,
+        "encoder_version": brain.encoder_version,
+        "dataset_hash": brain.dataset_hash,
+        "feature_ids": brain.feature_ids,
+        "mean": norm.mean.cpu().tolist(),
+        "scale": norm.scale.cpu().tolist(),
+        "layers": layers,
+        "action_limits": limits.tolist(),
+        "output": "tanh",
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload))
+    brain.load_policy(path)
+    rng = np.random.default_rng(123)
+    error = 0.0
+    for x in rng.uniform(0, 1, (32, len(brain.feature_ids))).astype(np.float32):
+        with torch.no_grad():
+            velocity = actor.velocity_head(
+                actor.velocity_norm({"dn": torch.as_tensor(x, device=model.device)})
+            )
+            expected = torch.tanh(velocity).cpu().numpy() * limits
         error = max(error, float(np.max(np.abs(expected - brain.infer(x)))))
     if error > 1e-4:
         raise RuntimeError(f"Rust policy parity failed: {error}")
@@ -1061,7 +1226,25 @@ def export_checkpoint(checkpoint, learner, output, encoder=None, device="auto"):
             "encoder_version": brain.encoder_version,
             "output": str(out),
         }
-    raise ValueError("learner must be 'encoder' or 'decoder'")
+    if learner == "joint":
+        from .joint_policy import JointActor
+        from .spatial_encoder import SpatialEncoder
+
+        if not isinstance(model.actor, JointActor):
+            raise ValueError("not a joint checkpoint")
+        out.mkdir(parents=True, exist_ok=True)
+        version = SpatialEncoder.from_actor(model.actor).save(out / "encoder.pt")
+        brain = BrainRuntime(encoder=out / "encoder.pt")
+        error = export_joint_decoder(
+            model, brain, out / "decoder.json", ArenaSpec().limits
+        )
+        return {
+            "learner": "joint",
+            "encoder_version": version,
+            "export_max_error": error,
+            "output": str(out),
+        }
+    raise ValueError("learner must be 'encoder', 'decoder' or 'joint'")
 
 
 _DECODER_FIELDS = {
@@ -1230,20 +1413,39 @@ def _factory(learner, rank, seed, decoder, encoder, level, spatial=False, anchor
         from stable_baselines3.common.monitor import Monitor
 
         torch.set_num_threads(1)
-        env = Monitor(
-            SacRoamEnv(
-                learner,
-                decoder=decoder,
-                encoder=encoder,
-                level=level,
-                spatial=spatial,
-                anchor=anchor,
+        if learner == "joint":
+            env = Monitor(JointRoamEnv(level=level, anchor=anchor))
+        else:
+            env = Monitor(
+                SacRoamEnv(
+                    learner,
+                    decoder=decoder,
+                    encoder=encoder,
+                    level=level,
+                    spatial=spatial,
+                    anchor=anchor,
+                )
             )
-        )
         env.reset(seed=seed + rank)
         return env
 
     return make
+
+
+def _load_velocity_head(model, path):
+    """Warm-start the joint actor's velocity head from a round-0 decoder JSON."""
+    data = json.loads(Path(path).read_text())
+    head = model.actor.velocity_head
+    linears = [m for m in head if isinstance(m, nn.Linear)]
+    if len(linears) != len(data["layers"]):
+        raise ValueError("decoder layers do not match the joint velocity head")
+    for module, layer in zip(linears, data["layers"], strict=True):
+        module.weight.data.copy_(torch.tensor(layer["weights"], dtype=torch.float32))
+        module.bias.data.copy_(torch.tensor(layer["bias"], dtype=torch.float32))
+    set_dn_stats(model, data["mean"], data["scale"])
+    with torch.no_grad():
+        model.actor.velocity_log_std.fill_(WARM_START_LOG_STD)
+    return model
 
 
 def _attach_predictor(model, weight):
@@ -1319,17 +1521,16 @@ def train_round(
     decoder = str(Path(decoder).resolve()) if decoder else None
     encoder = str(Path(encoder).resolve()) if encoder else None
     # Stabilise the spatial encoder round: default the anchor to the encoder it warm-starts from
-    # (the clone for round 1, the previous round's encoder later). The stabiliser only applies to
-    # the v6 spatial encoder learner.
-    if anchor is None and spatial and learner == "encoder":
+    # (the clone for round 1, the previous round's encoder later). Applies to the v6 spatial encoder
+    # learner and to the joint learner (which contains it).
+    spatial_encoder = learner == "joint" or (spatial and learner == "encoder")
+    if anchor is None and spatial_encoder:
         if init is not None and str(init).endswith(".pt"):
             anchor = str(init)
     anchor = str(Path(anchor).resolve()) if anchor else None
     # The predictive auxiliary objective applies to the spatial encoder round by default.
     if predictive_weight is None:
-        predictive_weight = (
-            PREDICTIVE_WEIGHT if (spatial and learner == "encoder") else 0.0
-        )
+        predictive_weight = PREDICTIVE_WEIGHT if spatial_encoder else 0.0
     predictive_weight = float(predictive_weight)
     factories = [
         _factory(learner, r, seed, decoder, encoder, level, spatial, anchor)
@@ -1397,19 +1598,26 @@ def train_round(
                 predictive_weight,
             )
             if init is not None:
-                if learner != "encoder":
+                if learner not in ("encoder", "joint"):
                     raise ValueError(
                         "a .pt init is the v4 clone for the first encoder round"
                     )
                 state = torch.load(init, map_location="cpu", weights_only=True)
-                if spatial:
+                if learner == "joint":
                     model.actor.features_extractor.net.load_state_dict(state["net"])
+                    if decoder is not None:
+                        _load_velocity_head(model, decoder)
+                elif spatial:
+                    model.actor.features_extractor.net.load_state_dict(state["net"])
+                    with torch.no_grad():
+                        model.actor.log_std.weight.zero_()
+                        model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
                 else:
                     model.actor.features_extractor.load_state_dict(state["extractor"])
                     model.actor.mu.load_state_dict(state["mu"])
-                with torch.no_grad():
-                    model.actor.log_std.weight.zero_()
-                    model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
+                    with torch.no_grad():
+                        model.actor.log_std.weight.zero_()
+                        model.actor.log_std.bias.fill_(WARM_START_LOG_STD)
         if learner == "encoder":
             stats = json.loads(Path(decoder).read_text())
             set_dn_stats(model, stats["mean"], stats["scale"])
