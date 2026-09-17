@@ -1689,6 +1689,15 @@ def train_round(
             model, brain, out / "decoder.json", ArenaSpec().limits
         )
         report["encoder_version"] = brain.encoder_version
+    if learner == "joint":
+        from .spatial_encoder import SpatialEncoder
+
+        version = SpatialEncoder.from_actor(model.actor).save(out / "encoder.pt")
+        brain = BrainRuntime(encoder=out / "encoder.pt")
+        report["export_max_error"] = export_joint_decoder(
+            model, brain, out / "decoder.json", ArenaSpec().limits
+        )
+        report["encoder_version"] = version
     (out / "round.json").write_text(json.dumps(report, indent=2))
     return report
 
