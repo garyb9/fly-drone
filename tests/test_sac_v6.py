@@ -239,8 +239,9 @@ def test_encoder_predictive_head_is_wired_and_trains():
         predictive_weight=1.0,
     )
     assert model.predictor is not None
-    # The actor optimizer holds the actor's and the predictor's parameters.
-    assert len(model.actor.optimizer.param_groups) == 2
+    # The predictor has its own optimizer; the actor optimizer stays SB3-loadable (one group).
+    assert model.aux_optimizer is not None
+    assert len(model.actor.optimizer.param_groups) == 1
     space = env.observation_space
     for _ in range(8):
         obs = {k: space[k].sample() for k in space.spaces}
@@ -249,3 +250,27 @@ def test_encoder_predictive_head_is_wired_and_trains():
     model.set_logger(configure(None, []))
     model.num_timesteps = model.actor_warmup  # past the critic-only warm-up
     model.train(1, batch_size=4)
+
+
+def test_predictive_model_saves_and_resumes(tmp_path):
+    from fly_drone.sac import SpacesOnlyEnv, WarmupSAC, _attach_predictor, build_sac
+    from stable_baselines3.common.logger import configure
+
+    env = SpacesOnlyEnv("encoder", spatial=True)
+    model = build_sac(
+        "encoder",
+        env,
+        buffer_size=64,
+        device="cpu",
+        spatial=True,
+        predictive_weight=1.0,
+    )
+    model.set_logger(configure(None, []))
+    model.save(tmp_path / "model")
+    # The actor optimizer is untouched, so SB3's load must succeed; the predictor is re-attached.
+    loaded = WarmupSAC.load(
+        tmp_path / "model.zip", env=env, device="cpu", buffer_size=64, actor_warmup=0
+    )
+    _attach_predictor(loaded, 1.0)
+    assert loaded.predictor is not None
+    assert loaded.aux_optimizer is not None

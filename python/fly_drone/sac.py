@@ -405,12 +405,17 @@ class WarmupSAC(SAC):
         self.predictive_weight = float(predictive_weight)
         super().__init__(*args, **kwargs)
         if self.predictor is not None:
+            # A dedicated optimizer over the encoder's features and the predictor. The actor
+            # optimizer must stay untouched: SB3 saves/loads its param groups, and a custom group
+            # breaks `.zip` resume (`loaded state dict has a different number of parameter groups`).
             self.predictor.to(self.device)
-            # Optimise the predictor with the actor: one backward gives the encoder features their
-            # predictive gradient and the predictor its own.
-            self.actor.optimizer.add_param_group(
-                {"params": list(self.predictor.parameters())}
+            self.aux_optimizer = torch.optim.Adam(
+                list(self.actor.features_extractor.parameters())
+                + list(self.predictor.parameters()),
+                lr=self.actor.optimizer.param_groups[0]["lr"],
             )
+        else:
+            self.aux_optimizer = None
 
     @property
     def actor_frozen(self):
@@ -442,6 +447,8 @@ class WarmupSAC(SAC):
         optimizers = [self.actor.optimizer, self.critic.optimizer]
         if self.ent_coef_optimizer is not None:
             optimizers += [self.ent_coef_optimizer]
+        if self.aux_optimizer is not None:
+            optimizers += [self.aux_optimizer]
         self._update_learning_rate(optimizers)
 
         ent_coef_losses, ent_coefs = [], []
@@ -509,19 +516,24 @@ class WarmupSAC(SAC):
             )
             min_qf_pi, _ = torch.min(q_values_pi, dim=1, keepdim=True)
             actor_loss = (ent_coef * log_prob - min_qf_pi).mean()
+            actor_losses.append(float(actor_loss.detach()))
+            self.actor.optimizer.zero_grad()
+            actor_loss.backward()
+            self.actor.optimizer.step()
 
+            # Predictive auxiliary step: a dedicated optimizer over the encoder's features and the
+            # predictor, so the actor optimizer stays SB3-loadable. The encoder features must
+            # predict the next DN trace, and their variance is kept up, so a near-constant encoder
+            # is directly penalised — the failure the frozen-decoder reward alone does not prevent.
             features = self.actor.features_extractor(replay_data.observations)
             currents = torch.tanh(features)
             prediction = self.predictor(replay_data.observations["dn"], currents)
             aux = F.mse_loss(prediction, replay_data.next_observations["dn"])
             aux = aux + PREDICTIVE_VAR_WEIGHT * variance_loss(currents)
             predictive_losses.append(float(aux.detach()))
-            actor_loss = actor_loss + self.predictive_weight * aux
-
-            actor_losses.append(float(actor_loss.detach()))
-            self.actor.optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor.optimizer.step()
+            self.aux_optimizer.zero_grad()
+            aux.backward()
+            self.aux_optimizer.step()
 
             if gradient_step % self.target_update_interval == 0:
                 polyak_update(
@@ -1245,7 +1257,11 @@ def _attach_predictor(model, weight):
     predictor = MlpPredictor(n_dn, action_dim, out_dim=n_dn).to(model.device)
     model.predictor = predictor
     model.predictive_weight = float(weight)
-    model.actor.optimizer.add_param_group({"params": list(predictor.parameters())})
+    model.aux_optimizer = torch.optim.Adam(
+        list(model.actor.features_extractor.parameters())
+        + list(predictor.parameters()),
+        lr=model.actor.optimizer.param_groups[0]["lr"],
+    )
     return model
 
 
