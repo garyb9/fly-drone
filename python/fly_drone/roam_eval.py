@@ -387,13 +387,18 @@ def encoder_scores(currents, threat, beacon):
     currents = np.asarray(currents, dtype=float)
     threat = np.asarray(threat)
     keep = threat >= 0
+    motion = None
     if currents.shape[1] == flat_dim():  # v6 spatial: score the named groups
         groups = group_slices()
         light_ids, loom_ids = groups["light"], groups["loom"]
+        motion_ids = groups["motion"]
     else:
         light_ids, loom_ids = LIGHT, LOOM
+        motion_ids = None
     light = currents[keep][:, light_ids].mean(1)
     loom = currents[keep][:, loom_ids].max(1)
+    if motion_ids is not None:
+        motion = currents[keep][:, motion_ids].max(1)
     is_threat = threat[keep] == 1
     seen = np.asarray(beacon, dtype=bool)[keep]
     auc = {
@@ -402,6 +407,16 @@ def encoder_scores(currents, threat, beacon):
         "light_beacon": roc_auc(light, seen),
         "light_threat": roc_auc(light, is_threat),
     }
+    # v6 also scores the primary M1b channel (motion = Tm4/T2) and the union with the direct loom
+    # route, reported alongside the pre-registered loom number. The bar (0.8) and the
+    # pre-registered `passed` (on the loom group, the v5 definition) are unchanged; this only lets
+    # E1 be read on the spatial channels the v6 spec re-bases it on.
+    extra = {}
+    if motion is not None:
+        extra = {
+            "motion_auc": roc_auc(motion, is_threat),
+            "union_auc": roc_auc(np.maximum(loom, motion), is_threat),
+        }
     t = ENCODER_CHECKS
     complete = None not in auc.values()
     light_margin = auc["light_beacon"] - auc["light_threat"] if complete else None
@@ -409,6 +424,7 @@ def encoder_scores(currents, threat, beacon):
     return {
         "E1": {
             "loom_auc": auc["loom_threat"],
+            **extra,
             "positives": int(is_threat.sum()),
             "negatives": int((~is_threat).sum()),
             "passed": bool(

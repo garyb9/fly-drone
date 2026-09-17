@@ -129,6 +129,8 @@ def test_encoder_scores_uses_the_v6_groups():
     currents[1, loom] = 2.0
     scores = encoder_scores(currents, [1, 1, 0, -1], [False, False, True, False])
     assert scores["E1"]["loom_auc"] == pytest.approx(1.0)
+    assert scores["E1"]["motion_auc"] == pytest.approx(0.5)  # motion flat at 0
+    assert scores["E1"]["union_auc"] == pytest.approx(1.0)
     assert scores["E1"]["passed"] is True
 
 
