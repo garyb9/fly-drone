@@ -121,15 +121,20 @@ the failure; no threshold moves.
 - [ ] Commit: `Train and export the joint encoder+decoder`.
 
 ### Task 4: Smoke
-- [ ] 9k-frame joint round, 6 workers: fps, RAM, both heads move after warm-up, anchors/predictive
-      logged. Commit: `Add the joint-training smoke result`.
+- [x] 9k-frame joint round, 6 workers: exited 0; `predictive_loss` 0.219, `ent_coef` 1.4e-4
+      (dimension-scaled), anchor = clone, both heads warm-started. Commit: `Add the joint-training
+      smoke result` (`edce7d3`, `babdc4a`).
 
 ### Task 5: One long joint run (gated, needs user approval)
 - [ ] Run to a pre-agreed budget (recommend 300k frames); `sac-validate`; round guard.
 - [ ] **Gates G1–G3.** Stop and report if the guard or E2 fails.
 
 ### Task 6: E3 bypass and the comparison (G4, G5)
-- [ ] `sac-round bypass` reading the joint encoder's currents; `roam-screen` full vs bypass; report
+- [ ] **6a — v6 bypass support (missing).** The bypass learner reads the 8 v5 currents and
+      `distill.screen` rejects a v6 encoder. Extend bypass to the flat 816 currents
+      (`learner_spaces("bypass")`, `SacRoamEnv._obs["currents"]` flat, `distill._bypass_job`) before
+      G4 can run. Same shape as `spatial_policy`, small.
+- [ ] **6b — run E3:** `sac-round bypass` on the joint encoder; `roam-screen` full vs bypass;
       `bypass_comparison`. Then compare against the best alternating pair on guard + E1 union.
 
 ### Task 7: Report
