@@ -226,9 +226,8 @@ def test_spatial_encoder_uses_the_scaled_entropy_alpha():
 
 
 def test_encoder_predictive_head_is_wired_and_trains():
-    from stable_baselines3.common.logger import configure
-
     from fly_drone.sac import SpacesOnlyEnv, build_sac
+    from stable_baselines3.common.logger import configure
 
     env = SpacesOnlyEnv("encoder", spatial=True)
     model = build_sac(
