@@ -130,10 +130,11 @@ the failure; no threshold moves.
 - [ ] **Gates G1–G3.** Stop and report if the guard or E2 fails.
 
 ### Task 6: E3 bypass and the comparison (G4, G5)
-- [ ] **6a — v6 bypass support (missing).** The bypass learner reads the 8 v5 currents and
-      `distill.screen` rejects a v6 encoder. Extend bypass to the flat 816 currents
-      (`learner_spaces("bypass")`, `SacRoamEnv._obs["currents"]` flat, `distill._bypass_job`) before
-      G4 can run. Same shape as `spatial_policy`, small.
+- [x] **6a — v6 bypass support.** `learner_spaces`/`SacRoamEnv` carry the flat 816 currents for a
+      bypass round under a v6 encoder (`spatial_inputs`), `_infer_spatial` recognises a v6 encoder
+      for `bypass`, `CriticExtractor` sizes the currents key from the space, and `distill`'s
+      `bypass:` controller accepts `SpatialEncoder` and flattens the currents. Commit:
+      `Support the brain-bypass control on the v6 currents`.
 - [ ] **6b — run E3:** `sac-round bypass` on the joint encoder; `roam-screen` full vs bypass;
       `bypass_comparison`. Then compare against the best alternating pair on guard + E1 union.
 

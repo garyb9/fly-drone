@@ -11,7 +11,7 @@ def _infer_spatial(learner, encoder, init):
     """Whether a round runs the v6 spatial encoder, from the frozen partner it names."""
     from .brain import _is_spatial
 
-    if learner == "decoder" and encoder:
+    if learner in ("decoder", "bypass") and encoder:
         return _is_spatial(encoder)
     if learner == "encoder" and init and str(init).endswith(".pt"):
         return _is_spatial(init)

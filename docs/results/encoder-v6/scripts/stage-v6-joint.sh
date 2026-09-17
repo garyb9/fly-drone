@@ -50,8 +50,20 @@ print('M4 E2 pass', r['E2']['passed'], 'margins', r['E2']['light_margin'], r['E2
 
 log "M4 E1/E2 done (G2/G3) at $OUT/e1e2-fixed.json"
 
-# G4 (E3 brain-bypass) needs v6 bypass support, which does not exist yet: the bypass learner reads
-# the 8 v5 currents and `distill.screen` rejects a v6 encoder. Tracked as plan-07 Task 6b; run it
-# before accepting the pair. Until then, do not claim E3.
-log "M4 NOTE: G4 (E3 bypass) not run - v6 bypass support missing (plan 07 Task 6b)"
-log "M4 done; report G1-G3 and compare against runs/v6/round0"
+log "M4 G4 E3 bypass (decoder reading the same 816 currents, brain bypassed; ${FRAMES} frames)"
+$FD sac-round bypass --output "${OUT}-bypass" --frames "$FRAMES" --encoder "$OUT/encoder.pt" \
+    --workers 6 > runs/v6/joint-bypass.log 2>&1
+$FD roam-screen "$OUT/decoder.json" "${OUT}-bypass/bypass.zip" --encoder "$OUT/encoder.pt" \
+    --ablations none ghost --seeds 50 --seconds 120 --level 3 --seed-base 1000 --workers 6 \
+    --output "$OUT/e3-screen.json"
+$PY -c "
+import json
+from pathlib import Path
+from fly_drone.roam_eval import bypass_comparison
+r = json.loads(Path('$OUT/e3-screen.json').read_text())['results']
+key = lambda pre: next(v for k, v in r.items() if k.startswith(pre) and k.endswith('|none'))
+out = bypass_comparison(key('policy:'), key('bypass:'))
+Path('$OUT/e3.json').write_text(json.dumps(out, indent=2))
+print('M4 bypass_better', out['bypass_better'])"
+
+log "M4 done; report G1-G4 and compare against runs/v6/round0"

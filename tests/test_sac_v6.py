@@ -52,9 +52,20 @@ def test_v6_encoder_env_spaces_and_metabolic_cost(tmp_path):
         env.env.close()
 
 
-def test_spatial_bypass_is_rejected(tmp_path):
-    with pytest.raises(ValueError, match="bypass"):
-        SacRoamEnv("bypass", encoder=None, spatial=True)
+def test_bypass_reads_the_v6_currents(tmp_path):
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    SpatialEncoder.fresh(seed=0).save(tmp_path / "e.pt")
+    env = SacRoamEnv("bypass", encoder=str(tmp_path / "e.pt"), level=3, spatial=True)
+    try:
+        obs, _ = env.reset(seed=42)
+        assert obs["currents"].shape == (flat_dim(),)
+        assert env.action_space.shape == (4,)
+        assert env.spatial is False and env.spatial_inputs is True
+        _, _, _, _, info = env.step(np.zeros(4, np.float32))
+        assert "metabolic_cost" in info
+    finally:
+        env.env.close()
 
 
 def test_v6_policy_builds_with_the_spatial_actor():
@@ -141,6 +152,7 @@ def test_infer_spatial_detects_v6_encoders(tmp_path):
     path = tmp_path / "e.pt"
     SpatialEncoder.fresh(seed=0).save(path)
     assert _infer_spatial("decoder", str(path), None) is True
+    assert _infer_spatial("bypass", str(path), None) is True
     assert _infer_spatial("encoder", None, str(path)) is True
     assert _infer_spatial("encoder", None, "runs/x.zip") is False
     assert _infer_spatial("encoder", None, None) is False

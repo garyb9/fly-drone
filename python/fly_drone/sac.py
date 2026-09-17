@@ -148,7 +148,8 @@ def learner_spaces(learner, n_features=2022, spatial=False):
     elif learner == "decoder":
         keys["dn"] = spaces.Box(0, 1, (n_features,), np.float32)
     else:
-        keys["currents"] = spaces.Box(0, 2, (len(V5_CHANNELS),), np.float32)
+        n_currents = _spatial_dim() if spatial else len(V5_CHANNELS)
+        keys["currents"] = spaces.Box(0, 2, (n_currents,), np.float32)
     return spaces.Dict(keys), action
 
 
@@ -179,11 +180,11 @@ class SacRoamEnv(gym.Env):
     ):
         if learner not in LEARNERS:
             raise ValueError(f"learner must be one of {LEARNERS}")
-        if spatial and learner == "bypass":
-            raise ValueError("the spatial v6 path has no brain-bypass control")
         # Only the encoder learner has the 816-dim spatial action; a decoder round runs under a v6
         # encoder but keeps the 4-dim velocity interface, so it must not use the spatial policy.
+        # The bypass learner reads the currents, which are 816-dim under a v6 encoder.
         self.spatial = bool(spatial) and learner == "encoder"
+        self.spatial_inputs = bool(spatial)
         if learner == "encoder":
             if decoder is None:
                 raise ValueError("encoder learning needs a frozen decoder")
@@ -224,7 +225,7 @@ class SacRoamEnv(gym.Env):
         )
         n = len(brain.feature_ids)
         self.observation_space, self.action_space = learner_spaces(
-            learner, n, spatial=self.spatial
+            learner, n, spatial=self.spatial_inputs
         )
         self.features = np.zeros(n, np.float32)
         if self.spatial:
@@ -240,7 +241,12 @@ class SacRoamEnv(gym.Env):
         if "dn" in keys:
             obs["dn"] = self.features
         if "currents" in keys:
-            obs["currents"] = brain.encoder.currents(brain.stack.array())
+            currents = brain.encoder.currents(brain.stack.array())
+            if isinstance(currents, dict):
+                from .spatial_encoder import flatten_np
+
+                currents = flatten_np(currents)
+            obs["currents"] = currents
         return obs
 
     def reset(self, seed=None, options=None):
@@ -437,7 +443,7 @@ class CriticExtractor(BaseFeaturesExtractor):
         keys = observation_space.spaces
         n_dn = keys["dn"].shape[0] if "dn" in keys else 0
         dim = GEOMETRY + (2 * FEATURES if "eyes" in keys else 0) + (64 if n_dn else 0)
-        dim += len(V5_CHANNELS) if "currents" in keys else 0
+        dim += keys["currents"].shape[0] if "currents" in keys else 0
         super().__init__(observation_space, dim)
         self.register_buffer("geometry_scale", torch.tensor(GEOMETRY_SCALE))
         self.eyes = EyesExtractor(observation_space) if "eyes" in keys else None

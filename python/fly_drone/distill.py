@@ -309,10 +309,11 @@ def _screen_job(job):
         from stable_baselines3 import SAC
 
         from .encoder import LearnedEncoder
+        from .spatial_encoder import SpatialEncoder
 
-        if not isinstance(brain.encoder, LearnedEncoder):
+        if not isinstance(brain.encoder, (LearnedEncoder, SpatialEncoder)):
             raise ValueError(
-                "bypass: controller requires a LearnedEncoder "
+                "bypass: controller requires a learned encoder "
                 f"(got encoder={encoder!r}); pass a saved encoder path"
             )
         bypass = SAC.load(controller.split(":", 1)[1], device="cpu")
@@ -340,8 +341,13 @@ def _screen_job(job):
                     action = script.act(env.brain.cues)
                 elif bypass is not None:
                     # E3 control: a decoder that reads the encoder's currents, not the brain.
+                    currents = brain.encoder.currents(brain.stack.array())
+                    if isinstance(currents, dict):
+                        from .spatial_encoder import flatten_np
+
+                        currents = flatten_np(currents)
                     bypass_obs = {
-                        "currents": brain.encoder.currents(brain.stack.array()),
+                        "currents": currents,
                         "geometry": np.zeros(8, np.float32),
                     }
                     action = bypass.predict(bypass_obs, deterministic=True)[0]
