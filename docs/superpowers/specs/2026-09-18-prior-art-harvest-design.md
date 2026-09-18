@@ -84,8 +84,17 @@ same degree sequence is the strongest available control for "the connectome is d
   - **R2 `edge-swap`** — double-edge swaps preserving in- and out-degree; matches FlyGM's
     degree-preserving rewiring. Stricter and slower.
 - Deterministic given `--seed`; the report records seed, mode, edge count and resulting `bundle_hash`.
-- `scripts/rewired_report.py` runs the free-roam diagnostic on intact vs rewired for the same seeds
-  and writes `runs/diagnostics/rewired-<bundle_hash>.json`.
+- `scripts/rewired_report.py` runs a **decoder-free lateralisation probe** — inject left
+  Tm4/T2 or the direct LC4/LPLC2 route, measure ipsilateral vs contralateral loom/escape — on
+  intact vs rewired for the same seed and writes `runs/diagnostics/rewired-<bundle_hash>.json`.
+  A free-roam policy comparison would need a decoder retrained per bundle, which is a training
+  run and stays out of scope.
+- **Result (2026-09-18, `swap`, seed 0, 16,450,801 swaps).** In-degree and out-degree are
+  preserved exactly, `dataset_hash` is unchanged and only `bundle_hash` differs
+  (`dbc0f1256bb6`); runtime ~23 s. Left Tm4 injection: laterality **+1.000 intact, +0.000
+  rewired**; left T2 the same. The direct LC4/LPLC2 probe measures the injected cells and is
+  reported as n/a. First causal evidence that the connectome's specific wiring, not the graph
+  size, carries the loom lateralisation.
 
 **Contract guard.** `roam_eval.CONDITIONS`/`ACCEPTANCE` untouched; the report is not an acceptance
 run; accepted actors never load `data/malecns-rewired/`; `test_legacy_room_mjcf_unchanged` and the
