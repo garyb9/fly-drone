@@ -54,9 +54,14 @@ canonical bundle's `dataset_hash` is byte-for-byte unchanged.
   `project_to_pixels`, `sample` with a ~5° acceptance window.
 - Recompute the frustum for **our** geometry: two cameras splayed ±0.75 rad, 64×48, 177° combined
   (`sensory-model.md` §2), instead of their single 66°×50° Tello camera.
-- Verify the v6 map: assert the Tm4 per-side PCA basis (`retinotopy.py:_pca2d`) has its principal axis
-  aligned with the ommatidial azimuth/elevation axes within a documented tolerance, and report the
-  residual. This converts the v6 §7 risk from "unverified" to "measured".
+- Verify the v6 map: `scripts/eye_alignment.py` reports the principal angles between each
+  population's positional PCA basis (`retinotopy.py:_pca2d`) and the visible ommatidial direction
+  PCA, plus the angle from the sheet normal to the mean gaze. This converts the v6 §7 risk from
+  "unverified" to "measured". **Result (2026-09-18):** PC1 aligns (0.0°) but PC2 differs by
+  67–80° and the sheet normal sits 70–75° from the mean gaze. Because the eye map is in the fly
+  head frame, cell positions in the scene frame, and the source marks the cell↔ommatidium join as
+  modelled, this is recorded as a **diagnostic, not an assertion**; the v6 functional gates
+  (spatial silencing, E1/E2) remain the evidence that the map carries direction.
 - **Read-only w.r.t. behaviour:** no change to injection, roles or the encoder. The test is a
   provenance/geometry check, not a gate that can fail the v6 path.
 
@@ -172,7 +177,7 @@ Every step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`, `.venv/bin/ruff f
 
 - `docs/external-prior-art.md` (survey), this spec, `docs/references.md` links.
 - `python/fly_drone/eye_geometry.py`, `python/fly_drone/vendor/eye_map/` + `NOTICE.md`,
-  `tests/test_eye_geometry.py`.
+  `tests/test_eye_geometry.py`, `scripts/eye_alignment.py`.
 - `scripts/make_rewired_bundle.py`, `scripts/rewired_report.py`,
   `scripts/check_fly_ai_oracle.py`, `scripts/stimulus_battery.py`, `scripts/make_sign_bundle.py`.
 - `runs/diagnostics/` (git-ignored): rewired report, battery, sign decision.
