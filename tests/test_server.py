@@ -136,13 +136,14 @@ def test_replay_reset_task_ablation_and_policy_guard():
             assert 0.0 <= roam["coverage"] <= 1.0
             ws.send_json({"op": "launch_threat"})
             ws.send_json({"op": "pathway", "name": "loom", "silenced": True})
+            ws.send_json({"op": "pathway", "name": "sensory", "silenced": True})
             ws.send_json({"op": "ghost", "value": True})
             ws.send_json({"op": "place_beacon", "x": 99.0, "y": 0.0})
             while not (frame := next_frame(ws))["error"]:
                 pass
             assert "beacon" in frame["error"]
             roam = frame["free_roam"]
-            assert roam["silenced"] == ["loom"] and roam["ghost"] is True
+            assert roam["silenced"] == ["loom", "sensory"] and roam["ghost"] is True
             assert any(e["type"] == "threat_launched" for e in roam["events"])
             assert frame["outcome"]["launched"]
             ws.send_json({"op": "reset", "policy": "/etc/passwd.json"})

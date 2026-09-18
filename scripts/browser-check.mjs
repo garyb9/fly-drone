@@ -92,6 +92,54 @@ try {
   await page.getByRole("button", { name: "Reset view" }).click();
   passed.push("airframe and camera controls");
 
+  // The status strip is the one place that explains a decoder holding the drone still.
+  const statusStrip = await text(page, "#status-strip");
+  assert.ok(statusStrip && statusStrip.length > 0, "status strip populated");
+  passed.push("decoder status strip");
+
+  // Free-roam mission control is mode-aware: present only when a free-roam decoder is loaded.
+  if (await page.locator("#roam-group").isVisible()) {
+    await page.waitForFunction(() => {
+      const value = document.querySelector("#roam-beacons")?.textContent ?? "";
+      return value !== "" && value !== "—";
+    });
+    assert.match(await text(page, "#roam-beacons"), /^\d+(\.\d+)?$/);
+    assert.match(await text(page, "#roam-collisions"), /^\d+(\.\d+)?$/);
+    assert.ok((await page.locator("#roam-levels button").count()) >= 2);
+
+    const pressed = (id) =>
+      page.waitForFunction(
+        (selector) => document.querySelector(selector)?.getAttribute("aria-pressed") === "true",
+        id,
+      );
+    const released = (id) =>
+      page.waitForFunction(
+        (selector) => document.querySelector(selector)?.getAttribute("aria-pressed") === "false",
+        id,
+      );
+
+    await page.getByRole("button", { name: "Silence loom", exact: true }).click();
+    await pressed("#roam-silence-loom");
+    await page.getByRole("button", { name: "Silence vision", exact: true }).click();
+    await pressed("#roam-silence-sensory");
+    await page.getByRole("button", { name: "Ghost", exact: true }).click();
+    await pressed("#roam-ghost");
+    await page.waitForFunction(
+      () => getComputedStyle(document.querySelector("#ghost-banner")).display !== "none",
+    );
+    await page.getByRole("button", { name: "Restore", exact: true }).click();
+    await released("#roam-silence-loom");
+    await released("#roam-silence-sensory");
+    await released("#roam-ghost");
+    await page.waitForFunction(
+      () => getComputedStyle(document.querySelector("#ghost-banner")).display === "none",
+    );
+    await page.getByRole("button", { name: "Threat now", exact: true }).click();
+    passed.push("free-roam mission control (scoreboard, causal probes, ghost)");
+  } else {
+    passed.push("free-roam group hidden (no free-roam decoder loaded)");
+  }
+
   const episode = await text(page, "#episode");
   const beforeReload = await tickOf(page);
   await page.reload();

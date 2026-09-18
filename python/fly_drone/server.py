@@ -161,7 +161,11 @@ class Session:
                 elif env.ablation in PATHWAYS:
                     env.brain.silence_inputs(PATHWAYS[env.ablation])
                 for name in sorted(silenced):
-                    env.brain.silence_inputs(PATHWAYS[name])
+                    # "sensory" is the whole visual field; light/loom are single pathways.
+                    if name == "sensory":
+                        env.brain.silence_sensors()
+                    else:
+                        env.brain.silence_inputs(PATHWAYS[name])
 
             use_policy(self.policy)
             seed = 42
@@ -322,8 +326,10 @@ class Session:
                                     )
                             elif op == "pathway":
                                 name = c["name"]
-                                if name not in PATHWAYS:
-                                    raise ValueError("pathway must be light or loom")
+                                if name not in (*PATHWAYS, "sensory"):
+                                    raise ValueError(
+                                        "pathway must be sensory, light or loom"
+                                    )
                                 if c.get("silenced", True):
                                     silenced.add(name)
                                 else:
@@ -335,6 +341,8 @@ class Session:
                             env.brain.core.restore()
                             env.interventions.clear()
                             silenced.clear()
+                            if env.roam is not None:
+                                env.plant.set_ghost(False)
                             apply_silencing()
                         else:
                             raise ValueError("unknown command")

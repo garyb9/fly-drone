@@ -1170,3 +1170,95 @@ main {
     animation: none;
   }
 }
+
+/* Free-roam mission control: a mode-aware group inside the one bottom bar (no drawer).
+   Hidden entirely on non-free-roam tasks so the bar stays as lean as before. */
+.bar-group-roam {
+  max-width: 430px;
+}
+.bar-group-roam[hidden] {
+  display: none;
+}
+.bar-group-roam .roam-stats {
+  padding: 0;
+  gap: 4px 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.bar-group-roam .roam-stats strong {
+  font-size: 15px;
+}
+.bar-row-roam {
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #1f323b;
+}
+.bar-row-roam .bar-cell {
+  padding-left: 0;
+  border-left: none;
+}
+.bar-row-roam .button-row {
+  flex-wrap: wrap;
+}
+.bar-group-roam .bar-foot {
+  align-items: center;
+}
+.bar-group-roam #roam-event {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--bp-ink-dim);
+}
+.bar-group-roam #roam-visibility {
+  flex: none;
+  color: var(--bp-amber);
+}
+
+/* Status-truth strip in the console foot: why the decoder is or isn't moving the drone. */
+.status-strip {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0.4px;
+  font-variant-numeric: tabular-nums;
+}
+.status-strip[data-state="ok"] {
+  color: var(--bp-success);
+}
+.status-strip[data-state="warn"] {
+  color: var(--bp-amber);
+}
+.status-strip[data-state="error"] {
+  color: #ff9d6c;
+}
+
+/* Ghost mode is a causal control, not a graphics option: label it unmistakably. */
+.ghost-banner {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 6px 14px;
+  border: 1px solid var(--bp-command);
+  border-radius: 20px;
+  background: rgba(7, 27, 38, 0.88);
+  color: var(--bp-command);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  pointer-events: none;
+}
+.ghost-banner[hidden] {
+  display: none;
+}
+@media (max-width: 700px) {
+  .bar-group-roam {
+    max-width: none;
+  }
+}

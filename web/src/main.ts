@@ -17,7 +17,7 @@ import { renderFlightView } from "./ui/flightView";
 import { renderHudPinned } from "./ui/hudPinned";
 import { renderBottomBar } from "./ui/bottomBar";
 import { renderFooter } from "./ui/footer";
-import type { Frame, Metadata } from "./types";
+import type { Frame, FreeRoamEvent, Metadata } from "./types";
 
 applyCssTokens();
 
@@ -193,14 +193,60 @@ const target = new THREE.Mesh(
     color: THEME.amber,
     emissive: THEME.targetEmissive,
     emissiveIntensity: 0.4,
+    transparent: true,
   }),
 );
 world.scene.add(target);
+// Marks whether the beacon is geometrically visible to the drone (free-roam frames carry
+// beacon_visible). Positioned on the beacon each frame, at a fixed metric radius.
+const beaconRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.42, 0.5, 48),
+  new THREE.MeshBasicMaterial({
+    color: THEME.amber,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.5,
+    depthWrite: false,
+  }),
+);
+beaconRing.rotation.x = -Math.PI / 2;
+beaconRing.visible = false;
+world.scene.add(beaconRing);
 const obstacle = new THREE.Mesh(
   new THREE.SphereGeometry(OBSTACLE_BASE_RADIUS, 24, 16),
   mat(THEME.obstacleStroke),
 );
+(obstacle.material as THREE.MeshStandardMaterial).transparent = true;
 world.scene.add(obstacle);
+// Surface-distance halo from free_roam.clearance: reads as "how much room is left" at a glance.
+const clearanceRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.97, 1.0, 48),
+  new THREE.MeshBasicMaterial({
+    color: THEME.velocity,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.28,
+    depthWrite: false,
+  }),
+);
+clearanceRing.rotation.x = -Math.PI / 2;
+clearanceRing.visible = false;
+world.scene.add(clearanceRing);
+// The threat's recent path, sampled from obstacle positions (the frame carries no velocity).
+const threatTrail: THREE.Vector3[] = [];
+const THREAT_TRAIL_MAX = 60;
+const threatTrailGeometry = new THREE.BufferGeometry();
+threatTrailGeometry.setAttribute(
+  "position",
+  new THREE.Float32BufferAttribute(new Float32Array(THREAT_TRAIL_MAX * 3), 3),
+);
+const threatTrailLine = new THREE.Line(
+  threatTrailGeometry,
+  new THREE.LineBasicMaterial({ color: THEME.command, transparent: true, opacity: 0.6 }),
+);
+threatTrailLine.frustumCulled = false;
+threatTrailLine.visible = false;
+world.scene.add(threatTrailLine);
 const brain = view("brain", [0, 0, 4], [0, 0, 0]);
 brain.scene.background = new THREE.Color(0x0d171e);
 const flyview = view("fly", [4, 2.5, 4], [0, 1, 0]);
@@ -345,6 +391,7 @@ function setupBrain(m: Metadata) {
   initialized = true;
   el("mode").textContent =
     m.policy === "trained" ? "CONNECTOME POLICY" : "PID BASELINE · BRAIN OBSERVING";
+  renderRoamLevels(m.levels);
   if (
     m.cameras &&
     (m.cameras.splay !== eyeGeometry.splay || m.cameras.fovy_deg !== eyeGeometry.fovyDeg)
@@ -440,6 +487,133 @@ function updateAttitudeGauges(f: Frame) {
   const av = f.state.angular_velocity;
   el("turn-rate").textContent =
     av?.length === 3 ? `${((Math.hypot(...av) * 180) / Math.PI).toFixed(0)}°/s` : "—";
+}
+function setPressed(id: string, on: boolean) {
+  const button = el(id);
+  button.classList.toggle("active", on);
+  button.setAttribute("aria-pressed", String(on));
+}
+function formatRoamEvent(event: FreeRoamEvent): string {
+  const when = event.time !== undefined ? `t${event.time.toFixed(1)}s ` : "";
+  switch (event.type) {
+    case "beacon_collected":
+      return `${when}beacon #${event.count} collected`;
+    case "threat_launched":
+      return `${when}threat launched (${(event.side ?? 0) > 0 ? "left" : "right"})`;
+    case "threat_passed":
+      return `${when}threat dodged · min ${event.min_distance?.toFixed(2) ?? "—"} m`;
+    case "threat_hit":
+      return `${when}threat hit`;
+    case "collision":
+      return `${when}collision: ${event.kinds?.join(", ") ?? ""}`;
+    default:
+      return `${when}${event.type.replace(/_/g, " ")}`;
+  }
+}
+function renderRoamLevels(levels: number[]) {
+  const host = el("roam-levels");
+  host.innerHTML = levels
+    .map(
+      (level) =>
+        `<button data-level="${level}" title="Reset the arena at level ${level} with a fresh seed">L${level}</button>`,
+    )
+    .join("");
+  host.querySelectorAll<HTMLButtonElement>("button").forEach((button) => {
+    button.onclick = () =>
+      send({ op: "reset", level: Number(button.dataset.level), seed: randomSeed() });
+  });
+}
+function updateRoamOverlays(f: Frame) {
+  const roam = f.free_roam;
+  const active = f.task === "free_roam" && roam !== null;
+  el("ghost-banner").hidden = !(active && roam.ghost);
+  beaconRing.visible = active;
+  clearanceRing.visible = active;
+  if (active && roam) {
+    beaconRing.position.set(target.position.x, 0.004, target.position.z);
+    (beaconRing.material as THREE.MeshBasicMaterial).opacity = roam.beacon_visible
+      ? 0.55
+      : 0.12;
+    clearanceRing.position.set(drone.position.x, 0.004, drone.position.z);
+    clearanceRing.scale.setScalar(Math.max(0.05, roam.clearance));
+    (clearanceRing.material as THREE.MeshBasicMaterial).color.set(
+      roam.clearance < 0.5 ? THEME.amber : THEME.velocity,
+    );
+  }
+  // The threat is parked at a far z when idle; only an in-arena position draws a trail.
+  const threatActive = active && f.state.obstacle[2] < 3;
+  if (threatActive) {
+    const point = vector(f.state.obstacle);
+    const last = threatTrail[threatTrail.length - 1];
+    if (!last || last.distanceToSquared(point) > 1e-6) {
+      threatTrail.push(point);
+      if (threatTrail.length > THREAT_TRAIL_MAX) threatTrail.shift();
+    }
+  } else if (threatTrail.length) {
+    threatTrail.length = 0;
+  }
+  threatTrailLine.visible = threatActive && threatTrail.length > 1;
+  if (threatTrailLine.visible) {
+    const attr = threatTrailGeometry.getAttribute("position") as THREE.BufferAttribute;
+    threatTrail.forEach((point, i) => attr.setXYZ(i, point.x, point.y, point.z));
+    attr.needsUpdate = true;
+    threatTrailGeometry.setDrawRange(0, threatTrail.length);
+  }
+  (target.material as THREE.MeshStandardMaterial).opacity =
+    active && roam?.ghost ? 0.25 : 1;
+  (obstacle.material as THREE.MeshStandardMaterial).opacity =
+    active && roam?.ghost ? 0.25 : 1;
+}
+function updateFreeRoam(f: Frame) {
+  const roam = f.free_roam;
+  const active = f.task === "free_roam" && roam !== null;
+  el("roam-group").hidden = !active;
+  if (!active || !roam) return;
+  el("roam-beacons").textContent = roam.beacons_per_min.toFixed(2);
+  el("roam-collisions").textContent = roam.collisions_per_min.toFixed(2);
+  el("roam-threats").textContent = `${roam.threats_dodged} / ${roam.threats_hit}`;
+  el("roam-coverage").textContent = `${Math.round(roam.coverage * 100)}%`;
+  el("roam-clearance").textContent = `${roam.clearance.toFixed(2)} m`;
+  el("roam-level").textContent = `L${roam.level}`;
+  const silenced = new Set(roam.silenced);
+  setPressed("roam-silence-sensory", silenced.has("sensory"));
+  setPressed("roam-silence-light", silenced.has("light"));
+  setPressed("roam-silence-loom", silenced.has("loom"));
+  setPressed("roam-ghost", roam.ghost);
+  el("roam-levels")
+    .querySelectorAll<HTMLButtonElement>("button")
+    .forEach((button) =>
+      button.classList.toggle("active", Number(button.dataset.level) === roam.level),
+    );
+  el("roam-visibility").textContent = roam.beacon_visible
+    ? "Beacon visible"
+    : "Beacon out of view";
+  const event = roam.events[roam.events.length - 1];
+  el("roam-event").textContent = event ? formatRoamEvent(event) : "No free-roam events yet.";
+}
+// The one place that says why the drone is (or isn't) moving: none / limits mismatch both
+// hold the command at zero, which otherwise just looks like a stuck aircraft.
+function updateStatusStrip(f: Frame) {
+  const strip = el("status-strip");
+  const state = f.policy_status ?? "none";
+  const parts: string[] = [];
+  let severity: "ok" | "warn" | "error" = "ok";
+  if (state === "loaded") {
+    parts.push(`DECODER ${f.active_policy ?? "loaded"}`);
+  } else if (state === "limits mismatch") {
+    parts.push(`DECODER ${f.active_policy ?? "?"} · LIMITS MISMATCH — HOLDING`);
+    severity = "error";
+  } else {
+    parts.push("DECODER none — HOLDING");
+    severity = "warn";
+  }
+  parts.push(f.task.toUpperCase());
+  if (f.free_roam) parts.push(`L${f.free_roam.level}`);
+  parts.push(`SEED ${f.seed}`);
+  parts.push(`RTF ${f.real_time_factor.toFixed(2)}×`);
+  parts.push(`${f.missed_deadlines} missed`);
+  strip.textContent = parts.join("  ·  ");
+  strip.dataset.state = severity;
 }
 function update(f: Frame) {
   latest = f;
@@ -545,6 +719,9 @@ function update(f: Frame) {
   el("error").textContent =
     f.error ??
     `${f.missed_deadlines} missed frame deadlines · Full graph running · Fly panel uses modeled dynamics`;
+  updateFreeRoam(f);
+  updateRoamOverlays(f);
+  updateStatusStrip(f);
 }
 function connect() {
   socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
@@ -634,6 +811,41 @@ el("loom").onclick = () => {
   send({ op: "objects", obstacle: [Math.min(3.5, p[0] + 0.65), p[1], Math.max(0.3, p[2])] });
 };
 el("clear").onclick = () => send({ op: "objects", obstacle: [2, -2, 1] });
+// Free-roam probes. The server validates each one and reports any refusal through #error.
+el("roam-beacon").onclick = () => {
+  const f = latest;
+  if (!f) return;
+  const { yaw } = attitudeFromQuaternion(f.state.quaternion);
+  const p = f.state.position;
+  const distance = 1.5;
+  send({
+    op: "place_beacon",
+    x: p[0] + Math.cos(yaw) * distance,
+    y: p[1] + Math.sin(yaw) * distance,
+  });
+};
+el("roam-threat").onclick = () => send({ op: "launch_threat" });
+el("roam-silence-sensory").onclick = () =>
+  send({
+    op: "pathway",
+    name: "sensory",
+    silenced: !latest?.free_roam?.silenced.includes("sensory"),
+  });
+el("roam-silence-light").onclick = () =>
+  send({
+    op: "pathway",
+    name: "light",
+    silenced: !latest?.free_roam?.silenced.includes("light"),
+  });
+el("roam-silence-loom").onclick = () =>
+  send({
+    op: "pathway",
+    name: "loom",
+    silenced: !latest?.free_roam?.silenced.includes("loom"),
+  });
+el("roam-ghost").onclick = () =>
+  send({ op: "ghost", value: !latest?.free_roam?.ghost });
+el("roam-restore").onclick = () => send({ op: "restore" });
 function applyCameraMode() {
   if (cameraMode === "fpv") {
     const cam = airframe.eyes[0];

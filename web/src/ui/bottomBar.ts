@@ -1,3 +1,5 @@
+import { renderFreeRoam } from "./freeRoam";
+
 export function renderBottomBar(): string {
   return `
 <div class="bottom-bar bp-boot" id="bottom-bar">
@@ -10,6 +12,7 @@ export function renderBottomBar(): string {
 <div><span class="bar-label">compute budget</span><div id="budget" class="meters"></div><em class="bar-note" id="budget-note">—</em></div>
 </div>
 </section>
+${renderFreeRoam()}
 <section class="bar-group bar-group-console">
 <div class="bar-head"><h3>Controls &amp; camera</h3><span class="bar-head-meta">episode <b id="episode">0</b></span></div>
 <div class="bar-row bar-row-controls">
@@ -26,7 +29,7 @@ export function renderBottomBar(): string {
 <div class="bar-cluster"><em>mode</em><div class="button-row"><button id="cam-fpv" title="Ride along in the drone's cockpit">1st person</button><button id="cam-tpv" title="Chase camera behind the drone">3rd person</button></div></div>
 </div>
 </div>
-<div class="bar-foot"><span id="command">Motion command: —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div>
+<div class="bar-foot"><span id="command">Motion command: —</span><span class="status-strip" id="status-strip" data-state="warn" role="status" aria-live="polite">DECODER —</span><span id="error">Waiting for the local Rust + MuJoCo service.</span></div>
 </section>
 </div>`;
 }
