@@ -122,6 +122,9 @@ not in default `pytest`).
 - Reconcile the edge-count discrepancy (§5 of the survey): count ordered pairs under our ≥3 filter
   (10,520,431) and under fly.ai's build (25,582,938) from the same source file and document the
   definitional difference in `external-prior-art.md` and `data-pipeline.md`.
+- **Result (2026-09-18):** the edge probe runs and reports the 2.43× gap as open (needs the raw
+  flat-connectome feather, not vendored). The laterality probe is written and gated but **skipped**:
+  `flybrain` is not installed. Install `pip install flybrain` to run it; it is never in `pytest`.
 
 **Falsifier.** A laterality or sign inversion relative to fly.ai invalidates the current input roles
 or sign hypothesis and blocks workstream E until resolved.
@@ -134,8 +137,12 @@ or sign hypothesis and blocks workstream E until resolved.
 A standalone script rather than an edit to `calibration.py`, to avoid touching a module on the active
 v6 path; integrate later only if useful.
 
-- Seven stimuli adapted to our axes: rest; sinking → `vz+`; rising → `vz−`; rotate right/left → `yaw
-  ±`; loom left/right → yaw away. Baseline-centred ridge fit, per-axis R².
+- Seven stimuli adapted to the cues this project can drive (light and loom per side; v4 has no
+  vertical-flow cue, so sinking/rising are dropped). Baseline-centred ridge from the eight compact
+  readouts to turn/escape targets.
+- **Result (2026-09-18):** escape **R² = 0.981**, turn **R² = 0.327**. The compact readouts carry
+  the loom/escape direction strongly and the light-direction turn only weakly — expected, since the
+  decoder reads all 2,022 DN/VNC traces, not these eight readouts.
 - Diagnostic only: no decoder, no threshold, no acceptance.
 
 ## 7. Workstream E — transmitter-sign `sign-v2` (authorized, additive)
@@ -179,7 +186,8 @@ Every step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`, `.venv/bin/ruff f
 - `python/fly_drone/eye_geometry.py`, `python/fly_drone/vendor/eye_map/` + `NOTICE.md`,
   `tests/test_eye_geometry.py`, `scripts/eye_alignment.py`.
 - `scripts/make_rewired_bundle.py`, `scripts/rewired_report.py`,
-  `scripts/check_fly_ai_oracle.py`, `scripts/stimulus_battery.py`, `scripts/make_sign_bundle.py`.
+  `scripts/check_fly_ai_oracle.py`, `scripts/stimulus_battery.py`, `scripts/eye_alignment.py`,
+  `scripts/make_sign_bundle.py` (pending).
 - `runs/diagnostics/` (git-ignored): rewired report, battery, sign decision.
 - Test additions: identity hashing, state-carry regression, eye-geometry alignment.
 
