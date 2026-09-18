@@ -79,6 +79,12 @@ def ent_coef_init(action_dim):
 # maps. Weights stay below the ~0.05/step task reward so they do not swamp it.
 ANCHOR_WEIGHT = 0.5
 ANCHOR_DECAY_FRAMES = 350_000  # per environment, linear to zero over a full round
+# Decoder-round anchor (plan 08 Phase 4): a frozen exported decoder, penalised by the MSE of the
+# SAC action to its action on the same DN traces. The v5 decoder rounds drifted into constant
+# dodgers (beacons 0, ghost dodge 1.0) with no anchor; this holds the DAgger skill while SAC
+# explores. A lighter default than the encoder anchor: the decoder action is small and bounded.
+DECODER_ANCHOR_WEIGHT = 0.2
+DECODER_ANCHOR_DECAY_FRAMES = 150_000
 SATURATION_WEIGHT = 0.05
 SATURATION_LO = 0.2
 SATURATION_HI = 1.8
@@ -92,6 +98,40 @@ PREDICTIVE_VAR_WEIGHT = 1.0
 def anchor_penalty(currents, reference):
     """Mean squared deviation of the encoder's currents from a reference encoder's."""
     return float(np.mean((np.asarray(currents) - np.asarray(reference)) ** 2))
+
+
+class DecoderReference:
+    """A frozen exported decoder (JSON) evaluated in numpy, for the decoder-round anchor.
+
+    Mirrors the Rust actor: standardise by `mean`/`scale`, tanh between hidden layers, and a tanh
+    output (`output` defaults to "tanh", which also matches `training.export_actor` payloads).
+    """
+
+    def __init__(self, payload):
+        self.mean = np.asarray(payload["mean"], dtype=np.float32)
+        self.scale = np.asarray(payload["scale"], dtype=np.float32)
+        self.layers = [
+            (
+                np.asarray(layer["weights"], np.float32),
+                np.asarray(layer["bias"], np.float32),
+            )
+            for layer in payload["layers"]
+        ]
+        self.output = payload.get("output", "tanh")
+        self.encoder_version = payload.get("encoder_version")
+        self.dataset_hash = payload.get("dataset_hash")
+
+    @classmethod
+    def load(cls, path):
+        return cls(json.loads(Path(path).read_text()))
+
+    def action(self, features):
+        z = (np.asarray(features, dtype=np.float32) - self.mean) / self.scale
+        for i, (weights, bias) in enumerate(self.layers):
+            z = z @ weights.T + bias
+            if i < len(self.layers) - 1 or self.output == "tanh":
+                z = np.tanh(z)
+        return z
 
 
 def saturation_penalty(currents, lo=SATURATION_LO, hi=SATURATION_HI):
@@ -177,6 +217,8 @@ class SacRoamEnv(gym.Env):
         anchor_weight=ANCHOR_WEIGHT,
         saturation_weight=SATURATION_WEIGHT,
         anchor_decay=ANCHOR_DECAY_FRAMES,
+        decoder_anchor_weight=DECODER_ANCHOR_WEIGHT,
+        decoder_anchor_decay=DECODER_ANCHOR_DECAY_FRAMES,
     ):
         if learner not in LEARNERS:
             raise ValueError(f"learner must be one of {LEARNERS}")
@@ -203,19 +245,36 @@ class SacRoamEnv(gym.Env):
         self.learner = learner
         self.lambda_loom = lambda_loom
         self.lambda_light = lambda_light
-        if anchor is not None and not (self.spatial and learner == "encoder"):
-            raise ValueError(
-                "an encoder anchor is only used by the spatial encoder learner"
-            )
         self.anchor = None
+        self.decoder_anchor = None
+        self.decoder_anchor_weight = float(decoder_anchor_weight)
+        self.decoder_anchor_decay = max(1, int(decoder_anchor_decay))
+        self._decoder_anchored_steps = 0
         if anchor is not None:
-            from .spatial_encoder import SpatialEncoder
+            if self.spatial and learner == "encoder":
+                from .spatial_encoder import SpatialEncoder
 
-            self.anchor = (
-                anchor
-                if isinstance(anchor, SpatialEncoder)
-                else SpatialEncoder.load(anchor)
-            )
+                self.anchor = (
+                    anchor
+                    if isinstance(anchor, SpatialEncoder)
+                    else SpatialEncoder.load(anchor)
+                )
+            elif learner == "decoder":
+                self.decoder_anchor = (
+                    anchor
+                    if isinstance(anchor, DecoderReference)
+                    else DecoderReference.load(anchor)
+                )
+                if self.decoder_anchor.encoder_version != brain.encoder_version:
+                    raise ValueError(
+                        "decoder anchor was exported for encoder "
+                        f"{self.decoder_anchor.encoder_version!r}, runtime is "
+                        f"{brain.encoder_version!r}"
+                    )
+            else:
+                raise ValueError(
+                    "an anchor is only used by the spatial encoder learner or a decoder round"
+                )
         self.anchor_weight = float(anchor_weight)
         self.saturation_weight = float(saturation_weight)
         self.anchor_decay = max(1, int(anchor_decay))
@@ -301,6 +360,18 @@ class SacRoamEnv(gym.Env):
                 self._anchored_steps += 1
         else:
             velocity = action
+            if self.decoder_anchor is not None:
+                reference = self.decoder_anchor.action(self.features)
+                decay = max(
+                    0.0, 1.0 - self._decoder_anchored_steps / self.decoder_anchor_decay
+                )
+                anchor_cost = (
+                    self.decoder_anchor_weight
+                    * decay
+                    * float(np.mean((action - reference) ** 2))
+                )
+                cost += anchor_cost
+                self._decoder_anchored_steps += 1
         self.features, reward, terminated, truncated, info = self.env.step(
             np.clip(velocity, -1, 1)
         )

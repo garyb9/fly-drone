@@ -195,11 +195,107 @@ def test_anchor_rejected_for_non_encoder_learner(tmp_path):
     SpatialEncoder.fresh(seed=1).save(tmp_path / "a.pt")
     with pytest.raises(ValueError, match="anchor"):
         SacRoamEnv(
-            "decoder",
+            "bypass",
             encoder=str(tmp_path / "e.pt"),
             spatial=True,
             anchor=str(tmp_path / "a.pt"),
         )
+
+
+def test_decoder_env_applies_the_anchor_cost(tmp_path):
+    import json
+
+    from fly_drone.brain import BrainRuntime
+    from fly_drone.sac import SacRoamEnv
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    SpatialEncoder.fresh(seed=3).save(tmp_path / "e.pt")
+    brain = BrainRuntime(encoder=str(tmp_path / "e.pt"))
+    n = len(brain.feature_ids)
+    payload = {
+        "version": 1,
+        "encoder_version": brain.encoder_version,
+        "dataset_hash": brain.dataset_hash,
+        "feature_ids": brain.feature_ids,
+        "mean": [0.0] * n,
+        "scale": [1.0] * n,
+        "layers": [{"weights": [[0.0] * n] * 4, "bias": [0.0] * 4}],
+        "action_limits": [0.7, 0.5, 0.3, 0.8],
+    }
+    (tmp_path / "anchor.json").write_text(json.dumps(payload))
+    env = SacRoamEnv(
+        "decoder",
+        encoder=str(tmp_path / "e.pt"),
+        level=3,
+        anchor=str(tmp_path / "anchor.json"),
+    )
+    try:
+        env.reset(seed=7)
+        # The all-zero reference is exactly the zero action, independent of features.
+        _, _, _, _, info = env.step(np.zeros(4, np.float32))
+        assert info["anchor_cost"] == pytest.approx(0.0, abs=1e-9)
+        _, _, _, _, info = env.step(np.ones(4, np.float32))
+        assert info["anchor_cost"] > 0.0
+    finally:
+        env.env.close()
+
+
+def test_decoder_anchor_rejects_a_mismatched_encoder(tmp_path):
+    import json
+
+    from fly_drone.brain import BrainRuntime
+    from fly_drone.sac import SacRoamEnv
+    from fly_drone.spatial_encoder import SpatialEncoder
+
+    SpatialEncoder.fresh(seed=4).save(tmp_path / "e.pt")
+    brain = BrainRuntime(encoder=str(tmp_path / "e.pt"))
+    n = len(brain.feature_ids)
+    payload = {
+        "version": 1,
+        "encoder_version": "learned-v6:" + "0" * 16,
+        "dataset_hash": brain.dataset_hash,
+        "feature_ids": brain.feature_ids,
+        "mean": [0.0] * n,
+        "scale": [1.0] * n,
+        "layers": [{"weights": [[0.0] * n] * 4, "bias": [0.0] * 4}],
+        "action_limits": [0.7, 0.5, 0.3, 0.8],
+    }
+    (tmp_path / "anchor.json").write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="decoder anchor"):
+        SacRoamEnv(
+            "decoder",
+            encoder=str(tmp_path / "e.pt"),
+            level=3,
+            anchor=str(tmp_path / "anchor.json"),
+        )
+
+
+def test_decoder_reference_forward_matches_a_hand_computed_payload(tmp_path):
+    import json
+
+    from fly_drone.sac import DecoderReference
+
+    payload = {
+        "version": 1,
+        "encoder_version": "learned-v6:" + "1" * 16,
+        "dataset_hash": "h",
+        "mean": [0.5, 0.5, 0.5],
+        "scale": [2.0, 2.0, 2.0],
+        "layers": [
+            {"weights": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], "bias": [0.0, 0.0]},
+            {"weights": [[1.0, 1.0], [1.0, -1.0]], "bias": [0.1, -0.1]},
+        ],
+        "output": "tanh",
+    }
+    path = tmp_path / "d.json"
+    path.write_text(json.dumps(payload))
+    ref = DecoderReference.load(path)
+    x = np.array([0.5, 1.5, 2.5], np.float32)
+    w1 = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    w2 = np.array([[1.0, 1.0], [1.0, -1.0]])
+    hidden = np.tanh(((x - 0.5) / 2.0) @ w1.T)
+    expected = np.tanh(hidden @ w2.T + np.array([0.1, -0.1]))
+    assert ref.action(x) == pytest.approx(expected, abs=1e-6)
 
 
 def test_ent_coef_scales_with_action_dimension():

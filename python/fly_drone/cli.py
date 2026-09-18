@@ -202,8 +202,8 @@ def main():
     )
     p.add_argument(
         "--anchor",
-        help="reference encoder .pt the encoder round is anchored to (v6 encoder rounds; "
-        "defaults to --init)",
+        help="reference the round is anchored to: an encoder .pt for an encoder round "
+        "(defaults to --init), or a decoder .json for a decoder round (the DAgger actor)",
     )
     p = sub.add_parser("sac-export")
     p.add_argument(
