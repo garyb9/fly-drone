@@ -1,10 +1,10 @@
-import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 
 from ._brain import Brain
+from .identity import check_bundle_pin, hashes, is_alternate
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data/malecns"
@@ -79,8 +79,10 @@ class BrainRuntime:
         self.data = Path(data)
         manifest = json.loads((self.data / "manifest.json").read_text())
         raw = (self.data / "graph.bin").read_bytes()
-        self.dataset_hash = hashlib.sha256(raw).hexdigest()
-        self.core = Brain((self.data / "neurons.bin").read_bytes(), raw, seed)
+        neurons = (self.data / "neurons.bin").read_bytes()
+        self.dataset_hash, self.bundle_hash = hashes(raw, neurons, manifest)
+        self.alternate = is_alternate(manifest)
+        self.core = Brain(neurons, raw, seed)
         if self.core.neuron_count() != manifest["n_neurons"]:
             raise ValueError("manifest neuron count mismatch")
         self.cells = json.loads((self.data / "cells.json").read_text())
@@ -330,13 +332,17 @@ class BrainRuntime:
 
     def load_policy(self, path, check_encoder=True):
         text = Path(path).read_text()
-        version = json.loads(text)["encoder_version"]
+        payload = json.loads(text)
+        version = payload["encoder_version"]
         # A decoder reads activity shaped by one encoder; check_encoder=False only for a
         # frozen decoder inside an encoder-learning environment.
         if check_encoder and version != self.encoder_version:
             raise ValueError(
                 f"actor encoder {version!r} does not match runtime {self.encoder_version!r}"
             )
+        # Alternate wiring/sign bundles share a graph or neurons file with the canonical
+        # bundle, so dataset_hash alone cannot gate them; the actor must pin the bundle.
+        check_bundle_pin(payload, self.bundle_hash, self.alternate)
         self.core.load_policy(text, self.dataset_hash, self.feature_ids)
 
     def infer(self, features=None):

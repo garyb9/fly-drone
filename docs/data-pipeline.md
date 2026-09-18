@@ -57,6 +57,20 @@ policy loader and `warm_start` refuse to run on a mismatch. Any graph change the
 invalidates old decoders, which is the intent: a decoder is only meaningful for the neurons it
 was trained on.
 
+A second, stronger identity covers the whole model, because a sign variant changes `neurons.bin`
+(where each neuron's inhibitory flag lives) while leaving `graph.bin` identical:
+
+```
+bundle_hash  = SHA-256(graph.bin ‖ neurons.bin ‖ canonical(model manifest fields))
+             = edc5439e291e65233e673b5baaed069f570f5003c245e414de2aa1e41b14aff5   (current)
+```
+
+`python/fly_drone/identity.py` computes both. `dataset_hash` is kept unchanged so every accepted
+actor still loads; `bundle_hash` is enforced only for alternate bundles (a manifest carrying
+`wiring` or `sign_convention`), whose actors must pin it. See the harvest spec
+[`superpowers/specs/2026-09-18-prior-art-harvest-design.md`](superpowers/specs/2026-09-18-prior-art-harvest-design.md)
+Step 0.
+
 ## 4. Test fixture
 
 `pipeline/out/fixture/` holds a tiny synthetic graph in the same binary format. It is produced by
