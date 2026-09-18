@@ -120,15 +120,17 @@ No new module is expected; all commands already take `--encoder`.
 - Gate each: screens improve or hold; E1/E2 stay at the frozen baseline.
 
 ### Task 4: Decoder SAC fine-tune (gated, one round at a time)
+- [x] **Decoder anchor landed** (commit `45fc4d4`): `DecoderReference` (a numpy forward of an
+      exported decoder JSON) + a decayed action-MSE penalty in `SacRoamEnv` for `learner=decoder`,
+      wired through `sac-round decoder --anchor <decoder.json>`. Weight 0.2, decay 150k.
 - Warm-start in the SAC spaces (a DAgger `warm-ppo.zip` cannot load: its observation is
   `Box(2022)`, a v6 decoder round's is `Dict(dn, geometry)`):
   `sac-init-decoder <it3-npz> --encoder runs/v6/clone/encoder.pt --output runs/roam/v6-it3/init`,
   then `sac-round decoder --encoder runs/v6/clone/encoder.pt --init runs/roam/v6-it3/init/decoder.zip
-  --frames <agreed> --workers 6`.
-- Add the **decoder behaviour-cloning anchor** first (Phase 4): `sac.anchor_penalty` is currently
-  encoder-only, so a decoder round can still drift. Anchor to the DAgger actor with a small fixed α.
-- `sac-validate` + `roam_eval.round_eligible`; accept the round only on G1 and G2, else revert to
-  the DAgger actor and record. Budget/kill rule: see Open decisions — ask before starting.
+  --anchor runs/roam/v6-it3t/warm-actor.json --frames <agreed> --workers 6`.
+- DAgger 0-3 and the threat-only iteration are recorded; the best causal dodge is `it3t`
+  (dodge 0.31, foraging 0.80). `sac-validate` + `roam_eval.round_eligible`; accept the round only
+  on G1 and G2, else revert and record. Budget/kill rule: see Open decisions — ask before starting.
 
 ### Task 5: Full evaluation (G3)
 - `evaluate --task free_roam --policy <decoder> --encoder runs/v6/clone/encoder.pt --episodes 50
