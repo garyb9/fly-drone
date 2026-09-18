@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import torch
 from fly_drone.encoder import eyes_space
 from fly_drone.joint_policy import (
@@ -117,3 +118,109 @@ def test_joint_export_round_trip(tmp_path):
     decoder = json.loads((tmp_path / "out" / "decoder.json").read_text())
     assert decoder["encoder_version"] == report["encoder_version"]
     assert decoder["output"] == "tanh"
+
+
+def _joint_model(actor_warmup, predictive_weight=0.0, n_dn=16):
+    from fly_drone.sac import SpacesOnlyEnv, build_sac
+    from stable_baselines3.common.logger import Logger
+
+    env = SpacesOnlyEnv("joint", n_features=n_dn)
+    model = build_sac(
+        "joint",
+        env,
+        buffer_size=64,
+        device="cpu",
+        actor_warmup=actor_warmup,
+        predictive_weight=predictive_weight,
+    )
+    model.set_logger(Logger(folder=None, output_formats=[]))
+    rng = np.random.default_rng(11)
+    for _ in range(32):
+        obs = {
+            k: rng.uniform(0, 1, (1, *s.shape)).astype(s.dtype)
+            for k, s in env.observation_space.items()
+        }
+        nxt = {
+            k: rng.uniform(0, 1, (1, *s.shape)).astype(s.dtype)
+            for k, s in env.observation_space.items()
+        }
+        model.replay_buffer.add(
+            obs,
+            nxt,
+            rng.uniform(-1, 1, (1, joint_action_dim())).astype(np.float32),
+            rng.normal(size=1).astype(np.float32),
+            np.zeros(1, dtype=bool),
+            [{}],
+        )
+    return model
+
+
+def test_per_head_log_prob_sums_to_the_total():
+    policy = _policy()
+    obs = _obs()
+    with torch.no_grad():
+        action, lp_enc, lp_vel = policy.actor.action_log_prob_heads(obs)
+        # action_log_prob_heads leaves the distribution set from the same obs, so this is the
+        # same per-action squashed log-density SB3 sums, for the same sampled action.
+        total = policy.actor.action_dist.log_prob(action)
+    assert lp_enc.shape == (2, 1) and lp_vel.shape == (2, 1)
+    torch.testing.assert_close((lp_enc + lp_vel).squeeze(1), total)
+
+
+def test_joint_sac_uses_per_head_alpha():
+    import math
+
+    from fly_drone.sac import (
+        ENT_COEF_INIT,
+        TARGET_ENTROPY_PER_DIM,
+        JointSAC,
+        ent_coef_init,
+    )
+
+    model = _joint_model(actor_warmup=0)
+    assert isinstance(model, JointSAC)
+    assert model.log_ent_coef.shape == (2,)
+    assert model.target_entropy_heads == (
+        flat_dim() * TARGET_ENTROPY_PER_DIM,
+        4 * TARGET_ENTROPY_PER_DIM,
+    )
+    assert model.log_ent_coef[0].item() == pytest.approx(
+        math.log(ent_coef_init(flat_dim())), abs=1e-6
+    )
+    assert model.log_ent_coef[1].item() == pytest.approx(
+        math.log(ENT_COEF_INIT), abs=1e-6
+    )
+
+
+def test_joint_per_head_alpha_trains_and_warmup_freezes_it():
+    from fly_drone.sac import JointSAC
+
+    model = _joint_model(actor_warmup=100)
+    assert isinstance(model, JointSAC)
+    model.num_timesteps = 60
+    frozen = model.log_ent_coef.detach().clone()
+    model.train(gradient_steps=2, batch_size=16)
+    assert torch.equal(model.log_ent_coef.detach(), frozen)
+
+    model.num_timesteps = 100
+    before = model.log_ent_coef.detach().clone()
+    model.train(gradient_steps=4, batch_size=16)
+    assert not torch.equal(model.log_ent_coef.detach(), before)
+
+
+def test_joint_training_runs_the_predictive_auxiliary():
+    model = _joint_model(actor_warmup=0, predictive_weight=1.0)
+    model.train(gradient_steps=1, batch_size=4)
+    assert model._n_updates == 1
+    assert "train/predictive_loss" in model.logger.name_to_value
+    assert "train/ent_coef_enc" in model.logger.name_to_value
+    assert "train/ent_coef_vel" in model.logger.name_to_value
+
+
+def test_attach_predictor_uses_the_encoder_head_dim():
+    from fly_drone.sac import _attach_predictor
+
+    model = _joint_model(actor_warmup=0)
+    _attach_predictor(model, 1.0)
+    first = next(m for m in model.predictor.modules() if isinstance(m, torch.nn.Linear))
+    assert first.in_features == 16 + flat_dim()

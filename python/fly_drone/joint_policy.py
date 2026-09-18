@@ -67,6 +67,26 @@ class JointActor(Actor):
         log_std = torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX).expand_as(mean)
         return mean, log_std, {}
 
+    def action_log_prob_heads(self, obs):
+        """Like `action_log_prob`, but split the squashed log-density per head.
+
+        SB3's `SquashedDiagGaussianDistribution.log_prob` sums over the action dims, which hides
+        the per-head contribution the joint entropy coefficient needs. Rebuild the per-dim value
+        (Normal log-density of the inverse-tanh action minus the tanh correction) and sum each
+        head. The two sums add up to `action_log_prob`'s scalar.
+        """
+        from stable_baselines3.common.distributions import TanhBijector
+
+        mean, log_std, kwargs = self.get_action_dist_params(obs)
+        action = self.action_dist.actions_from_params(mean, log_std, **kwargs)
+        gaussian = TanhBijector.inverse(action)
+        per_dim = self.action_dist.distribution.log_prob(gaussian) - torch.log(
+            1 - action.pow(2) + self.action_dist.epsilon
+        )
+        encoder = per_dim[..., : self.n_encoder].sum(dim=1, keepdim=True)
+        velocity = per_dim[..., self.n_encoder :].sum(dim=1, keepdim=True)
+        return action, encoder, velocity
+
 
 class JointSACPolicy(AsymmetricSACPolicy):
     """SAC policy whose actor is the two-head joint encoder+decoder."""

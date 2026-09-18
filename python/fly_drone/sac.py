@@ -741,6 +741,235 @@ class WarmupSAC(SAC):
         self.logger.record("train/critic_loss", np.mean(critic_losses))
 
 
+class JointSAC(WarmupSAC):
+    """WarmupSAC with a per-head entropy coefficient on the joint encoder+decoder action.
+
+    One scalar alpha over the 820-dim action lets the 816-dim current head and the 4-dim velocity
+    head trade entropy pressure; in the M4 run the auto-tuner drove it up ~500x and the encoder lost
+    its loom/motion selectivity (see `docs/results/encoder-v6/JOINT-2026-09-17.md` §4). Here each head
+    auto-tunes against its own target, so exploration noise cannot be traded across heads. Everything
+    else (warm-up freeze, predictive auxiliary, dimension-scaled init) matches `WarmupSAC`.
+    """
+
+    def __init__(self, *args, ent_coef_enc=None, ent_coef_vel=None, **kwargs):
+        self.encoder_dim = _spatial_dim()
+        self.ent_coef_enc_init = float(
+            ent_coef_enc
+            if ent_coef_enc is not None
+            else ent_coef_init(self.encoder_dim)
+        )
+        self.ent_coef_vel_init = float(
+            ent_coef_vel if ent_coef_vel is not None else ENT_COEF_INIT
+        )
+        super().__init__(*args, **kwargs)
+
+    def _setup_model(self):
+        super()._setup_model()
+        if isinstance(self.ent_coef, str) and self.ent_coef.startswith("auto"):
+            init = torch.tensor(
+                [self.ent_coef_enc_init, self.ent_coef_vel_init], device=self.device
+            )
+            self.log_ent_coef = nn.Parameter(torch.log(init))
+            self.ent_coef_optimizer = torch.optim.Adam(
+                [self.log_ent_coef], lr=self.lr_schedule(1)
+            )
+        action_dim = int(np.prod(self.action_space.shape))
+        self.target_entropy_heads = (
+            self.encoder_dim * TARGET_ENTROPY_PER_DIM,
+            (action_dim - self.encoder_dim) * TARGET_ENTROPY_PER_DIM,
+        )
+
+    def _entropy_coefs(self):
+        alphas = torch.exp(self.log_ent_coef.detach())
+        return alphas[0], alphas[1]
+
+    def train(self, gradient_steps, batch_size=64):
+        # This SAC never uses SB3's scalar-alpha `train`: the two heads must be summed separately.
+        self.logger.record("train/actor_frozen", int(self.actor_frozen))
+        if self.actor_frozen:
+            self._train_critic_only(gradient_steps, batch_size)
+            return
+        self._train_with_predictive(gradient_steps, batch_size)
+
+    def _train_with_predictive(self, gradient_steps, batch_size):
+        """`WarmupSAC._train_with_predictive` with the entropy term split per head."""
+        from stable_baselines3.common.utils import polyak_update
+        from torch.nn import functional as F
+
+        from .predictive import variance_loss
+
+        self.policy.set_training_mode(True)
+        optimizers = [self.actor.optimizer, self.critic.optimizer]
+        if self.ent_coef_optimizer is not None:
+            optimizers += [self.ent_coef_optimizer]
+        if self.aux_optimizer is not None:
+            optimizers += [self.aux_optimizer]
+        self._update_learning_rate(optimizers)
+
+        target_enc, target_vel = self.target_entropy_heads
+        ent_coef_losses, ent_coefs_enc, ent_coefs_vel = [], [], []
+        actor_losses, critic_losses, predictive_losses = [], [], []
+        for gradient_step in range(gradient_steps):
+            replay_data = self.replay_buffer.sample(
+                batch_size, env=self._vec_normalize_env
+            )
+            discounts = (
+                replay_data.discounts
+                if replay_data.discounts is not None
+                else self.gamma
+            )
+            if self.use_sde:
+                self.actor.reset_noise()
+
+            actions_pi, lp_enc, lp_vel = self.actor.action_log_prob_heads(
+                replay_data.observations
+            )
+
+            ent_coef_loss = None
+            if self.ent_coef_optimizer is not None and self.log_ent_coef is not None:
+                log_alpha = self.log_ent_coef
+                ent_coef_loss = -(
+                    log_alpha[0] * (lp_enc + target_enc).detach()
+                    + log_alpha[1] * (lp_vel + target_vel).detach()
+                ).mean()
+                ent_coef_losses.append(ent_coef_loss.item())
+                self.ent_coef_optimizer.zero_grad()
+                ent_coef_loss.backward()
+                self.ent_coef_optimizer.step()
+
+            alpha_enc, alpha_vel = self._entropy_coefs()
+            ent_coefs_enc.append(alpha_enc.item())
+            ent_coefs_vel.append(alpha_vel.item())
+
+            with torch.no_grad():
+                next_actions, next_lp_enc, next_lp_vel = (
+                    self.actor.action_log_prob_heads(replay_data.next_observations)
+                )
+                next_q_values = torch.cat(
+                    self.critic_target(replay_data.next_observations, next_actions),
+                    dim=1,
+                )
+                next_q_values, _ = torch.min(next_q_values, dim=1, keepdim=True)
+                next_q_values = (
+                    next_q_values - alpha_enc * next_lp_enc - alpha_vel * next_lp_vel
+                )
+                target_q_values = (
+                    replay_data.rewards
+                    + (1 - replay_data.dones) * discounts * next_q_values
+                )
+
+            current_q_values = self.critic(
+                replay_data.observations, replay_data.actions
+            )
+            critic_loss = 0.5 * sum(
+                F.mse_loss(current_q, target_q_values) for current_q in current_q_values
+            )
+            critic_losses.append(critic_loss.item())
+            self.critic.optimizer.zero_grad()
+            critic_loss.backward()
+            self.critic.optimizer.step()
+
+            q_values_pi = torch.cat(
+                self.critic(replay_data.observations, actions_pi), dim=1
+            )
+            min_qf_pi, _ = torch.min(q_values_pi, dim=1, keepdim=True)
+            # Alphas are detached, as in SB3: the actor loss moves the actor, the alpha loss below
+            # moves alpha, never each other.
+            actor_loss = (alpha_enc * lp_enc + alpha_vel * lp_vel - min_qf_pi).mean()
+            actor_losses.append(float(actor_loss.detach()))
+            self.actor.optimizer.zero_grad()
+            actor_loss.backward()
+            self.actor.optimizer.step()
+
+            if self.predictor is not None and self.aux_optimizer is not None:
+                features = self.actor.features_extractor(replay_data.observations)
+                currents = torch.tanh(features)
+                prediction = self.predictor(replay_data.observations["dn"], currents)
+                aux = F.mse_loss(prediction, replay_data.next_observations["dn"])
+                aux = aux + PREDICTIVE_VAR_WEIGHT * variance_loss(currents)
+                predictive_losses.append(float(aux.detach()))
+                self.aux_optimizer.zero_grad()
+                aux.backward()
+                self.aux_optimizer.step()
+
+            if gradient_step % self.target_update_interval == 0:
+                polyak_update(
+                    self.critic.parameters(), self.critic_target.parameters(), self.tau
+                )
+                polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
+
+        self._n_updates += gradient_steps
+        self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
+        self.logger.record("train/ent_coef", np.mean(ent_coefs_enc + ent_coefs_vel))
+        self.logger.record("train/ent_coef_enc", np.mean(ent_coefs_enc))
+        self.logger.record("train/ent_coef_vel", np.mean(ent_coefs_vel))
+        self.logger.record("train/actor_loss", np.mean(actor_losses))
+        self.logger.record("train/critic_loss", np.mean(critic_losses))
+        if predictive_losses:
+            self.logger.record("train/predictive_loss", np.mean(predictive_losses))
+        if len(ent_coef_losses) > 0:
+            self.logger.record("train/ent_coef_loss", np.mean(ent_coef_losses))
+
+    def _train_critic_only(self, gradient_steps, batch_size):
+        """`WarmupSAC._train_critic_only` with the frozen entropy term split per head."""
+        from stable_baselines3.common.utils import polyak_update
+        from torch.nn import functional as F
+
+        self.policy.set_training_mode(True)
+        optimizers = [self.actor.optimizer, self.critic.optimizer]
+        if self.ent_coef_optimizer is not None:
+            optimizers += [self.ent_coef_optimizer]
+        self._update_learning_rate(optimizers)
+        alpha_enc, alpha_vel = self._entropy_coefs()
+        critic_losses = []
+        for gradient_step in range(gradient_steps):
+            replay_data = self.replay_buffer.sample(
+                batch_size, env=self._vec_normalize_env
+            )
+            discounts = (
+                replay_data.discounts
+                if replay_data.discounts is not None
+                else self.gamma
+            )
+            current_q_values = self.critic(
+                replay_data.observations, replay_data.actions
+            )
+            with torch.no_grad():
+                next_actions, next_lp_enc, next_lp_vel = (
+                    self.actor.action_log_prob_heads(replay_data.next_observations)
+                )
+                next_q_values = torch.cat(
+                    self.critic_target(replay_data.next_observations, next_actions),
+                    dim=1,
+                )
+                next_q_values, _ = torch.min(next_q_values, dim=1, keepdim=True)
+                next_q_values = (
+                    next_q_values - alpha_enc * next_lp_enc - alpha_vel * next_lp_vel
+                )
+                target_q_values = (
+                    replay_data.rewards
+                    + (1 - replay_data.dones) * discounts * next_q_values
+                )
+            critic_loss = 0.5 * sum(
+                F.mse_loss(current_q, target_q_values) for current_q in current_q_values
+            )
+            critic_losses.append(critic_loss.item())
+            self.critic.optimizer.zero_grad()
+            critic_loss.backward()
+            self.critic.optimizer.step()
+            if gradient_step % self.target_update_interval == 0:
+                polyak_update(
+                    self.critic.parameters(), self.critic_target.parameters(), self.tau
+                )
+                polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
+        self._n_updates += gradient_steps
+        self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
+        self.logger.record("train/ent_coef", 0.5 * (alpha_enc + alpha_vel).item())
+        self.logger.record("train/ent_coef_enc", alpha_enc.item())
+        self.logger.record("train/ent_coef_vel", alpha_vel.item())
+        self.logger.record("train/critic_loss", np.mean(critic_losses))
+
+
 def build_sac(
     learner,
     env,
@@ -775,7 +1004,10 @@ def build_sac(
 
         n_dn = int(env.observation_space["dn"].shape[0])
         predictor = MlpPredictor(n_dn, _spatial_dim(), out_dim=n_dn)
-    return WarmupSAC(
+    # The joint action mixes an 816-dim head with a 4-dim one, so it gets a per-head entropy
+    # coefficient; every other learner keeps SB3's single scalar alpha.
+    algorithm = JointSAC if learner == "joint" else WarmupSAC
+    return algorithm(
         policy_class,
         env,
         actor_warmup=actor_warmup,
@@ -824,6 +1056,18 @@ def apply_entropy_regime(model, action_dim):
     alpha = ent_coef_init(action_dim)
     model.ent_coef = f"auto_{alpha}"
     model.target_entropy = float(action_dim) * TARGET_ENTROPY_PER_DIM
+    if getattr(model, "target_entropy_heads", None) is not None:
+        # JointSAC: per-head alpha, encoder scaled by its 816 dims and velocity by its 4.
+        n_enc = int(model.encoder_dim)
+        model.target_entropy_heads = (
+            n_enc * TARGET_ENTROPY_PER_DIM,
+            (int(action_dim) - n_enc) * TARGET_ENTROPY_PER_DIM,
+        )
+        if model.log_ent_coef is not None:
+            with torch.no_grad():
+                model.log_ent_coef.fill_(math.log(ent_coef_init(n_enc)))
+                model.log_ent_coef[1] = math.log(ENT_COEF_INIT)
+        return model
     if model.log_ent_coef is not None:
         with torch.no_grad():
             model.log_ent_coef.fill_(math.log(alpha))
@@ -1209,7 +1453,9 @@ def export_checkpoint(checkpoint, learner, output, encoder=None, device="auto"):
     from .encoder import LearnedEncoder
 
     # buffer_size=1: exporting only reads the actor's weights, no replay buffer needed.
-    model = SAC.load(checkpoint, device=device, buffer_size=1)
+    # JointSAC (not SAC) so the per-head alpha vector is rebuilt with the right shape on load.
+    algorithm = JointSAC if learner == "joint" else SAC
+    model = algorithm.load(checkpoint, device=device, buffer_size=1)
     out = Path(output)
     if learner == "encoder":
         from .spatial_policy import SpatialActor
@@ -1461,8 +1707,11 @@ def _attach_predictor(model, weight):
     from .predictive import MlpPredictor
 
     action_dim = int(np.prod(model.action_space.shape))
+    # The predictor reads the encoder features, which for the joint action is only its 816-dim
+    # encoder head (the 4 velocity dims are not features).
+    feature_dim = int(getattr(model.actor, "n_encoder", action_dim))
     n_dn = int(model.observation_space["dn"].shape[0])
-    predictor = MlpPredictor(n_dn, action_dim, out_dim=n_dn).to(model.device)
+    predictor = MlpPredictor(n_dn, feature_dim, out_dim=n_dn).to(model.device)
     model.predictor = predictor
     model.predictive_weight = float(weight)
     model.aux_optimizer = torch.optim.Adam(
@@ -1555,10 +1804,12 @@ def train_round(
             "optimize_memory_usage": bool(optimize_memory),
             "n_steps": int(n_step),
         }
+        # JointSAC (not WarmupSAC) so the per-head alpha is rebuilt with two entries on load.
+        algorithm = JointSAC if learner == "joint" else WarmupSAC
         if resume and (snapshot / "model.zip").exists():
             # Continue the interrupted attempt. The snapshot's model and buffer are a matched
             # pair from the same step, and its num_timesteps means the warm-up is already over.
-            model = WarmupSAC.load(
+            model = algorithm.load(
                 snapshot / "model.zip",
                 env=vec,
                 device=device,
@@ -1575,7 +1826,7 @@ def train_round(
             # Fresh replay buffer each round: the frozen partner changed, old transitions are stale.
             # WarmupSAC.load (not SAC.load) keeps train() warm-up-aware; the argument, not
             # the value saved in the .zip, sets this round's warm-up.
-            model = WarmupSAC.load(
+            model = algorithm.load(
                 init,
                 env=vec,
                 device=device,
