@@ -1,5 +1,10 @@
 # Gated joint encoder+decoder training (M4) Implementation Plan
 
+> **CLOSED 2026-09-18 — negative.** Both entropy regimes collapsed the encoder (single scaled α;
+> per-head α). The eye-alignment diagnostic then showed the v6 chart's second axis is not visual and
+> cannot be fixed without the cell↔ommatidium join. v6 sensing is closed; see
+> [`CONCLUSION-2026-09-18.md`](../../results/encoder-v6/CONCLUSION-2026-09-18.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
 > (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.

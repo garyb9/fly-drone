@@ -1,6 +1,11 @@
 # Anatomical eye-map sensing (v6b) — plan
 
-**Status:** proposed (2026-09-18), needs user sign-off. No code yet.
+**Status: closed, not implemented (2026-09-18).** Task 1's diagnostic killed the approach before any
+code: the chart's second principal angle is the dihedral angle between the cell-sheet plane and the
+ommatidial-direction plane (67–81°), which no rotation about the shared PC1 can change, so no rigid
+direction-aligned chart exists; and no true cell↔ommatidium join is available locally
+(`cells.json` carries no ommatidial/column coordinate). See
+[`CONCLUSION-2026-09-18.md`](../../results/encoder-v6/CONCLUSION-2026-09-18.md).
 
 **Goal:** replace the v6 encoder's *rectangular* retina and its *position-PCA* patch chart with the
 measured eye geometry, so the injected currents follow ommatidial viewing directions rather than a
