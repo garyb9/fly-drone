@@ -100,25 +100,20 @@ the failure; no threshold moves.
 ## Tasks
 
 ### Task 1: Joint policy and action space
-- [ ] `JointActor`: encoder head (eyes → 816 logits) + decoder head (dn → 4 means), one clamped
+- [x] `JointActor`: encoder head (eyes → 816 logits) + decoder head (dn → 4 means), one clamped
       `log_std` per part; `get_action_dist_params` concatenates. Tests: mean shape (N, 820); changing
       `eyes` moves only the first 816, changing `dn` only the last 4; a fresh policy round-trips
-      through `save`/`load`.
-- [ ] Commit: `Add a two-head joint actor for gated joint training`.
+      through `save`/`load`. Commit `edce7d3`.
 
 ### Task 2: `JointRoamEnv`
-- [ ] Split the 820 action: `currents = action[:816]`, `velocity = action[816:]`; feed currents to the
+- [x] Split the 820 action: `currents = action[:816]`, `velocity = action[816:]`; feed currents to the
       external-v6 brain, velocity to the plant. Observation `{eyes, dn, geometry}`; metabolic cost as
-      in the encoder env. Tests: action split; equal-split currents reach the same cells as the
-      encoder env; a step runs and returns the right observation keys.
-- [ ] Commit: `Add the joint encoder+decoder environment`.
+      in the encoder env. Commit `edce7d3`.
 
 ### Task 3: Training, export and load plumbing
-- [ ] `learner_spaces("joint")`, `build_sac("joint", ...)` → `JointSACPolicy`, `ent_coef_init(820)`;
+- [x] `learner_spaces("joint")`, `build_sac("joint", ...)` → `JointSACPolicy`, `ent_coef_init(820)`;
       `train_round(learner="joint")` with the anchor + predictive objective on the encoder path;
-      `sac-export --learner joint` writing both artifacts. Tests: one `train` step changes both heads;
-      save/resume; export parity for the decoder and a loadable `learned-v6:` encoder.
-- [ ] Commit: `Train and export the joint encoder+decoder`.
+      `sac-export --learner joint` writing both artifacts. Commit `edce7d3`, `babdc4a`.
 
 ### Task 4: Smoke
 - [x] 9k-frame joint round, 6 workers: exited 0; `predictive_loss` 0.219, `ent_coef` 1.4e-4
@@ -138,9 +133,19 @@ the failure; no threshold moves.
       for `bypass`, `CriticExtractor` sizes the currents key from the space, and `distill`'s
       `bypass:` controller accepts `SpatialEncoder` and flattens the currents. Commit:
       `Support the brain-bypass control on the v6 currents`.
-- [ ] **6b — run E3:** skipped — G1 already failed, so the joint-vs-bypass comparison is void.
-- [ ] **Task 7 — open decision** (needs the user): per-head α (O2 fallback) vs decoupled critic vs
-      frozen encoder; see §6 of the joint report.
+- [ ] **6b — run E3:** skipped for the single-α pair — G1 already failed, so the joint-vs-bypass
+      comparison was void. Re-run for the per-head pair (Task 8).
+- [x] **Task 7 — decision:** per-head α (O2 fallback) chosen by the user; implemented in `JointSAC`
+      (2-vector `log_ent_coef`, per-head losses/targets, `JointSAC.load` on resume/export) with tests.
+      Commit `80e52c5`. Single-α run reverted to `runs/v6/round0`.
+
+### Task 8: Per-head-α joint run (the O2 fallback)
+- [x] 9k smoke `runs/v6/joint/smoke-heads`: exit 0, parity 3.4e-6; `ent_coef_enc` 6.0e-5 and
+      `ent_coef_vel` 8.1e-3 moved independently; warm start + predictor active.
+- [ ] 300k-frame gated round from the round-0 warm start; liveness mid-check; `sac-validate`; guard.
+- [ ] G1–G3: guard + E1 union vs round 0 (0.720) + E2.
+- [ ] G4: `sac-round bypass` on the per-head encoder; `roam-screen` full vs bypass; `bypass_comparison`.
+- [ ] Report and verdict; keep or revert to `runs/v6/round0`.
 
 ### Task 7: Report
 - [ ] Write `docs/results/encoder-v6/JOINT-<date>.md` with G1–G5, all E1/E2 numbers (union/loom/
