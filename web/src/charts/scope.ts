@@ -48,10 +48,7 @@ export class RingBuffer {
  * Vertical bounds for a signal that always keep the target line and a flat series
  * visible (a flat signal would otherwise collapse to a zero-height range).
  */
-export function seriesBounds(
-  values: number[],
-  targetLine = 0,
-): { min: number; max: number } {
+export function seriesBounds(values: number[], targetLine = 0): { min: number; max: number } {
   let min = targetLine;
   let max = targetLine;
   for (const value of values) {
