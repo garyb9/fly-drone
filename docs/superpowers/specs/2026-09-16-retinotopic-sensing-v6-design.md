@@ -3,6 +3,15 @@
 **Status:** proposed, awaiting user decision (2026-09-16). The first gate (M1/M1b feasibility) has
 been run and **passed, with a corrected injection target**.
 
+**Update 2026-09-18 — encoder learning paused (Option 3).** Three clean negative routes (alternating
+round 1, joint single-α, joint per-head-α) mean SAC does not improve E1 on this graph. The user chose
+to **freeze the encoder** at the neutral clone `learned-v6:01280e414169ff9c` and proceed decoder-only.
+Free roam is now [plan 08](../plans/2026-09-18-fly-drone-08-frozen-v6-free-roam.md); the decision brief
+is [`HANDOFF-2026-09-18.md`](../../results/encoder-v6/HANDOFF-2026-09-18.md). Under the frozen pair,
+E1/E2 are **reported, not gated** (round 0: E1 loom 0.720, E2 light 0.488 / loom 0.208); the 0.8 bar
+is unchanged. Option 2 (decoupled critic) stays available as a time-boxed fallback if A3 (threat
+dodge) fails specifically on loom.
+
 **Related:** the action side is [`2026-09-16-wing-level-action-design.md`](2026-09-16-wing-level-action-design.md).
 Together they widen what the connectome senses and deepen what it commands; they share the training
 and evaluation changes described here (§5–§6) and in that spec (§6–§7).
@@ -191,7 +200,8 @@ compute; the expensive items are the extra training rounds.
 | **M1/M1b** | **Done.** Geometry probe + propagation/lateralisation assay | **Passed** | minutes |
 | M2 | Spatial encoder v6 (Tm4/T2/LC4/LPLC2), motion input, domain randomisation, v4-clone init | Spatial E1/E2 beat v4; ghost clean | collection + 1 round |
 | M3 | Training signal: curriculum, shaping, recovery DAgger, n-step; read M1–M3 | Causal dodge (ghost ≤ 0.3, E2 pass) | 1–2 rounds |
-| M4 | Gated joint training | Joint > alternating **without** failing E1/E2/E3 | 1 long run |
+| M4 | Gated joint training — **FAILED** (2026-09-17); see [`JOINT-2026-09-17.md`](../../results/encoder-v6/JOINT-2026-09-17.md) | Joint > alternating **without** failing E1/E2/E3 | 1 long run |
+| **M4′** | **Encoder frozen (Option 3, 2026-09-18): decoder-only free roam on the round-0 pair** | A1–A7 + E3 bypass | [plan 08](../plans/2026-09-18-fly-drone-08-frozen-v6-free-roam.md) |
 | M5 | Unseen-layout distribution + final E1–E4 | Goal-level generalization | eval |
 
 ## 9. Artifacts from this step
