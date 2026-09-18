@@ -1,6 +1,7 @@
 import hashlib
 
 import numpy as np
+import pytest
 from fly_drone.env import ConnectomeEnv
 from fly_drone.fly import FlyMirror
 
@@ -177,3 +178,29 @@ def test_v4_looming_replay_is_bit_identical():
 
 def test_v4_free_roam_replay_is_bit_identical():
     assert _replay_digest("free_roam", 7, 20, level=3, respawn=True) == V4_ROAM_REPLAY
+
+
+def test_threat_shaping_rewards_opening_the_gap():
+    from fly_drone.env import threat_potential, threat_shaping
+
+    assert threat_potential(0.0) == pytest.approx(1.0)
+    assert threat_potential(0.0) > threat_potential(1.0) > threat_potential(3.0)
+    assert threat_shaping(None, 1.0) == 0.0
+    assert threat_shaping(1.0, 3.0) > 0.0  # moving away
+    assert threat_shaping(3.0, 1.0) < 0.0  # closing in
+
+
+def test_threat_curriculum_level_has_threats_and_no_pillars():
+    from fly_drone import arena
+
+    assert arena.LEVELS[4] == (0, True)
+    e = ConnectomeEnv(task="free_roam", level=4, respawn=True)
+    try:
+        e.reset(seed=5)
+        assert len(e.plant.pillars) == 0
+        assert e.roam["next_threat"] is not None
+        if e.launch_threat():
+            e.step(np.zeros(4))
+            assert e.previous_threat_distance is not None
+    finally:
+        e.close()

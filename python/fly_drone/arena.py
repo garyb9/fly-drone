@@ -60,7 +60,15 @@ class ArenaSpec:
 
 
 # level -> (pillar count, threats enabled)
-LEVELS = {0: (0, False), 1: (6, False), 2: (16, False), 3: (16, True)}
+# Level 4 is the threat curriculum (v6 spec §5): thrown threats with no pillars, so the dodge drive
+# gets gradient without pillar collisions confounding it. Additive; levels 0-3 are unchanged.
+LEVELS = {
+    0: (0, False),
+    1: (6, False),
+    2: (16, False),
+    3: (16, True),
+    4: (0, True),
+}
 
 # Opt-in visual variety (e.g. for the live viewer): a repeating thin/medium/thick cycle
 # around the default 0.3 m, never varying enough to change how much of the connectivity

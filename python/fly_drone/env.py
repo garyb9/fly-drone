@@ -38,6 +38,32 @@ EVAL_SECONDS = {
     "escape": 6,
     "free_roam": 120,
 }
+# Dense, potential-based threat shaping (v6 spec §5; training.md §2). The only threat reward is the
+# sparse -20 collision; that propagates too slowly and a policy can game it by flailing. Phi(d) is
+# high near the threat, so gamma*Phi(d_prev) - Phi(d) rewards opening the gap. Potential-based
+# shaping does not change the optimal policy (Ng et al. 1999). Applied only while a threat is active
+# on both steps, so spawning/despawning a threat cannot be farmed; reset on respawn for the same
+# reason.
+THREAT_SHAPING_WEIGHT = 1.0
+THREAT_SHAPING_SIGMA = 1.5
+THREAT_SHAPING_GAMMA = 0.99
+
+
+def threat_potential(distance, sigma=THREAT_SHAPING_SIGMA):
+    """Phi(d) in (0, 1]: 1 at contact, ~0 beyond a few sigma."""
+    return float(np.exp(-((float(distance) / float(sigma)) ** 2)))
+
+
+def threat_shaping(previous_distance, distance):
+    """Potential-based shaping term for one step; 0 when there was no previous threat gap."""
+    if previous_distance is None:
+        return 0.0
+    return THREAT_SHAPING_WEIGHT * (
+        THREAT_SHAPING_GAMMA * threat_potential(previous_distance)
+        - threat_potential(distance)
+    )
+
+
 OBSTACLE_PARK = np.array([3.8, -3.8, 0.4])
 TARGET_BEHIND = np.array([-3.8, 0.0, 1.0])
 THREAT_RANGE = 2.0
@@ -103,6 +129,7 @@ class ConnectomeEnv(gym.Env):
         self.last_brain_ticks = 0
         self.previous_bearing = 0.0
         self.previous_distance = 0.0
+        self.previous_threat_distance = None
         self.launch = None
         self.orbit = None
         self.roam = None
@@ -152,6 +179,7 @@ class ConnectomeEnv(gym.Env):
         self.orbit = None
         self.roam = None
         self.side = side
+        self.previous_threat_distance = None
         if self.task == "free_roam":
             self._reset_roam(rng)
         else:
@@ -457,8 +485,13 @@ class ConnectomeEnv(gym.Env):
             threat["min_distance"] = min(threat["min_distance"], distance)
             threat["peak_vy"] = max(threat.get("peak_vy", 0.0), abs(float(action[1])))
             threat["peak_vz"] = max(threat.get("peak_vz", 0.0), abs(float(action[2])))
+            if self.previous_threat_distance is not None:
+                reward += threat_shaping(self.previous_threat_distance, distance)
+            self.previous_threat_distance = distance
             if "threat" in kinds:
                 self._finish_threat(hit=True)
+        else:
+            self.previous_threat_distance = None
         beacon_distance = float(np.linalg.norm((plant.target - pos)[:2]))
         visible = self.beacon_visible()
         if (
@@ -504,6 +537,7 @@ class ConnectomeEnv(gym.Env):
                 spot = arena.safe_respawn(spec, plant.pillars, pos)
                 plant.teleport(spot, float(plant.rpy[0, 2]))
                 self.brain.clear_vision_history()
+                self.previous_threat_distance = None
                 self.previous_distance = float(
                     np.linalg.norm((plant.target - plant.pos[0])[:2])
                 )
