@@ -165,6 +165,14 @@ git-ignored), and a decision report under `runs/diagnostics/`.
 **Falsifier.** If the variants do not differ on the laterality/loom probes, the sign convention is not
 the limiting factor and `sign-v2` is not adopted.
 
+**Status (2026-09-18): blocked pending a dependency decision.** The raw
+`body-neurotransmitters-male-cns-v1.0.feather` (43 MB) downloads and its SHA-256 matches the manifest
+(`95c92892…`). It is dictionary-coded with labels `acetylcholine`, `gaba`, `glutamate`, `histamine`,
+`octopamine`, `serotonin`, `unclear`. But the project venv has **no Arrow/Feather reader** (no
+`pyarrow`, `pandas`, `polars`, `duckdb`, `fastparquet`), the upstream sign mapping is not in this repo
+to reproduce, and no `sign-v2` code has been written. E needs an optional Arrow dependency (or a
+separate environment) before it can proceed; the canonical bundle is unchanged.
+
 ## 8. Sequencing
 
 | Step | What | Depends on | Compute |
@@ -198,5 +206,6 @@ Every step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`, `.venv/bin/ruff f
 2. **Oracle scope** — laterality only (recommended) vs also porting `flybrain`'s readout as a second
    training path (rejected: different thesis).
 3. **`sign-v2` adoption** — default S1 until the probes report; any change to the canonical sign
-   convention is a separate contract change requiring explicit sign-off.
+   convention is a separate contract change requiring explicit sign-off. **Blocked:** needs an
+   optional Arrow reader and the upstream transmitter→sign mapping (see workstream E status).
 4. **Edge-count reconciliation** — must be explained before any edge count is cited externally.
