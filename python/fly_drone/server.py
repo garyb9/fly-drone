@@ -19,9 +19,13 @@ from .attribution import for_brain
 from .brain import ROOT, BrainRuntime
 from .env import PATHWAYS, TASKS, ConnectomeEnv, EpisodeTracker
 from .fly import FlyMirror
+from .roam_eval import FREE_CELLS
 
 ABLATION_MODES = ("none", "zero", "sensory", "shuffle", "light", "loom", "ghost")
 POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
+# Frames between attribution refreshes. explain() costs ~90 ms, so the live viewer
+# gets a fresh gradient-x-input readout a few times a second without taxing the loop.
+ATTRIBUTION_EVERY = 12
 
 
 def safe_policy_path(path):
@@ -235,6 +239,7 @@ class Session:
             last_error = None
             policy_status = "loaded" if active_policy else "none"
             explained = None
+            explained_seq = 0
             while not self.stop.is_set():
                 while True:
                     try:
@@ -348,10 +353,11 @@ class Session:
                         policy_status = "loaded"
                     if policy_status == "loaded":
                         command = env.brain.infer(observed) / env.plant.limits
-                        # Attribution is a debug view costing ~90 ms/frame; the viewer does
-                        # not read it yet, so refresh it about once a second, not every frame.
-                        if attributor is not None and seq % 25 == 0:
+                        # Attribution is a debug view costing ~90 ms/frame; refresh it a few
+                        # times a second (ATTRIBUTION_EVERY), not every frame.
+                        if attributor is not None and seq % ATTRIBUTION_EVERY == 0:
                             explained = attributor.explain(observed)
+                            explained_seq = seq
                     else:
                         command = np.zeros(4)
                         explained = None
@@ -380,6 +386,32 @@ class Session:
                     b = io.BytesIO()
                     Image.fromarray(frame).save(b, format="JPEG", quality=75)
                     camera.append(base64.b64encode(b.getvalue()).decode())
+                # Live scoreboard uses the same units as roam_eval's acceptance metrics.
+                # The one-second floor keeps startup rates finite before enough sim time elapsed.
+                roam_stats = None
+                if env.roam is not None:
+                    minutes = max(float(info["time"]), 1.0) / 60.0
+                    roam_stats = {
+                        "level": env.level,
+                        "beacons": info["beacons_collected"],
+                        "collisions": info["collisions"],
+                        "collision_kinds": info["collision_kinds"],
+                        "threats_finished": len(info["threats"]),
+                        "threats_dodged": sum(t["dodged"] for t in info["threats"]),
+                        "threats_hit": sum(t["hit"] for t in info["threats"]),
+                        "visited_cells": info["visited_cells"],
+                        "beacon_visible": info["beacon_visible"],
+                        "clearance": info["clearance"],
+                        "ghost": env.plant.ghost,
+                        "silenced": sorted(silenced),
+                        "events": list(events),
+                        "elapsed": round(float(info["time"]), 2),
+                        "beacons_per_min": round(
+                            info["beacons_collected"] / minutes, 3
+                        ),
+                        "collisions_per_min": round(info["collisions"] / minutes, 3),
+                        "coverage": round(info["visited_cells"] / FREE_CELLS, 4),
+                    }
                 seq += 1
                 now = time.perf_counter()
                 frame = {
@@ -428,23 +460,8 @@ class Session:
                     },
                     "policy_status": policy_status,
                     "attribution": explained,
-                    "free_roam": None
-                    if env.roam is None
-                    else {
-                        "level": env.level,
-                        "beacons": info["beacons_collected"],
-                        "collisions": info["collisions"],
-                        "collision_kinds": info["collision_kinds"],
-                        "threats_finished": len(info["threats"]),
-                        "threats_dodged": sum(t["dodged"] for t in info["threats"]),
-                        "threats_hit": sum(t["hit"] for t in info["threats"]),
-                        "visited_cells": info["visited_cells"],
-                        "beacon_visible": info["beacon_visible"],
-                        "clearance": info["clearance"],
-                        "ghost": env.plant.ghost,
-                        "silenced": sorted(silenced),
-                        "events": list(events),
-                    },
+                    "attribution_seq": explained_seq,
+                    "free_roam": roam_stats,
                 }
                 with self.lock:
                     self.latest = frame

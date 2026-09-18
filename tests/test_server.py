@@ -128,6 +128,12 @@ def test_replay_reset_task_ablation_and_policy_guard():
             assert (
                 frame["free_roam"]["level"] == 3 and frame["free_roam"]["beacons"] == 0
             )
+            # Derived live-scoreboard fields share roam_eval's units.
+            assert frame["attribution_seq"] == 0
+            roam = frame["free_roam"]
+            assert roam["elapsed"] >= 0.0
+            assert roam["beacons_per_min"] == 0.0 and roam["collisions_per_min"] == 0.0
+            assert 0.0 <= roam["coverage"] <= 1.0
             ws.send_json({"op": "launch_threat"})
             ws.send_json({"op": "pathway", "name": "loom", "silenced": True})
             ws.send_json({"op": "ghost", "value": True})

@@ -17,72 +17,10 @@ import { renderFlightView } from "./ui/flightView";
 import { renderHudPinned } from "./ui/hudPinned";
 import { renderBottomBar } from "./ui/bottomBar";
 import { renderFooter } from "./ui/footer";
+import type { Frame, Metadata } from "./types";
 
 applyCssTokens();
 
-type Cell = {
-  id: string;
-  type: string;
-  side: string;
-  group?: number;
-  position: number[];
-  measured: boolean;
-};
-type Metadata = {
-  ids: number[];
-  cells: Cell[];
-  links: number[][];
-  groups: string[];
-  cameras?: { count: number; splay: number; fovy_deg: number; pos: number[] };
-  neurons: number;
-  features: number;
-  policy: string;
-  dataset_hash: string;
-  tasks: string[];
-  ablations: string[];
-  room: Room;
-  task_policy_status: Record<string, "loaded" | "none">;
-};
-type Frame = {
-  seq: number;
-  episode: number;
-  tick: number;
-  physics_tick: number;
-  time: number;
-  paused: boolean;
-  state: {
-    position: number[];
-    quaternion: number[];
-    velocity: number[];
-    angular_velocity?: number[];
-    actual_rpm: number[];
-    commanded_rpm: number[];
-    rotor_phase: number[];
-    target: number[];
-    obstacle: number[];
-  };
-  fly: { position: number[]; quaternion: number[]; ticks: number };
-  activity: number[];
-  readouts: Record<string, number>;
-  cues: number[];
-  sensory?: Record<string, number>;
-  command: number[];
-  cameras: string[];
-  real_time_factor: number;
-  missed_deadlines: number;
-  budget?: {
-    tick_ms_p50: number | null;
-    tick_ms_p95: number | null;
-    target_ms: number;
-    samples: number;
-  };
-  error?: string;
-  task: string;
-  ablation: string;
-  seed: number;
-  active_policy: string | null;
-  policy_status?: "none" | "loaded" | "limits mismatch";
-};
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
 <main>
