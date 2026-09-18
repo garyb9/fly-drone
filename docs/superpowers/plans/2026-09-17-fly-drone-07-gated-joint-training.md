@@ -142,10 +142,12 @@ the failure; no threshold moves.
 ### Task 8: Per-head-α joint run (the O2 fallback)
 - [x] 9k smoke `runs/v6/joint/smoke-heads`: exit 0, parity 3.4e-6; `ent_coef_enc` 6.0e-5 and
       `ent_coef_vel` 8.1e-3 moved independently; warm start + predictor active.
-- [ ] 300k-frame gated round from the round-0 warm start; liveness mid-check; `sac-validate`; guard.
-- [ ] G1–G3: guard + E1 union vs round 0 (0.720) + E2.
-- [ ] G4: `sac-round bypass` on the per-head encoder; `roam-screen` full vs bypass; `bypass_comparison`.
-- [ ] Report and verdict; keep or revert to `runs/v6/round0`.
+- [x] **FAIL.** 300k round `runs/v6/joint/round2` collapsed by 100k (liveness 0.000/0.000); 150k
+      encoder saturated (light/motion pinned to 2.0). Stopped at ~160k. Velocity α crashed
+      0.01 → 3.6e-7; the encoder then saturated, so per-head α did not help. Record:
+      [`JOINT-2026-09-17.md`](../../results/encoder-v6/JOINT-2026-09-17.md) §7. Reverted to round 0.
+- [ ] G1–G3, G4: not reached.
+- [ ] **Next decision (user):** decoupled critic (option 2) vs freeze encoder (option 3).
 
 ### Task 7: Report
 - [ ] Write `docs/results/encoder-v6/JOINT-<date>.md` with G1–G5, all E1/E2 numbers (union/loom/
