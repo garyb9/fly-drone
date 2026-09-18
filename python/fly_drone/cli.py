@@ -23,6 +23,11 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("serve")
     p.add_argument("--policy")
+    p.add_argument(
+        "--encoder",
+        help="learned encoder .pt the policy's decoder is pinned to (v5/v6); "
+        "when set, the viewer flies the learned-encoder pair",
+    )
     p.add_argument("--looming-policy")
     p.add_argument(
         "--task-policy",
@@ -407,6 +412,7 @@ def main():
 
         task_policies = dict(item.split("=", 1) for item in args.task_policy)
         policy, looming_policy = args.policy, args.looming_policy
+        encoder = args.encoder
         if args.accepted:
             # Without a decoder every command is zero and the drone holds still.
             present, missing = accepted_policies()
@@ -424,16 +430,22 @@ def main():
                 print(f"current {task} policy not found locally: {path}", flush=True)
             for task, path in present.items():
                 entry = current_pointer.current_entry(task)
+                # A learned-encoder pairing (v5/v6) flies the frozen connectome with the encoder's
+                # currents; a v4 entry has no encoder and uses the default sensory mapping.
                 if entry and entry.get("encoder"):
-                    print(
-                        f"current {task} policy needs a learned-encoder pairing "
-                        "`serve` does not support yet; skipping",
-                        flush=True,
-                    )
+                    encoder = encoder or entry["encoder"]
+                    if task == "visual":
+                        policy = policy or path
+                    else:
+                        task_policies.setdefault(task, path)
                     continue
                 task_policies.setdefault(task, path)
+        if encoder:
+            encoder = str(Path(encoder).resolve())
+            if not Path(encoder).exists():
+                raise SystemExit(f"encoder not found: {encoder}")
         uvicorn.run(
-            make_app(policy, looming_policy, task_policies, args.port),
+            make_app(policy, looming_policy, task_policies, args.port, encoder=encoder),
             host="127.0.0.1",
             port=args.port,
         )

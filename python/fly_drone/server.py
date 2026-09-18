@@ -16,7 +16,7 @@ from PIL import Image
 
 from .arena import LEVELS, clearance
 from .attribution import for_brain
-from .brain import ROOT
+from .brain import ROOT, BrainRuntime
 from .env import PATHWAYS, TASKS, ConnectomeEnv, EpisodeTracker
 from .fly import FlyMirror
 
@@ -93,8 +93,11 @@ def list_reports():
 
 
 class Session:
-    def __init__(self, policy=None, looming_policy=None, task_policies=None):
+    def __init__(
+        self, policy=None, looming_policy=None, task_policies=None, encoder=None
+    ):
         self.policy = policy
+        self.encoder = encoder
         self.task_policies = {task: None for task in TASKS}
         self.task_policies.update(task_policies or {})
         self.task_policies["visual"] = policy
@@ -128,7 +131,8 @@ class Session:
     def run(self):
         env = None
         try:
-            env = ConnectomeEnv()
+            brain = BrainRuntime(encoder=self.encoder) if self.encoder else None
+            env = ConnectomeEnv(brain=brain) if brain is not None else ConnectomeEnv()
             fly = FlyMirror()
             task_policies = self.task_policies
             active_policy = None
@@ -463,8 +467,10 @@ class Session:
         self.thread.join(timeout=10)
 
 
-def make_app(policy=None, looming_policy=None, task_policies=None, port=8000):
-    session = Session(policy, looming_policy, task_policies)
+def make_app(
+    policy=None, looming_policy=None, task_policies=None, port=8000, encoder=None
+):
+    session = Session(policy, looming_policy, task_policies, encoder=encoder)
 
     @asynccontextmanager
     async def lifespan(app):
