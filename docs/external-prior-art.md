@@ -147,7 +147,7 @@ project; as of 2026-09-18 its authors have not published the flight logs they li
 | Degree-preserving rewiring + shuffled-graph control | FlyGM §4.1; fly-self-driving `train_street.py` | `scripts/make_rewired_bundle.py`, `scripts/rewired_report.py` | Heavy graph rebuild; diagnostic only |
 | Independent MaleCNS oracle + laterality checks | `flybrain` PyPI; fly.ai README findings 1–5 | `scripts/check_fly_ai_oracle.py` | Optional dep, ~260 MB data |
 | State-carry-between-decisions regression | fly-self-driving (3/20 → 17/20) | test on `brain.py`/`env.py` | None |
-| Transmitter-sign conventions | fly.ai (histamine), FlyGM §3.1 | additive `sign-v2` bundles | **Contract change**; user-authorized 2026-09-18 |
+| Transmitter-sign conventions | fly.ai (histamine), FlyGM §3.1 | additive `sign-v2` bundles | Built; **S1 kept** (S2 identical, S3 escape-gain only) |
 
 ## 7. Contract guardrails
 

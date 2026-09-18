@@ -165,13 +165,15 @@ git-ignored), and a decision report under `runs/diagnostics/`.
 **Falsifier.** If the variants do not differ on the laterality/loom probes, the sign convention is not
 the limiting factor and `sign-v2` is not adopted.
 
-**Status (2026-09-18): blocked pending a dependency decision.** The raw
-`body-neurotransmitters-male-cns-v1.0.feather` (43 MB) downloads and its SHA-256 matches the manifest
-(`95c92892…`). It is dictionary-coded with labels `acetylcholine`, `gaba`, `glutamate`, `histamine`,
-`octopamine`, `serotonin`, `unclear`. But the project venv has **no Arrow/Feather reader** (no
-`pyarrow`, `pandas`, `polars`, `duckdb`, `fastparquet`), the upstream sign mapping is not in this repo
-to reproduce, and no `sign-v2` code has been written. E needs an optional Arrow dependency (or a
-separate environment) before it can proceed; the canonical bundle is unchanged.
+**Status and result (2026-09-18).** Confirmed the canonical mapping is exactly
+`inhibitory = {glutamate, gaba}` from the feather's `consensus_nt`. Built S2 (`histamine` also
+inhibitory) and S3 (`glutamate` excitatory) as additive bundles: same `dataset_hash`, distinct
+`bundle_hash`; the optional `pyarrow` reader is the `data` extra. Probe (left Tm4/T2 → ipsilateral
+LC4/LPLC2 + escape): **S1 and S2 are identical** (+1.000, escape 0.535/0.549), while **S3 keeps
++1.000 but raises escape to 0.664/0.854**. Laterality is therefore robust to the sign convention,
+and S3 changes global escape gain rather than adding selectivity. **Not adopted:** S1 stays the
+default; S3 would be a contract change needing a behaviour case, not a gain increase. The canonical
+bundle is unchanged.
 
 ## 8. Sequencing
 
@@ -195,7 +197,7 @@ Every step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`, `.venv/bin/ruff f
   `tests/test_eye_geometry.py`, `scripts/eye_alignment.py`.
 - `scripts/make_rewired_bundle.py`, `scripts/rewired_report.py`,
   `scripts/check_fly_ai_oracle.py`, `scripts/stimulus_battery.py`, `scripts/eye_alignment.py`,
-  `scripts/make_sign_bundle.py` (pending).
+  `scripts/make_sign_bundle.py`, `scripts/sign_variant_report.py`.
 - `runs/diagnostics/` (git-ignored): rewired report, battery, sign decision.
 - Test additions: identity hashing, state-carry regression, eye-geometry alignment.
 
@@ -205,7 +207,7 @@ Every step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`, `.venv/bin/ruff f
    (matches FlyGM §4.1) vs both.
 2. **Oracle scope** — laterality only (recommended) vs also porting `flybrain`'s readout as a second
    training path (rejected: different thesis).
-3. **`sign-v2` adoption** — default S1 until the probes report; any change to the canonical sign
-   convention is a separate contract change requiring explicit sign-off. **Blocked:** needs an
-   optional Arrow reader and the upstream transmitter→sign mapping (see workstream E status).
+3. **`sign-v2` adoption** — **decided 2026-09-18: S1 stays.** S2 is indistinguishable on the probe;
+   S3 raises escape gain only. Any change to the canonical sign convention remains a separate
+   contract change requiring explicit sign-off.
 4. **Edge-count reconciliation** — must be explained before any edge count is cited externally.
