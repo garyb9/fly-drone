@@ -110,6 +110,10 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--steps", type=int, default=4000)
     p.add_argument("--net-arch", type=int, nargs="+", default=[64, 64])
+    p.add_argument(
+        "--encoder",
+        help="learned encoder .pt the data was collected under (default: v4)",
+    )
     p = sub.add_parser("roam-step-response")
     p.add_argument("--output", default="runs/roam/step-response.json")
     p = sub.add_parser("roam-screen")
@@ -357,7 +361,13 @@ def main():
                 encoder=args.encoder,
             )
         elif args.command == "roam-fit":
-            result = distill.fit(args.data, args.output, args.net_arch, args.steps)
+            result = distill.fit(
+                args.data,
+                args.output,
+                args.net_arch,
+                args.steps,
+                encoder=args.encoder,
+            )
         else:
             controllers = [
                 c

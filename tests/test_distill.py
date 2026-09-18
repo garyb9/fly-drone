@@ -72,6 +72,25 @@ def test_collect_with_a_learned_encoder_records_its_version(tmp_path):
         distill.collect(out, flights=1, seconds=0.2, workers=1, encoder="external")
 
 
+def test_fit_accepts_the_learned_encoder_it_was_collected_under(tmp_path):
+    version = LearnedEncoder.fresh(seed=4).save(tmp_path / "e.pt")
+    path = fake_data(tmp_path / "v5.npz", n=400, encoder_version=version)
+    report = distill.fit(
+        [path],
+        tmp_path / "fit",
+        net_arch=(16, 16),
+        steps=20,
+        encoder=tmp_path / "e.pt",
+    )
+    assert report["held_out_flights"] == 2
+    assert report["export_max_error"] <= 1e-4
+    actor = json.loads((tmp_path / "fit" / "warm-actor.json").read_text())
+    assert actor["encoder_version"] == version
+    # Without the matching encoder the v4 runtime rejects the data before it is fit.
+    with pytest.raises(ValueError, match="learned-v5"):
+        distill.fit([path], tmp_path / "bad", net_arch=(16, 16), steps=5)
+
+
 def test_load_rejects_data_from_a_different_encoder(tmp_path):
     learned = "learned-v5:" + "0" * 16
     digest = BrainRuntime().dataset_hash

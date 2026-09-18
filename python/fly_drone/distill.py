@@ -222,8 +222,12 @@ def class_weights(drive, mask):
     return weight / weight[counts > 0].mean()
 
 
-def fit(paths, output, net_arch=(64, 64), steps=4000, holdout=0.1):
-    """Class-balanced behaviour cloning of the teacher onto the decoder head."""
+def fit(paths, output, net_arch=(64, 64), steps=4000, holdout=0.1, encoder=None):
+    """Class-balanced behaviour cloning of the teacher onto the decoder head.
+
+    `encoder` is the learned encoder `.pt` the data was collected under (v5 or v6); the fit
+    rejects data whose recorded `encoder_version` does not match, and exports the clone for it.
+    """
     import torch
 
     from .arena import ArenaSpec
@@ -232,8 +236,8 @@ def fit(paths, output, net_arch=(64, 64), steps=4000, holdout=0.1):
 
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
-    brain = BrainRuntime()
-    x, y, drive, flight = _load(paths, brain.dataset_hash)
+    brain = BrainRuntime(encoder=encoder)
+    x, y, drive, flight = _load(paths, brain.dataset_hash, brain.encoder_version)
     rng = np.random.default_rng(72)
     unique = np.unique(flight)
     held = set(rng.choice(unique, max(1, int(len(unique) * holdout)), replace=False))

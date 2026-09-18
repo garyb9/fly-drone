@@ -4,7 +4,6 @@ from pathlib import Path
 
 import numpy as np
 
-from .brain import ENCODER_VERSION
 from .plant import LIMITS
 
 
@@ -27,7 +26,10 @@ def export_actor(model, brain, path, limits=None):
             raise ValueError("only tanh MLP export supported")
     payload = {
         "version": 1,
-        "encoder_version": ENCODER_VERSION,
+        # The runtime's encoder, not the v4 constant: a learned-brain clone must carry the
+        # `learned-v5:`/`learned-v6:` identity or `load_policy` rejects it. A v4 brain keeps
+        # `ENCODER_VERSION`, so legacy exports are unchanged.
+        "encoder_version": brain.encoder_version,
         "dataset_hash": brain.dataset_hash,
         "feature_ids": brain.feature_ids,
         "mean": model.policy.features_extractor.mean.cpu().tolist()

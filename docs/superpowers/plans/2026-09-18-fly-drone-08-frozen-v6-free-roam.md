@@ -86,12 +86,16 @@ No new module is expected; all commands already take `--encoder`.
 ## Tasks
 
 ### Task 0: Pin the frozen pair and smoke every command path
-- Record the pair: encoder `learned-v6:01280e414169ff9c` (`runs/v6/clone/encoder.pt`) + decoder
-  `runs/v6/round0/decoder.json`; note the pair's `learned-v6:` identity and `bundle_hash`.
-- Smoke, at small settings, that each command loads the pair: `roam-collect --encoder`, `roam-fit
-  --encoder`, `roam-screen --encoder`, `sac-round --learner decoder --encoder --decoder`,
-  `sac-validate --encoder --decoder`, `evaluate --encoder --policy`.
-- Fix only what the smoke breaks; commit.
+- [x] Pair recorded: encoder `learned-v6:01280e414169ff9c` (`runs/v6/clone/encoder.pt`) + decoder
+      `runs/v6/round0/decoder.json` (`dataset_hash 60cb1821…`). Record:
+      [`FROZEN-PAIR-2026-09-18.md`](../../results/encoder-v6/FROZEN-PAIR-2026-09-18.md).
+- [x] Smoked `roam-collect/fit/screen`, `sac-validate`, `evaluate`, `sac-round bypass`,
+      `sac-init-decoder → sac-round decoder`, `sac-export` against the pair
+      (`runs/roam/v6-smoke/`).
+- [x] Fixed what the smoke broke: `roam-fit --encoder` (was v4-only) and
+      `training.export_actor` encoder identity (was hard-coded v4); both v4 paths unchanged.
+- [x] Corrected Task 4's warm start to `sac-init-decoder` (the DAgger `warm-ppo.zip` space does not
+      match a v6 decoder round).
 
 ### Task 1: Realisability probe (G0)
 - Collect a held-out teacher set under the frozen clone: `roam-collect --output
@@ -116,10 +120,15 @@ No new module is expected; all commands already take `--encoder`.
 - Gate each: screens improve or hold; E1/E2 stay at the frozen baseline.
 
 ### Task 4: Decoder SAC fine-tune (gated, one round at a time)
-- `sac-round --learner decoder --encoder runs/v6/clone/encoder.pt --decoder runs/roam/v6-it3/warm-actor.json
-  --frames <agreed> --workers 6`; `sac-validate` + `roam_eval.round_eligible`.
-- Accept the round only on G1 and G2; otherwise revert to the DAgger actor and record.
-- Budget and kill rule: see Open decisions — ask the user before starting.
+- Warm-start in the SAC spaces (a DAgger `warm-ppo.zip` cannot load: its observation is
+  `Box(2022)`, a v6 decoder round's is `Dict(dn, geometry)`):
+  `sac-init-decoder <it3-npz> --encoder runs/v6/clone/encoder.pt --output runs/roam/v6-it3/init`,
+  then `sac-round decoder --encoder runs/v6/clone/encoder.pt --init runs/roam/v6-it3/init/decoder.zip
+  --frames <agreed> --workers 6`.
+- Add the **decoder behaviour-cloning anchor** first (Phase 4): `sac.anchor_penalty` is currently
+  encoder-only, so a decoder round can still drift. Anchor to the DAgger actor with a small fixed α.
+- `sac-validate` + `roam_eval.round_eligible`; accept the round only on G1 and G2, else revert to
+  the DAgger actor and record. Budget/kill rule: see Open decisions — ask before starting.
 
 ### Task 5: Full evaluation (G3)
 - `evaluate --task free_roam --policy <decoder> --encoder runs/v6/clone/encoder.pt --episodes 50
