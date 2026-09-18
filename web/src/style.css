@@ -663,7 +663,9 @@ main {
   bottom: 14px;
   z-index: 12;
   display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
+  align-content: flex-end;
   gap: 12px;
   overflow-x: auto;
   pointer-events: auto;
@@ -707,8 +709,8 @@ main {
   align-items: start;
 }
 .bar-group-console {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: max-content;
 }
 /* Controls and camera live in one card as two stacked rows/layers. */
 .bar-row {
@@ -993,7 +995,21 @@ main {
     gap: 8px;
   }
   .bottom-bar {
-    right: 138px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    height: 200px;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .bottom-bar > .bar-group {
+    flex: 0 0 auto;
+    width: min(88vw, 340px);
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   .hud-pinned #brain {
     height: 90px;
@@ -1256,6 +1272,82 @@ main {
 }
 .ghost-banner[hidden] {
   display: none;
+}
+
+/* Rolling history behind each Signals meter: same palette, quiet enough to read at a glance. */
+.scope {
+  display: block;
+  width: 100%;
+  height: 26px;
+  margin: 4px 0 6px;
+  background: #0b1922;
+  border: 1px solid #1f323b;
+  border-radius: 3px;
+}
+
+/* Decoder attribution: which cell types push each motion command, gradient x input. */
+.bar-group-attribution {
+  max-width: 360px;
+}
+.bar-group-attribution[hidden] {
+  display: none;
+}
+.attribution-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 18px;
+}
+.attr-channel {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.attr-name {
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--bp-ink-dim);
+}
+.attr-row {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) 46px;
+  gap: 6px;
+  align-items: center;
+  font-size: 9px;
+  color: #89a4af;
+}
+.attr-track {
+  height: 4px;
+  background: #233942;
+  overflow: hidden;
+}
+.attr-track i {
+  display: block;
+  height: 100%;
+}
+.attr-track i.pos {
+  background: var(--bp-success);
+}
+.attr-track i.neg {
+  background: var(--bp-command);
+}
+.attr-row em {
+  font-style: normal;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #acc5ce;
+}
+.attr-cells {
+  font-size: 8px;
+  color: #5f7a86;
+}
+@media (max-width: 700px) {
+  .bar-group-attribution {
+    max-width: none;
+  }
+  .attribution-grid {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 700px) {
   .bar-group-roam {

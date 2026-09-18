@@ -17,6 +17,7 @@ import { renderFlightView } from "./ui/flightView";
 import { renderHudPinned } from "./ui/hudPinned";
 import { renderBottomBar } from "./ui/bottomBar";
 import { renderFooter } from "./ui/footer";
+import { Scope } from "./charts/scope";
 import type { Frame, FreeRoamEvent, Metadata } from "./types";
 
 applyCssTokens();
@@ -322,13 +323,80 @@ const droneTarget = { pos: new THREE.Vector3(), quat: new THREE.Quaternion() };
 const targetTarget = new THREE.Vector3();
 const obstacleTarget = new THREE.Vector3();
 const POSE_TAU = 0.06;
+// Meters are rebuilt only when the row count or scale changes; otherwise the cached nodes
+// have their text/width patched in place, so 20 Hz telemetry stops thrashing innerHTML.
+type MeterRow = { name: HTMLSpanElement; bar: HTMLElement; value: HTMLElement };
+const meterCache = new Map<
+  string,
+  { max: number; rows: MeterRow[] }
+>();
 function meters(id: string, values: [string, number, string][], max = 1) {
-  el(id).innerHTML = values
-    .map(
-      ([name, value, label]) =>
-        `<div class="meter"><span>${name}</span><div><i style="width:${Math.min(100, Math.max(0, (value / max) * 100))}%"></i></div><em>${label}</em></div>`,
-    )
-    .join("");
+  const host = el(id);
+  let cache = meterCache.get(id);
+  if (!cache || cache.rows.length !== values.length || cache.max !== max) {
+    host.innerHTML = values
+      .map(() => `<div class="meter"><span></span><div><i></i></div><em></em></div>`)
+      .join("");
+    cache = {
+      max,
+      rows: Array.from(host.querySelectorAll<HTMLElement>(".meter")).map((root) => ({
+        name: root.querySelector("span")!,
+        bar: root.querySelector("i")!,
+        value: root.querySelector("em")!,
+      })),
+    };
+    meterCache.set(id, cache);
+  }
+  values.forEach(([name, value, label], i) => {
+    const row = cache!.rows[i];
+    row.name.textContent = name;
+    row.bar.style.width = `${Math.min(100, Math.max(0, (value / max) * 100))}%`;
+    row.value.textContent = label;
+  });
+}
+// Live history for the same signals the meters show: max=Infinity keeps the node; a series
+// count change (e.g. encoder v4's 4 cues vs v5/v6's population groups) rebuilds the scope.
+const scopeCache = new Map<string, { canvas: HTMLCanvasElement; scope: Scope }>();
+const SCOPE_COLORS = [
+  PALETTE.successTeal,
+  PALETTE.velocity,
+  PALETTE.amber,
+  PALETTE.command,
+  PALETTE.axisX,
+  PALETTE.axisY,
+  PALETTE.axisZ,
+];
+function pushScope(
+  id: string,
+  values: number[],
+  options: { min?: number; max?: number; target?: number } = {},
+) {
+  const canvas = el(id) as HTMLCanvasElement;
+  let entry = scopeCache.get(id);
+  if (!entry || entry.scope.series !== values.length) {
+    entry = {
+      canvas,
+      scope: new Scope(values.length, 300, {
+        colors: values.map((_, i) => SCOPE_COLORS[i % SCOPE_COLORS.length]),
+        ...options,
+      }),
+    };
+    scopeCache.set(id, entry);
+  }
+  entry.scope.push(values);
+}
+function drawScopes() {
+  for (const { canvas, scope } of scopeCache.values()) {
+    const dpr = Math.min(devicePixelRatio, 2);
+    const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+    const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    const ctx = canvas.getContext("2d");
+    if (ctx) scope.draw(ctx, width, height);
+  }
 }
 function updateRoom(room: Room) {
   applyRoom(roomGroup, room, vector);
@@ -615,6 +683,30 @@ function updateStatusStrip(f: Frame) {
   strip.textContent = parts.join("  ·  ");
   strip.dataset.state = severity;
 }
+// Which decoder inputs push each command, as gradient × (feature − mean). Refreshed only when
+// the server's attribution_seq changes (it costs ~90 ms, so it arrives a few times a second).
+const ATTRIBUTION_CHANNELS = ["forward", "lateral", "climb", "yaw"];
+let lastAttributionSeq = -1;
+function updateAttribution(f: Frame) {
+  const group = el("attribution-group");
+  group.hidden = f.attribution === null;
+  if (!f.attribution || f.attribution_seq === lastAttributionSeq) return;
+  lastAttributionSeq = f.attribution_seq;
+  const host = el("attribution");
+  host.innerHTML = ATTRIBUTION_CHANNELS.map((channel) => {
+    const entry = f.attribution!.channels[channel];
+    if (!entry) return "";
+    const peak = Math.max(1e-9, ...entry.types.map((t) => Math.abs(t.value)));
+    const bars = entry.types
+      .slice(0, 4)
+      .map(
+        (t) =>
+          `<div class="attr-row" title="${t.type} ${t.value >= 0 ? "+" : ""}${t.value.toFixed(3)}"><span>${t.type.replace(/_/g, " ")}</span><div class="attr-track"><i class="${t.value >= 0 ? "pos" : "neg"}" style="width:${(Math.abs(t.value) / peak) * 100}%"></i></div><em>${t.value >= 0 ? "+" : ""}${t.value.toFixed(3)}</em></div>`,
+      )
+      .join("");
+    return `<div class="attr-channel"><span class="attr-name">${channel}</span>${bars}<span class="attr-cells">cells ${entry.cells.slice(0, 4).join(" · ")}</span></div>`;
+  }).join("");
+}
 function update(f: Frame) {
   latest = f;
   el("status").textContent = f.paused ? "Simulation paused" : "Local simulation connected";
@@ -714,6 +806,22 @@ function update(f: Frame) {
   el("budget-note").textContent = budget?.samples
     ? `${budget.samples} samples · ${f.real_time_factor.toFixed(2)}× real time · ${f.missed_deadlines} missed deadlines`
     : "No trained decoder loaded — nothing to time.";
+  // History behind the meters: one rolling scope per signal group (15 s at 20 Hz).
+  pushScope(
+    "cues-scope",
+    sensoryRows.map(([, value]) => value),
+    { min: 0, max: 2 },
+  );
+  pushScope(
+    "readouts-scope",
+    ["power_l", "power_r", "steer_l", "steer_r", "escape", "wing_l", "wing_r"].map(
+      (k) => f.readouts[k] ?? 0,
+    ),
+  );
+  pushScope("motors-scope", f.state.actual_rpm, { min: 0, max: 22000 });
+  if (p50 !== null && p95 !== null) {
+    pushScope("budget-scope", [p50, p95], { min: 0, target: budgetTarget });
+  }
   el("command").textContent =
     `Motion [m/s, rad/s]: ${f.command.map((v) => v.toFixed(2)).join(" · ")}`;
   el("error").textContent =
@@ -722,6 +830,7 @@ function update(f: Frame) {
   updateFreeRoam(f);
   updateRoamOverlays(f);
   updateStatusStrip(f);
+  updateAttribution(f);
 }
 function connect() {
   socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
@@ -884,6 +993,7 @@ function render(now = performance.now()) {
   locator.position.set(drone.position.x, 0.003, drone.position.z);
   glowDecal.position.set(drone.position.x, 0.002, drone.position.z);
   if (latest) updateDebugVectors(latest);
+  drawScopes();
   applyCameraMode();
   for (const v of [world, brain, flyview]) {
     v.controls.update();

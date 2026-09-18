@@ -140,6 +140,26 @@ try {
     passed.push("free-roam group hidden (no free-roam decoder loaded)");
   }
 
+  // Rolling scopes draw into backing canvases; attribution explains the decoder's commands.
+  const cuesScope = page.locator("#cues-scope");
+  assert.ok(await cuesScope.isVisible(), "sensory scope visible");
+  assert.ok(
+    await cuesScope.evaluate((canvas) => canvas.width > 0 && canvas.height > 0),
+    "sensory scope has backing pixels",
+  );
+  passed.push("rolling signal scopes");
+  if (await page.locator("#attribution-group").isVisible()) {
+    await page.waitForFunction(
+      () => document.querySelectorAll("#attribution .attr-channel").length >= 4,
+    );
+    const attribution = await text(page, "#attribution");
+    assert.match(attribution, /forward/);
+    assert.match(attribution, /lateral/);
+    passed.push("attribution panel (per-channel decoder contributions)");
+  } else {
+    passed.push("attribution hidden (no decoder loaded)");
+  }
+
   const episode = await text(page, "#episode");
   const beforeReload = await tickOf(page);
   await page.reload();

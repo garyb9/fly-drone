@@ -1,3 +1,4 @@
+import { renderAttribution } from "./attribution";
 import { renderFreeRoam } from "./freeRoam";
 
 export function renderBottomBar(): string {
@@ -6,13 +7,14 @@ export function renderBottomBar(): string {
 <section class="bar-group bar-group-signals">
 <div class="bar-head"><h3>Signals</h3><span class="bar-head-meta">full graph</span></div>
 <div class="bar-grid">
-<div><span class="bar-label">sensory current</span><div id="cues" class="meters"></div></div>
-<div><span class="bar-label">neural readout</span><div id="readouts" class="meters"></div></div>
-<div><span class="bar-label">actual / commanded rpm</span><div id="motors" class="meters"></div></div>
-<div><span class="bar-label">compute budget</span><div id="budget" class="meters"></div><em class="bar-note" id="budget-note">—</em></div>
+<div><span class="bar-label">sensory current</span><canvas class="scope" id="cues-scope" aria-hidden="true"></canvas><div id="cues" class="meters"></div></div>
+<div><span class="bar-label">neural readout</span><canvas class="scope" id="readouts-scope" aria-hidden="true"></canvas><div id="readouts" class="meters"></div></div>
+<div><span class="bar-label">actual / commanded rpm</span><canvas class="scope" id="motors-scope" aria-hidden="true"></canvas><div id="motors" class="meters"></div></div>
+<div><span class="bar-label">compute budget</span><canvas class="scope" id="budget-scope" aria-hidden="true"></canvas><div id="budget" class="meters"></div><em class="bar-note" id="budget-note">—</em></div>
 </div>
 </section>
 ${renderFreeRoam()}
+${renderAttribution()}
 <section class="bar-group bar-group-console">
 <div class="bar-head"><h3>Controls &amp; camera</h3><span class="bar-head-meta">episode <b id="episode">0</b></span></div>
 <div class="bar-row bar-row-controls">
