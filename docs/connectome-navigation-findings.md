@@ -8,7 +8,9 @@ not scheduled.
 
 It records no new biology and changes nothing. It is background for a possible future milestone
 and a filter for what to ignore. External links are collected in
-[`references.md`](references.md#connectome-mining-and-navigation-circuit-external).
+[`references.md`](references.md#connectome-mining-and-navigation-circuit-external). The sibling
+survey of connectome-driven bodies (drones, robots, reservoirs) is
+[`external-prior-art.md`](external-prior-art.md).
 
 ## 1. Provenance and what kind of claim each statement is
 

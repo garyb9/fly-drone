@@ -175,7 +175,7 @@ shows mode-averaging; see the action spec §5.
 | Risk | Evidence so far | Mitigation |
 | --- | --- | --- |
 | Spatial current too weak to drive the graph | Real: Mi1/Tm3 → 0; Tm4 → LC4 0.29 at full drive | Use Tm4/T2; retain the direct LC4/LPLC2 route; per-patch gain is a tunable in the encoder head |
-| The map is not truly retinotopic | Tm4 has a clean 2D sheet; the visual-axis correspondence is unverified | Functional mapping is enough for the agent; verify with the spatial-silence gate, not anatomy |
+| The map is not truly retinotopic | Tm4 has a clean 2D sheet; the visual-axis correspondence is unverified | Functional mapping is enough for the agent; verify with the spatial-silence gate, not anatomy. Workstream A of [`2026-09-18-prior-art-harvest-design.md`](2026-09-18-prior-art-harvest-design.md) measures the PCA-axis/ommatidial-axis alignment directly |
 | LPLC2 unreachable except directly | Confirmed (Tm4/T2 → LPLC2 ≈ 0) | Inject LPLC2 directly; keep it in the channel set |
 | Widening increases SAC search | — | Clone init + predictive auxiliary objective + curriculum |
 | `learned-v6` invalidates v5 round-0 data | Certain | Land after the Phase 2 re-run; v5 stays reproducible |

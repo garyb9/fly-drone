@@ -79,3 +79,32 @@ and what, if anything, this project adopts from them.
 - **fly-brain-spectacles** (PtPavloTkachenko): MaleCNS on Snap Spectacles, with a bit-exact Metal
   GPU brain kernel and an explicit "real vs. engineered" decisions log.
   <https://github.com/PtPavloTkachenko/fly-brain-spectacles>.
+
+## Connectome-driven bodies (prior art)
+
+Projects that put a fly connectome in a body. Each is surveyed, with what this project takes and what
+it rejects, in [`external-prior-art.md`](external-prior-art.md); the harvest design is
+[`superpowers/specs/2026-09-18-prior-art-harvest-design.md`](superpowers/specs/2026-09-18-prior-art-harvest-design.md).
+
+- **FlyDrones** (SpikeCalls): frozen MaleCNS as a drone pilot; optic flow → T4/T5/LPLC2/LC4, ridge
+  readout → RC sticks. <https://github.com/SpikeCalls/FlyDrones> (live browser demo:
+  <https://spikecalls.github.io/FlyDrones/>).
+- **fly.ai** (alextitonis): frozen MaleCNS reservoir (`flybrain` on PyPI), feature-detector input and
+  a PCA+linear readout; publishes laterality checks and negative results. Source:
+  <https://github.com/alextitonis/fly.ai>; package: <https://pypi.org/project/flybrain/0.1.0/>.
+- **dylankainth/flybrain**: FlyWire female brain on a Tello, with an opt-in retinotopic eye map from
+  Buchner (1971) ommatidial directions. <https://github.com/dylankainth/flybrain>.
+- **fly-self-driving** (suanmiao): frozen MaleCNS adjacency (trained per-synapse gains) driving a
+  simulated car with DAgger; shuffled-graph control. <https://github.com/suanmiao/fly-self-driving>.
+- **FlyGM** (Jin, Zhu, Zhang, Sui): whole-brain connectome as a graph policy trained with RL on
+  `flybody`. <https://arxiv.org/abs/2602.17997> · <https://lnsgroup.cc/research/FlyGM>.
+- **DOOMFLY** (nftechie): frozen MaleCNS plus a dopamine-gated plasticity rule in a Doom arena;
+  failed its validation gates. <https://github.com/nftechie/doomfly>.
+- **flybrain-robot-bridge** (Frankweb33): a mock neural backend with a MaleCNS stub.
+  <https://github.com/Frankweb33/flybrain-robot-bridge>.
+- **Straw lab `drosophila_eye_map`**: digitized Buchner-1971 ommatidial directions (BSD).
+  <https://github.com/strawlab/drosophila_eye_map>.
+- **flyhard** (MarkUnthank): the connectome-as-network recipe fly-self-driving builds on.
+  <https://github.com/MarkUnthank/flyhard>.
+- **Eon Systems embodied brain emulation**:
+  <https://eon.systems/updates/embodied-brain-emulation>.

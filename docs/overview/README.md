@@ -12,6 +12,8 @@ written companion: architecture, math, training, evidence and roadmap. The deep 
 [`../training.md`](../training.md), [`../free-roam.md`](../free-roam.md) and
 [`../validation.md`](../validation.md). External navigation-connectome findings, and what this
 project does with them, are in [`../connectome-navigation-findings.md`](../connectome-navigation-findings.md).
+Projects that put a fly connectome in a body, and the pieces this project takes from them, are in
+[`../external-prior-art.md`](../external-prior-art.md).
 
 ## 1. The goal, stated as a contract
 
