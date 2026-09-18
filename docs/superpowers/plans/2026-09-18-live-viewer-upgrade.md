@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
 > (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use
-> checkbox (`- [ ]`) syntax for tracking.
+> checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Turn the live viewer into a free-roam instrument that shows the connectome's causal
 behaviour, without reintroducing the left drawer that was deliberately removed in `2b5e0b5`.
@@ -50,23 +50,23 @@ Modified:
 ## Phase 0 — Foundations
 
 ### Task 0.1: Shared UI types
-- [ ] Create `web/src/types.ts` with `Cell`, `Metadata`, `Frame` (including `outcome`,
+- [x] Create `web/src/types.ts` with `Cell`, `Metadata`, `Frame` (including `outcome`,
       `free_roam`, `attribution`), `FreeRoam`, `FreeRoamEvent`, `Outcome`, `Attribution`.
-- [ ] Import them in `main.ts`; delete the local copies.
+- [x] Import them in `main.ts`; delete the local copies.
 - Verify: `yarn typecheck && yarn lint && yarn test`.
 
 ### Task 0.2: Derived free-roam rates (server)
-- [ ] Extend the `free_roam` frame payload in `server.py` with `elapsed`,
+- [x] Extend the `free_roam` frame payload in `server.py` with `elapsed`,
       `beacons_per_min`, `collisions_per_min`, `coverage = visited_cells / 256`.
-- [ ] Add assertions to `tests/test_server.py`.
+- [x] Add assertions to `tests/test_server.py`.
 - Verify: `env -u PYTHONPATH .venv/bin/python -m pytest tests/test_server.py -q`.
 
 ### Task 0.3: Attribution cadence/seq (server)
-- [ ] Add `attribution_seq` to the frame and a `ATTRIBUTION_EVERY` constant (default 12) so the
+- [x] Add `attribution_seq` to the frame and a `ATTRIBUTION_EVERY` constant (default 12) so the
       UI can refresh the attribution panel without guessing.
 
 ### Task 0.4: Scope renderer
-- [ ] `web/src/charts/scope.ts`: `Scope` class with a fixed-length ring buffer, multi-series
+- [x] `web/src/charts/scope.ts`: `Scope` class with a fixed-length ring buffer, multi-series
       autoscaling, optional target line, `push(values)` + `draw(ctx)`. Vitest for buffer/scale.
 
 Browser-check grows **with each feature**: the free-roam assertions land in Phase 1, the scope
@@ -77,34 +77,34 @@ is added before the element it checks exists.
 
 ## Phase 1 — Free-Roam Mission Control
 
-- [ ] `web/src/ui/freeRoam.ts`: scoreboard (beacons/min, collisions/min, dodged/hit, coverage,
+- [x] `web/src/ui/freeRoam.ts`: scoreboard (beacons/min, collisions/min, dodged/hit, coverage,
       clearance, level), probe cluster (`Beacon here`, `Threat now`, `Silence vision`,
       `Silence loom`, `Ghost`, `Restore`), level selector, one-line event ticker.
-- [ ] Wire in `main.ts` to `place_beacon`, `launch_threat`, `pathway`, `ghost`, `restore`,
+- [x] Wire in `main.ts` to `place_beacon`, `launch_threat`, `pathway`, `ghost`, `restore`,
       `reset {level, seed}`; reflect authoritative `free_roam.silenced` / `ghost`.
-- [ ] World overlays: beacon-visible ring, clearance halo, threat trajectory, GHOST watermark.
-- [ ] Status strip (`.bar-foot`): `policy_status`, active policy, task, level, seed, RTF,
+- [x] World overlays: beacon-visible ring, clearance halo, threat trajectory, GHOST watermark.
+- [x] Status strip (`.bar-foot`): `policy_status`, active policy, task, level, seed, RTF,
       missed deadlines.
 - Verify: manual at L2/L3 + `yarn browser:check`.
 
 ## Phase 2 — Live Scopes + Attribution
 
-- [ ] Replace per-frame `innerHTML` meters in the Signals group with `Scope` canvases (sensory,
+- [x] Replace per-frame `innerHTML` meters in the Signals group with `Scope` canvases (sensory,
       readouts, motors, budget) while keeping numeric readouts.
-- [ ] Attribution panel: four channel rows, signed top-type bars, hover tooltip, top cell ids;
+- [x] Attribution panel: four channel rows, signed top-type bars, hover tooltip, top cell ids;
       labelled "gradient × input, decoder-only".
-- [ ] Performance: ring buffers at ~10 Hz, rAF draw, cached DOM, reused `Vector3`/`Color`,
+- [x] Performance: ring buffers at ~10 Hz, rAF draw, cached DOM, reused `Vector3`/`Color`,
       no per-frame `innerHTML`.
 - Verify: `yarn test`, manual with a loaded decoder.
 
 ## Phase 3 — Accessibility + Responsive
 
-- [ ] Type-scale + contrast pass (labels ≥ 11px, body 13px, tabular numerals).
-- [ ] Semantics: `role="meter"` + `aria-valuenow`, `aria-live` status/outcome/events,
+- [x] Type-scale + contrast pass (labels ≥ 11px, body 13px, tabular numerals).
+- [x] Semantics: `role="meter"` + `aria-valuenow`, `aria-live` status/outcome/events,
       `aria-pressed` toggles, labelled icon controls.
-- [ ] Keyboard shortcuts + `?` help overlay (Space, R, F, 1/2/3, G).
-- [ ] Color-blind-safe mode (persisted) with shape/dash cues, not colour alone.
-- [ ] Mobile collapsible bottom sheet; no horizontal scroll at 390×844; reduced-motion coverage.
+- [x] Keyboard shortcuts + `?` help overlay (Space, R, F, 1/2/3, G).
+- [x] Color-blind-safe mode (persisted) with shape/dash cues, not colour alone.
+- [x] Mobile collapsible bottom sheet; no horizontal scroll at 390×844; reduced-motion coverage.
 - Verify: keyboard walkthrough, `yarn browser:check` desktop + mobile, `yarn test:tokens`.
 
 ## Self-Review

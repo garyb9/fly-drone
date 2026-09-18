@@ -13,9 +13,9 @@ export function renderHudPinned(): string {
 </div>
 <div class="turn-rate"><span>TURN RATE</span><em id="turn-rate">—</em></div>
 <div class="vector-legend">
-<span><i style="background:#ffb15c"></i><span class="legend-label">heading</span></span>
-<span><i style="background:#6fe2ff"></i><span class="legend-label">velocity</span></span>
-<span><i style="background:#ff6fd8"></i><span class="legend-label">command</span></span>
+<span><i id="legend-heading" style="background:#ffb15c"></i><span class="legend-label">heading</span></span>
+<span><i id="legend-velocity" style="background:#6fe2ff"></i><span class="legend-label">velocity</span></span>
+<span><i id="legend-command" style="background:#ff6fd8"></i><span class="legend-label">command</span></span>
 <span><i style="background:#ff5c5c"></i><span class="legend-label">world X</span></span>
 <span><i style="background:#5cff7a"></i><span class="legend-label">world Z↑</span></span>
 <span><i style="background:#5cb0ff"></i><span class="legend-label">world -Y</span></span>

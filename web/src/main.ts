@@ -325,7 +325,12 @@ const obstacleTarget = new THREE.Vector3();
 const POSE_TAU = 0.06;
 // Meters are rebuilt only when the row count or scale changes; otherwise the cached nodes
 // have their text/width patched in place, so 20 Hz telemetry stops thrashing innerHTML.
-type MeterRow = { name: HTMLSpanElement; bar: HTMLElement; value: HTMLElement };
+type MeterRow = {
+  root: HTMLElement;
+  name: HTMLSpanElement;
+  bar: HTMLElement;
+  value: HTMLElement;
+};
 const meterCache = new Map<
   string,
   { max: number; rows: MeterRow[] }
@@ -339,11 +344,17 @@ function meters(id: string, values: [string, number, string][], max = 1) {
       .join("");
     cache = {
       max,
-      rows: Array.from(host.querySelectorAll<HTMLElement>(".meter")).map((root) => ({
-        name: root.querySelector("span")!,
-        bar: root.querySelector("i")!,
-        value: root.querySelector("em")!,
-      })),
+      rows: Array.from(host.querySelectorAll<HTMLElement>(".meter")).map((root) => {
+        root.setAttribute("role", "meter");
+        root.setAttribute("aria-valuemin", "0");
+        root.setAttribute("aria-valuemax", String(max));
+        return {
+          root,
+          name: root.querySelector("span")!,
+          bar: root.querySelector("i")!,
+          value: root.querySelector("em")!,
+        };
+      }),
     };
     meterCache.set(id, cache);
   }
@@ -352,6 +363,8 @@ function meters(id: string, values: [string, number, string][], max = 1) {
     row.name.textContent = name;
     row.bar.style.width = `${Math.min(100, Math.max(0, (value / max) * 100))}%`;
     row.value.textContent = label;
+    row.root.setAttribute("aria-valuenow", value.toFixed(3));
+    row.root.setAttribute("aria-label", `${name} ${label}`);
   });
 }
 // Live history for the same signals the meters show: max=Infinity keeps the node; a series
@@ -955,6 +968,73 @@ el("roam-silence-loom").onclick = () =>
 el("roam-ghost").onclick = () =>
   send({ op: "ghost", value: !latest?.free_roam?.ghost });
 el("roam-restore").onclick = () => send({ op: "restore" });
+// Semantic-vector palette: default blueprint colours, or an Okabe-Ito colour-blind-safe set
+// (yellow / blue / vermillion). Persisted per browser; the labelled X/Y/Z gizmo is unchanged.
+const CVD_SAFE_KEY = "fly-drone.cvd-safe";
+const VECTOR_COLORS = {
+  default: { heading: PALETTE.amber, velocity: PALETTE.velocity, command: PALETTE.command },
+  safe: { heading: "#f0e442", velocity: "#0072b2", command: "#d55e00" },
+};
+function applyVectorPalette(safe: boolean) {
+  const colors = safe ? VECTOR_COLORS.safe : VECTOR_COLORS.default;
+  headingArrow.setColor(new THREE.Color(colors.heading));
+  velocityArrow.setColor(new THREE.Color(colors.velocity));
+  commandArrow.setColor(new THREE.Color(colors.command));
+  el("legend-heading").style.background = colors.heading;
+  el("legend-velocity").style.background = colors.velocity;
+  el("legend-command").style.background = colors.command;
+  el("cb-safe").classList.toggle("active", safe);
+  el("cb-safe").setAttribute("aria-pressed", String(safe));
+}
+el("cb-safe").onclick = () => {
+  const safe = el("cb-safe").getAttribute("aria-pressed") !== "true";
+  localStorage.setItem(CVD_SAFE_KEY, safe ? "1" : "0");
+  applyVectorPalette(safe);
+};
+applyVectorPalette(localStorage.getItem(CVD_SAFE_KEY) === "1");
+function setHelp(open: boolean) {
+  el("help-overlay").hidden = !open;
+  if (open) el("help-close").focus();
+}
+el("help-open").onclick = () => setHelp(true);
+el("help-close").onclick = () => setHelp(false);
+window.addEventListener("keydown", (event) => {
+  const target = event.target as HTMLElement | null;
+  if (target && ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName)) return;
+  if (event.key === "?") {
+    setHelp(el("help-overlay").hidden);
+    event.preventDefault();
+    return;
+  }
+  if (event.key === "Escape") {
+    setHelp(false);
+    return;
+  }
+  switch (event.key.toLowerCase()) {
+    case " ":
+      event.preventDefault();
+      send({ op: "pause", value: !latest?.paused });
+      break;
+    case "r":
+      runTrial();
+      break;
+    case "f":
+      el("cam-follow").click();
+      break;
+    case "1":
+      setCameraMode("orbit");
+      break;
+    case "2":
+      setCameraMode("fpv");
+      break;
+    case "3":
+      setCameraMode("tpv");
+      break;
+    case "g":
+      if (latest?.free_roam) send({ op: "ghost", value: !latest.free_roam.ghost });
+      break;
+  }
+});
 function applyCameraMode() {
   if (cameraMode === "fpv") {
     const cam = airframe.eyes[0];

@@ -86,7 +86,7 @@ body {
   min-width: 40px;
 }
 .panel-meta {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1px;
   color: #8ba6b2;
   background: #172730;
@@ -122,7 +122,7 @@ body {
 }
 .world-bottom > div > span {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.7px;
   color: #88a0ac;
 }
@@ -146,7 +146,7 @@ body {
   pointer-events: auto;
 }
 .camera-controls button {
-  font-size: 9px;
+  font-size: 10px;
   padding: 8px 10px;
 }
 .camera-controls button.active {
@@ -159,15 +159,15 @@ body {
   bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.8px;
-  color: #4f707e;
+  color: #7fa8b3;
   z-index: 1;
 }
 .brain-legend {
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 10px;
   color: #78939e;
   padding: 0 14px 10px;
 }
@@ -192,7 +192,7 @@ body {
   gap: 4px 10px;
   border-top: 1px solid #233741;
   padding: 9px 12px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.3px;
   text-transform: uppercase;
   color: #78939e;
@@ -211,7 +211,7 @@ canvas {
 }
 select {
   font-family: inherit;
-  font-size: 9px;
+  font-size: 10px;
   background-color: #13232c;
   color: #a7bdc6;
   border: 1px solid #2f444e;
@@ -254,7 +254,7 @@ button.primary {
   gap: 6px;
 }
 .inspect button {
-  font-size: 8px;
+  font-size: 10px;
   padding: 5px 9px;
   flex: 1;
 }
@@ -283,7 +283,7 @@ button.primary {
   image-rendering: pixelated;
 }
 .eyes figcaption {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   color: #6b8794;
   margin-top: 4px;
@@ -301,7 +301,7 @@ button.primary {
 }
 h3 {
   font-weight: 400;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.5px;
   color: #809ba7;
   margin: 0 0 14px;
@@ -312,7 +312,7 @@ h3 {
   align-items: center;
   gap: 7px;
   margin: 9px 0;
-  font-size: 8px;
+  font-size: 10px;
   color: #89a4af;
 }
 .meter > div {
@@ -328,7 +328,7 @@ h3 {
   font-style: normal;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  font-size: 8px;
+  font-size: 10px;
   color: #acc5ce;
 }
 #motors .meter {
@@ -355,7 +355,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 9px;
+  font-size: 10px;
   color: #758f9b;
   max-width: 100%;
   line-height: 1.5;
@@ -366,9 +366,9 @@ footer {
   padding: 0 29px 24px;
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1px;
-  color: #486470;
+  color: #7fa8b3;
 }
 @media (max-width: 1000px) {
   .signal-grid {
@@ -490,7 +490,7 @@ footer {
   gap: 4px;
 }
 .roam-stats span {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.5px;
   color: var(--bp-ink-dim);
 }
@@ -512,7 +512,7 @@ footer {
 }
 .roam-log-entry {
   margin: 0;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--bp-ink-dim);
 }
 .roam-log-entry.warn {
@@ -580,7 +580,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   color: #94aab5;
   border-bottom: 1px solid #263841;
@@ -603,7 +603,7 @@ main {
   padding: 0 10px;
   display: flex;
   align-items: center;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   color: #94aab5;
   border-bottom: 1px solid #263841;
@@ -635,7 +635,7 @@ main {
 }
 .telemetry span {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   color: #88a0ac;
 }
@@ -689,10 +689,10 @@ main {
 }
 .bar-head h3 {
   margin: 0;
-  font-size: 9px;
+  font-size: 10px;
 }
 .bar-head-meta {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: #6f8994;
@@ -752,10 +752,10 @@ main {
 }
 .bar-cluster em {
   font-style: normal;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1.1px;
   text-transform: uppercase;
-  color: #5f7a86;
+  color: #8ba6b2;
 }
 .bar-foot {
   display: flex;
@@ -764,18 +764,18 @@ main {
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid #1f323b;
-  font-size: 8px;
+  font-size: 10px;
   color: #78929e;
 }
 .bar-foot #error {
   text-align: right;
-  color: #5f7a86;
+  color: #8ba6b2;
 }
 .bottom-bar .meter {
   grid-template-columns: 46px 1fr 40px;
   gap: 5px;
   margin: 6px 0;
-  font-size: 9px;
+  font-size: 10px;
 }
 .bottom-bar #motors .meter {
   grid-template-columns: 18px 1fr 74px;
@@ -788,7 +788,7 @@ main {
 }
 .bar-label {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: #78929e;
@@ -797,13 +797,13 @@ main {
 .bar-note {
   display: block;
   font-style: normal;
-  font-size: 8px;
+  font-size: 10px;
   color: #89a4af;
   margin-top: 6px;
   max-width: 190px;
 }
 .bottom-bar button {
-  font-size: 9px;
+  font-size: 10px;
   padding: 6px 9px;
 }
 .bottom-bar .button-row {
@@ -831,7 +831,7 @@ main {
   pointer-events: auto;
 }
 .drawer-rail button {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.4px;
   padding: 10px 4px;
   flex: none;
@@ -926,7 +926,7 @@ main {
   transform-origin: center;
 }
 .attitude-gauge span {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1px;
   color: var(--bp-ink-dim);
 }
@@ -941,7 +941,7 @@ main {
   justify-content: space-between;
   gap: 10px;
   margin-top: 8px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1px;
   color: var(--bp-ink-dim);
 }
@@ -956,7 +956,7 @@ main {
   flex-direction: column;
   gap: 3px;
   margin-top: 10px;
-  font-size: 8px;
+  font-size: 10px;
   color: #78939e;
 }
 .vector-legend span {
@@ -1035,7 +1035,7 @@ main {
   }
   .fly-mini-head {
     height: 18px;
-    font-size: 6px;
+    font-size: 9px;
   }
   .instruments {
     padding: 8px 10px;
@@ -1048,7 +1048,7 @@ main {
   }
   .turn-rate {
     margin-top: 5px;
-    font-size: 6px;
+    font-size: 9px;
   }
   .vector-legend {
     flex-direction: row;
@@ -1143,7 +1143,7 @@ main {
   top: 16px;
   right: 654px;
   font-family: "Space Grotesk", sans-serif;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1.5px;
   color: var(--bp-amber);
   pointer-events: none;
@@ -1303,7 +1303,7 @@ main {
   gap: 3px;
 }
 .attr-name {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--bp-ink-dim);
@@ -1313,7 +1313,7 @@ main {
   grid-template-columns: 66px minmax(0, 1fr) 46px;
   gap: 6px;
   align-items: center;
-  font-size: 9px;
+  font-size: 10px;
   color: #89a4af;
 }
 .attr-track {
@@ -1338,8 +1338,8 @@ main {
   color: #acc5ce;
 }
 .attr-cells {
-  font-size: 8px;
-  color: #5f7a86;
+  font-size: 10px;
+  color: #8ba6b2;
 }
 @media (max-width: 700px) {
   .bar-group-attribution {
@@ -1353,4 +1353,74 @@ main {
   .bar-group-roam {
     max-width: none;
   }
+}
+
+/* Help overlay: shortcuts and the honest-limits note, opened with ? or the console button. */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 12, 17, 0.72);
+  pointer-events: auto;
+}
+.help-overlay[hidden] {
+  display: none;
+}
+.help-card {
+  width: min(430px, calc(100vw - 32px));
+  background: var(--bp-card);
+  border: 1px solid var(--bp-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.help-head h2 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+.help-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.help-card li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 13px;
+  color: #dbe6e8;
+}
+.help-card li span {
+  color: #a7bdc6;
+}
+kbd {
+  font-family: "Space Grotesk", monospace;
+  font-size: 11px;
+  min-width: 22px;
+  text-align: center;
+  padding: 2px 6px;
+  border: 1px solid var(--bp-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: #0d171e;
+  color: var(--bp-ink);
+}
+.help-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--bp-ink-dim);
+  line-height: 1.5;
 }

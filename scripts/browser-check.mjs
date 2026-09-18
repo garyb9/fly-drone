@@ -160,6 +160,26 @@ try {
     passed.push("attribution hidden (no decoder loaded)");
   }
 
+  // Accessibility: meters expose values to assistive tech, the help overlay toggles, and the
+  // colour-blind-safe vector palette is a real persisted control.
+  const meter = page.locator("#motors .meter").first();
+  assert.equal(await meter.getAttribute("role"), "meter");
+  assert.ok((await meter.getAttribute("aria-valuenow")) !== null);
+  passed.push("meter ARIA roles");
+
+  await page.getByRole("button", { name: "?", exact: true }).click();
+  await page.waitForFunction(() => !document.querySelector("#help-overlay").hidden);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.querySelector("#help-overlay").hidden);
+  passed.push("help overlay (open, Escape to close)");
+
+  const cvd = page.getByRole("button", { name: "CVD-safe" });
+  await cvd.click();
+  assert.equal(await cvd.getAttribute("aria-pressed"), "true");
+  await cvd.click();
+  assert.equal(await cvd.getAttribute("aria-pressed"), "false");
+  passed.push("colour-blind-safe vector palette");
+
   const episode = await text(page, "#episode");
   const beforeReload = await tickOf(page);
   await page.reload();
