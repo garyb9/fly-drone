@@ -97,8 +97,9 @@ try {
   assert.ok(statusStrip && statusStrip.length > 0, "status strip populated");
   passed.push("decoder status strip");
 
-  // Free-roam mission control is mode-aware: present only when a free-roam decoder is loaded.
-  if (await page.locator("#roam-group").isVisible()) {
+  // Free-roam mission control is mode-aware: its tab exists only when a free-roam decoder is loaded.
+  if (await page.locator("#tab-roam").isVisible()) {
+    await page.locator("#tab-roam").click();
     await page.waitForFunction(() => {
       const value = document.querySelector("#roam-beacons")?.textContent ?? "";
       return value !== "" && value !== "—";
@@ -135,30 +136,37 @@ try {
       () => getComputedStyle(document.querySelector("#ghost-banner")).display === "none",
     );
     await page.getByRole("button", { name: "Threat now", exact: true }).click();
-    passed.push("free-roam mission control (scoreboard, causal probes, ghost)");
+    passed.push("free-roam tab (scoreboard, causal probes, ghost)");
   } else {
-    passed.push("free-roam group hidden (no free-roam decoder loaded)");
+    passed.push("free-roam tab hidden (no free-roam decoder loaded)");
   }
 
-  // Rolling scopes draw into backing canvases; attribution explains the decoder's commands.
+  // Rolling scopes live in the Signals tab.
+  await page.locator("#tab-signals").click();
   const cuesScope = page.locator("#cues-scope");
   assert.ok(await cuesScope.isVisible(), "sensory scope visible");
   assert.ok(
     await cuesScope.evaluate((canvas) => canvas.width > 0 && canvas.height > 0),
     "sensory scope has backing pixels",
   );
-  passed.push("rolling signal scopes");
-  if (await page.locator("#attribution-group").isVisible()) {
+  passed.push("rolling signal scopes (Signals tab)");
+
+  // Attribution is its own mode-aware tab.
+  if (await page.locator("#tab-attribution").isVisible()) {
+    await page.locator("#tab-attribution").click();
     await page.waitForFunction(
       () => document.querySelectorAll("#attribution .attr-channel").length >= 4,
     );
     const attribution = await text(page, "#attribution");
     assert.match(attribution, /forward/);
     assert.match(attribution, /lateral/);
-    passed.push("attribution panel (per-channel decoder contributions)");
+    passed.push("attribution tab (per-channel decoder contributions)");
   } else {
-    passed.push("attribution hidden (no decoder loaded)");
+    passed.push("attribution tab hidden (no decoder loaded)");
   }
+
+  // Back to the controls tab for the keyboard and palette checks below.
+  await page.locator("#tab-controls").click();
 
   // Accessibility: meters expose values to assistive tech, the help overlay toggles, and the
   // colour-blind-safe vector palette is a real persisted control.

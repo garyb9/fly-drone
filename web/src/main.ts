@@ -54,6 +54,24 @@ function runBootSequence(): void {
 }
 runBootSequence();
 const el = (id: string) => document.getElementById(id)!;
+// One bottom panel, several tabs. Mode-aware tabs (free roam, attribution) are hidden when
+// they carry no data; if the active tab disappears the view falls back to the controls.
+const TABS = ["controls", "signals", "roam", "attribution"] as const;
+type TabName = (typeof TABS)[number];
+function setTab(name: TabName) {
+  for (const tab of TABS) {
+    const selected = tab === name;
+    const button = el(`tab-${tab}`);
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-selected", String(selected));
+    el(`panel-${tab}`).hidden = !selected;
+  }
+}
+function setTabAvailable(tab: TabName, available: boolean) {
+  const button = el(`tab-${tab}`);
+  button.hidden = !available;
+  if (!available && button.classList.contains("active")) setTab("controls");
+}
 // The brain-activity pulse and the fly viewport's background share the site's
 // existing accent/surface tokens rather than introducing new colors.
 const ACTIVITY_HOT = hexToInt(PALETTE.successTeal);
@@ -648,7 +666,7 @@ function updateRoamOverlays(f: Frame) {
 function updateFreeRoam(f: Frame) {
   const roam = f.free_roam;
   const active = f.task === "free_roam" && roam !== null;
-  el("roam-group").hidden = !active;
+  setTabAvailable("roam", active);
   if (!active || !roam) return;
   el("roam-beacons").textContent = roam.beacons_per_min.toFixed(2);
   el("roam-collisions").textContent = roam.collisions_per_min.toFixed(2);
@@ -701,8 +719,7 @@ function updateStatusStrip(f: Frame) {
 const ATTRIBUTION_CHANNELS = ["forward", "lateral", "climb", "yaw"];
 let lastAttributionSeq = -1;
 function updateAttribution(f: Frame) {
-  const group = el("attribution-group");
-  group.hidden = f.attribution === null;
+  setTabAvailable("attribution", f.attribution !== null);
   if (!f.attribution || f.attribution_seq === lastAttributionSeq) return;
   lastAttributionSeq = f.attribution_seq;
   const host = el("attribution");
@@ -865,6 +882,9 @@ function connect() {
 }
 function send(message: object) {
   if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
+}
+for (const tab of TABS) {
+  el(`tab-${tab}`).addEventListener("click", () => setTab(tab));
 }
 el("pause").onclick = () => send({ op: "pause", value: !latest?.paused });
 el("reset").onclick = () => runTrial();

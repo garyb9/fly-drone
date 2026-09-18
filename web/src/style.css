@@ -710,7 +710,39 @@ main {
 }
 .bar-group-console {
   flex: 1 1 auto;
-  min-width: max-content;
+  min-width: 0;
+}
+/* Tab strip: one bottom panel, one visible panel at a time. */
+.bar-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #1f323b;
+}
+.bar-tab {
+  font-size: 10px;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+.bar-tab.active {
+  background: var(--bp-success);
+  color: #112c2c;
+  border-color: var(--bp-success);
+}
+.bar-tabs .bar-head-meta {
+  margin-left: auto;
+}
+.bar-panel {
+  max-height: 46vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-border) var(--bp-surface);
+}
+.bar-panel[hidden] {
+  display: none;
 }
 /* Controls and camera live in one card as two stacked rows/layers. */
 .bar-row {
@@ -998,18 +1030,16 @@ main {
     left: 8px;
     right: 8px;
     bottom: 8px;
-    height: 200px;
+    height: auto;
+    max-height: 62vh;
     flex-wrap: nowrap;
     align-items: stretch;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
   .bottom-bar > .bar-group {
-    flex: 0 0 auto;
-    width: min(88vw, 340px);
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
+    flex: 1 1 auto;
+    width: 100%;
   }
   .hud-pinned #brain {
     height: 90px;
@@ -1187,20 +1217,13 @@ main {
   }
 }
 
-/* Free-roam mission control: a mode-aware group inside the one bottom bar (no drawer).
-   Hidden entirely on non-free-roam tasks so the bar stays as lean as before. */
-.bar-group-roam {
-  max-width: 430px;
-}
-.bar-group-roam[hidden] {
-  display: none;
-}
-.bar-group-roam .roam-stats {
+/* Free-roam mission control: the mode-aware "Free roam" tab of the bottom panel. */
+#panel-roam .roam-stats {
   padding: 0;
   gap: 4px 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
-.bar-group-roam .roam-stats strong {
+#panel-roam .roam-stats strong {
   font-size: 15px;
 }
 .bar-row-roam {
@@ -1217,10 +1240,10 @@ main {
 .bar-row-roam .button-row {
   flex-wrap: wrap;
 }
-.bar-group-roam .bar-foot {
+#panel-roam .bar-foot {
   align-items: center;
 }
-.bar-group-roam #roam-event {
+#panel-roam #roam-event {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -1228,7 +1251,7 @@ main {
   white-space: nowrap;
   color: var(--bp-ink-dim);
 }
-.bar-group-roam #roam-visibility {
+#panel-roam #roam-visibility {
   flex: none;
   color: var(--bp-amber);
 }
@@ -1285,13 +1308,7 @@ main {
   border-radius: 3px;
 }
 
-/* Decoder attribution: which cell types push each motion command, gradient x input. */
-.bar-group-attribution {
-  max-width: 360px;
-}
-.bar-group-attribution[hidden] {
-  display: none;
-}
+/* Decoder attribution: the mode-aware "Attribution" tab, gradient x input per channel. */
 .attribution-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1342,16 +1359,11 @@ main {
   color: #8ba6b2;
 }
 @media (max-width: 700px) {
-  .bar-group-attribution {
-    max-width: none;
-  }
   .attribution-grid {
     grid-template-columns: 1fr;
   }
-}
-@media (max-width: 700px) {
-  .bar-group-roam {
-    max-width: none;
+  #panel-roam .roam-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
