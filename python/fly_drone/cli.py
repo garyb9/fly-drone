@@ -165,6 +165,12 @@ def main():
     p.add_argument("--init", help="previous round .zip, or the clone encoder.pt")
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument(
+        "--level",
+        type=int,
+        default=3,
+        help="free-roam arena level for the round (4 = threats without pillars, the curriculum)",
+    )
     p.add_argument("--buffer-size", type=int, default=100_000)
     p.add_argument(
         "--n-step",
@@ -296,6 +302,7 @@ def main():
                 workers=args.workers,
                 seed=args.seed,
                 buffer_size=args.buffer_size,
+                level=args.level,
                 actor_warmup=(
                     sac.ACTOR_WARMUP_FRAMES
                     if args.actor_warmup is None
