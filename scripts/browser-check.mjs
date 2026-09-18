@@ -97,9 +97,9 @@ try {
   assert.ok(statusStrip && statusStrip.length > 0, "status strip populated");
   passed.push("decoder status strip");
 
-  // Free-roam mission control is mode-aware: its tab exists only when a free-roam decoder is loaded.
-  if (await page.locator("#tab-roam").isVisible()) {
-    await page.locator("#tab-roam").click();
+  // Free-roam mission control is mode-aware: the section appears inside Controls & camera only
+  // when a free-roam decoder is loaded.
+  if (await page.locator("#roam-group").isVisible()) {
     await page.waitForFunction(() => {
       const value = document.querySelector("#roam-beacons")?.textContent ?? "";
       return value !== "" && value !== "—";
@@ -136,9 +136,9 @@ try {
       () => getComputedStyle(document.querySelector("#ghost-banner")).display === "none",
     );
     await page.getByRole("button", { name: "Threat now", exact: true }).click();
-    passed.push("free-roam tab (scoreboard, causal probes, ghost)");
+    passed.push("free-roam controls (scoreboard, causal probes, ghost)");
   } else {
-    passed.push("free-roam tab hidden (no free-roam decoder loaded)");
+    passed.push("free-roam controls hidden (no free-roam decoder loaded)");
   }
 
   // Rolling scopes live in the Signals tab.

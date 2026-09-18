@@ -43,12 +43,10 @@ export const DOM_IDS = {
   // Bottom bar: tabs, panels, controls, telemetry
   "tab-controls": "button",
   "tab-signals": "button",
-  "tab-roam": "button",
   "tab-attribution": "button",
   episode: "b",
   "panel-controls": "div",
   "panel-signals": "div",
-  "panel-roam": "div",
   "panel-attribution": "div",
   pause: "button",
   reset: "button",
@@ -80,6 +78,7 @@ export const DOM_IDS = {
   "status-strip": "span",
   error: "span",
   // Free roam
+  "roam-group": "div",
   "roam-beacons": "strong",
   "roam-collisions": "strong",
   "roam-threats": "strong",

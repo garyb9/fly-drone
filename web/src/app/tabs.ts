@@ -2,7 +2,7 @@ import { els } from "../dom";
 
 // One bottom panel, several tabs. Mode-aware tabs (free roam, attribution) are hidden when
 // they carry no data; if the active tab disappears the view falls back to the controls.
-export const TABS = ["controls", "signals", "roam", "attribution"] as const;
+export const TABS = ["controls", "signals", "attribution"] as const;
 export type TabName = (typeof TABS)[number];
 
 export function setTab(name: TabName): void {

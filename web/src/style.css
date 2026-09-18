@@ -1217,43 +1217,54 @@ main {
   }
 }
 
-/* Free-roam mission control: the mode-aware "Free roam" tab of the bottom panel. */
-#panel-roam .roam-stats {
-  padding: 0;
-  gap: 4px 14px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-#panel-roam .roam-stats strong {
-  font-size: 15px;
-}
-.bar-row-roam {
-  grid-template-columns: 1fr;
-  gap: 8px;
+/* Free roam is mode-aware: it appears as a sub-section of Controls & camera rather than a
+   separate tab, so the probe cluster sits next to the camera/model controls that drive the
+   same simulation. Chrome follows the camera row it sits under. */
+.bar-roam {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid #1f323b;
 }
-.bar-row-roam .bar-cell {
-  padding-left: 0;
-  border-left: none;
+.bar-roam-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-.bar-row-roam .button-row {
-  flex-wrap: wrap;
+.bar-roam-head .bar-label {
+  margin-bottom: 0;
+  color: var(--bp-ink);
 }
-#panel-roam .bar-foot {
-  align-items: center;
-}
-#panel-roam #roam-event {
+#roam-event {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 10px;
   color: var(--bp-ink-dim);
 }
-#panel-roam #roam-visibility {
+#roam-visibility {
   flex: none;
+  font-size: 10px;
+  letter-spacing: 0.4px;
   color: var(--bp-amber);
+}
+.bar-roam .roam-stats {
+  padding: 0;
+  gap: 4px 14px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+.bar-roam .roam-stats strong {
+  font-size: 15px;
+}
+.bar-row-roam {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 18px;
+}
+.bar-row-roam .button-row {
+  flex-wrap: wrap;
 }
 
 /* Status-truth strip in the console foot: why the decoder is or isn't moving the drone. */
@@ -1362,8 +1373,11 @@ main {
   .attribution-grid {
     grid-template-columns: 1fr;
   }
-  #panel-roam .roam-stats {
+  .bar-roam .roam-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .bar-row-roam {
+    grid-template-columns: 1fr;
   }
 }
 

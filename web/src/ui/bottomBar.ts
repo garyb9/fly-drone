@@ -1,5 +1,5 @@
 import { renderAttributionPanel } from "./attribution";
-import { renderFreeRoamPanel } from "./freeRoam";
+import { renderFreeRoamControls } from "./freeRoam";
 import { renderHelp } from "./help";
 
 export function renderBottomBar(): string {
@@ -9,7 +9,6 @@ export function renderBottomBar(): string {
 <div class="bar-tabs" role="tablist" aria-label="Viewer panels">
 <button class="bar-tab active" id="tab-controls" role="tab" aria-selected="true" aria-controls="panel-controls">Controls &amp; camera</button>
 <button class="bar-tab" id="tab-signals" role="tab" aria-selected="false" aria-controls="panel-signals">Signals</button>
-<button class="bar-tab" id="tab-roam" role="tab" aria-selected="false" aria-controls="panel-roam" hidden>Free roam</button>
 <button class="bar-tab" id="tab-attribution" role="tab" aria-selected="false" aria-controls="panel-attribution" hidden>Attribution</button>
 <span class="bar-head-meta">episode <b id="episode">0</b></span>
 </div>
@@ -28,6 +27,7 @@ export function renderBottomBar(): string {
 <div class="bar-cluster"><em>mode</em><div class="button-row"><button id="cam-fpv" title="Ride along in the drone's cockpit">1st person</button><button id="cam-tpv" title="Chase camera behind the drone">3rd person</button></div></div>
 </div>
 </div>
+${renderFreeRoamControls()}
 </div>
 <div class="bar-panel" id="panel-signals" role="tabpanel" aria-labelledby="tab-signals" hidden>
 <div class="bar-grid">
@@ -36,9 +36,6 @@ export function renderBottomBar(): string {
 <div><span class="bar-label">actual / commanded rpm</span><canvas class="scope" id="motors-scope" aria-hidden="true"></canvas><div id="motors" class="meters"></div></div>
 <div><span class="bar-label">compute budget</span><canvas class="scope" id="budget-scope" aria-hidden="true"></canvas><div id="budget" class="meters"></div><em class="bar-note" id="budget-note">—</em></div>
 </div>
-</div>
-<div class="bar-panel" id="panel-roam" role="tabpanel" aria-labelledby="tab-roam" hidden>
-${renderFreeRoamPanel()}
 </div>
 <div class="bar-panel" id="panel-attribution" role="tabpanel" aria-labelledby="tab-attribution" hidden>
 ${renderAttributionPanel()}
