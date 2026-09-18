@@ -97,9 +97,9 @@ try {
   assert.ok(statusStrip && statusStrip.length > 0, "status strip populated");
   passed.push("decoder status strip");
 
-  // Free-roam mission control is mode-aware: the section appears inside Controls & camera only
-  // when a free-roam decoder is loaded.
-  if (await page.locator("#roam-group").isVisible()) {
+  // Free-roam mission control is mode-aware: the button row and scoreboard readout appear inside
+  // Controls & camera only when a free-roam decoder is loaded.
+  if (await page.locator("#roam-buttons").isVisible()) {
     await page.waitForFunction(() => {
       const value = document.querySelector("#roam-beacons")?.textContent ?? "";
       return value !== "" && value !== "—";

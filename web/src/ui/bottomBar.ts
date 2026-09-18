@@ -1,5 +1,5 @@
 import { renderAttributionPanel } from "./attribution";
-import { renderFreeRoamControls } from "./freeRoam";
+import { renderFreeRoamButtons, renderFreeRoamReadout } from "./freeRoam";
 import { renderHelp } from "./help";
 
 export function renderBottomBar(): string {
@@ -13,6 +13,8 @@ export function renderBottomBar(): string {
 <span class="bar-head-meta">episode <b id="episode">0</b></span>
 </div>
 <div class="bar-panel" id="panel-controls" role="tabpanel" aria-labelledby="tab-controls">
+<div class="controls-layout">
+<div class="controls-buttons">
 <div class="bar-row bar-row-controls">
 <div class="bar-cell"><span class="bar-label">experiment</span><div class="button-row"><button id="pause" class="primary">Pause</button><button id="reset">Reset trial</button></div></div>
 <div class="bar-cell"><span class="bar-label">visual target</span><div class="button-row"><button data-target="left">Left</button><button data-target="center">Center</button><button data-target="right">Right</button></div></div>
@@ -27,7 +29,10 @@ export function renderBottomBar(): string {
 <div class="bar-cluster"><em>mode</em><div class="button-row"><button id="cam-fpv" title="Ride along in the drone's cockpit">1st person</button><button id="cam-tpv" title="Chase camera behind the drone">3rd person</button></div></div>
 </div>
 </div>
-${renderFreeRoamControls()}
+${renderFreeRoamButtons()}
+</div>
+${renderFreeRoamReadout()}
+</div>
 </div>
 <div class="bar-panel" id="panel-signals" role="tabpanel" aria-labelledby="tab-signals" hidden>
 <div class="bar-grid">

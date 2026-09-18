@@ -78,7 +78,8 @@ export const DOM_IDS = {
   "status-strip": "span",
   error: "span",
   // Free roam
-  "roam-group": "div",
+  "roam-buttons": "div",
+  "roam-readout": "aside",
   "roam-beacons": "strong",
   "roam-collisions": "strong",
   "roam-threats": "strong",
@@ -93,7 +94,7 @@ export const DOM_IDS = {
   "roam-ghost": "button",
   "roam-restore": "button",
   "roam-levels": "div",
-  "roam-event": "span",
+  "roam-event": "div",
   "roam-visibility": "span",
   // Attribution + help
   attribution: "div",

@@ -126,7 +126,8 @@ function setPressed(button: HTMLButtonElement, on: boolean): void {
 function updateFreeRoam(f: Frame): void {
   const roam = f.free_roam;
   const active = f.task === "free_roam" && roam !== null;
-  els["roam-group"].hidden = !active;
+  els["roam-buttons"].hidden = !active;
+  els["roam-readout"].hidden = !active;
   if (!active || !roam) return;
   setText(els["roam-beacons"], roam.beacons_per_min.toFixed(2));
   setText(els["roam-collisions"], roam.collisions_per_min.toFixed(2));
