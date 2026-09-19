@@ -106,6 +106,10 @@ flights, and per-drive MSE and R². It exports a parity-checked actor with the a
 L3, with respawn, under seven brain conditions (intact, zeroed, shuffled, all vision silenced, light
 silenced, loom silenced, ghost objects) plus teacher, cue-script and random baselines.
 
+`fly-drone liveness-check` is a separate, additive, teacher-free diagnostic: it scores whether the
+body is *alive* (mobility, exploration, sense-causality, anti-luck, non-degeneracy) before capability
+is expanded. It never changes `ACCEPTANCE` or A1–A7.
+
 | ID  | Criterion                                                                                                                                                         |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A1  | beacons/min ≥ 0.6 × teacher and ≥ 2 × the best of zeroed, shuffled, vision-silenced, light-silenced, random; paired bootstrap interval above 0                    |

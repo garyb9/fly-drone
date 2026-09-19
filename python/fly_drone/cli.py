@@ -302,6 +302,18 @@ def main():
     p.add_argument("--level", type=int, default=3)
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed-base", type=int, default=1000)
+    p = sub.add_parser(
+        "liveness-check",
+        help="P3 liveness gate: the connectome drives the body from its senses (additive)",
+    )
+    p.add_argument("--output", default="runs/liveness/check.json")
+    p.add_argument("--bundle", help="alternate bundle dir (default data/malecns)")
+    p.add_argument("--adapter", help="adapter .json pinned to that bundle")
+    p.add_argument("--episodes", type=int, default=50)
+    p.add_argument("--seconds", type=float, default=120)
+    p.add_argument("--level", type=int, default=3)
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--seed-base", type=int, default=1000)
     p = sub.add_parser("encoder-checks")
     p.add_argument("--policy", required=True)
     p.add_argument("--encoder", help="omit for the v4 baseline")
@@ -538,6 +550,27 @@ def main():
             print(
                 "feedback-check: body feedback did not causally change behaviour "
                 "(honest negative; the wiring is still additive and reversible).",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+    elif args.command == "liveness-check":
+        from .roam_eval import liveness_check
+
+        report = liveness_check(
+            args.output,
+            args.episodes,
+            args.seconds,
+            args.level,
+            args.workers,
+            args.seed_base,
+            bundle=args.bundle,
+            adapter=args.adapter,
+        )
+        print(json.dumps(report["liveness"], indent=2))
+        if not report["liveness"]["passed"]:
+            print(
+                "liveness-check: the connectome-driven body did not reach the teacher-free "
+                "liveness bar (honest diagnostic; ACCEPTANCE is untouched).",
                 file=sys.stderr,
             )
             raise SystemExit(1)

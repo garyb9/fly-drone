@@ -1,0 +1,129 @@
+import sys
+
+import pytest
+from fly_drone import cli
+from fly_drone.liveness import liveness
+from fly_drone.roam_eval import FREE_CELLS
+
+POLICY = "adapter"
+
+
+def summary(slow, visited, yaw=0.05, n=20):
+    runs = [
+        {"seed": seed, "slow_fraction": slow, "collision_kinds": {}}
+        for seed in range(n)
+    ]
+    return {
+        "slow_fraction": slow,
+        "mean_visited_cells": visited,
+        "mean_abs_yaw_bias": yaw,
+        "runs": runs,
+    }
+
+
+def results(none, sensory, ghost, random=None, cue=None):
+    return {
+        f"{POLICY}|none": none,
+        f"{POLICY}|sensory": sensory,
+        f"{POLICY}|ghost": ghost,
+        "random|none": random or summary(0.10, 5),
+        "cue_script|none": cue or summary(0.05, 20),
+    }
+
+
+def alive():
+    # Moves, explores, senses keep it moving, controls fail, no spin.
+    return results(summary(0.10, 60), summary(0.90, 5), summary(0.60, 10))
+
+
+def test_an_alive_brain_driven_body_passes_every_criterion():
+    report = liveness(alive(), POLICY)
+    assert report["passed"]
+    assert all(report[k]["passed"] for k in report if k.startswith("L"))
+
+
+def test_the_current_dead_adapter_fails_mobility_and_exploration():
+    dead = results(summary(0.62, 8), summary(1.0, 2), summary(0.62, 8))
+    report = liveness(dead, POLICY)
+    assert not report["L1_mobility"]["passed"]
+    assert not report["L2_exploration"]["passed"]
+    assert not report["passed"]
+
+
+def test_a_spinner_fails_non_degeneracy():
+    spinner = results(summary(0.10, 60, yaw=0.9), summary(0.90, 5), summary(0.60, 10))
+    report = liveness(spinner, POLICY)
+    assert not report["L5_non_degenerate"]["passed"] and not report["passed"]
+
+
+def test_a_control_that_is_also_alive_fails_anti_luck():
+    # random happens to move and explore -> liveness is not attributable to the connectome.
+    lucky = results(
+        summary(0.10, 60),
+        summary(0.90, 5),
+        summary(0.60, 10),
+        random=summary(0.05, 80),
+    )
+    report = liveness(lucky, POLICY)
+    assert report["L4_anti_luck"]["controls"]["random"] is True
+    assert not report["L4_anti_luck"]["passed"] and not report["passed"]
+
+
+def test_senses_must_keep_it_moving_for_causality():
+    # Silencing senses does not make it more stationary -> no sense-causality.
+    flat = results(summary(0.10, 60), summary(0.10, 60), summary(0.60, 10))
+    report = liveness(flat, POLICY)
+    assert not report["L3_sense_causality"]["passed"] and not report["passed"]
+
+
+def test_liveness_never_needs_a_teacher_row():
+    report = results(summary(0.10, 60), summary(0.90, 5), summary(0.60, 10))
+    assert not any(k.startswith("teacher|") for k in report)
+    assert liveness(report, POLICY)["passed"]
+
+
+def test_coverage_uses_the_same_free_cell_count_as_acceptance():
+    report = liveness(
+        results(summary(0.10, FREE_CELLS // 2), summary(0.9, 5), summary(0.6, 10)),
+        POLICY,
+    )
+    assert report["L2_exploration"]["coverage"] == pytest.approx(0.5)
+
+
+def _report(passed):
+    return {"liveness": {"passed": passed}, "results": {}}
+
+
+def test_liveness_check_exits_nonzero_on_failure(monkeypatch, tmp_path):
+    from fly_drone import roam_eval
+
+    monkeypatch.setattr(roam_eval, "liveness_check", lambda *a, **k: _report(False))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["fly-drone", "liveness-check", "--output", str(tmp_path / "l.json")],
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main()
+    assert excinfo.value.code == 1
+
+
+def test_liveness_check_exits_zero_when_the_bar_passes(monkeypatch, tmp_path):
+    from fly_drone import roam_eval
+
+    monkeypatch.setattr(roam_eval, "liveness_check", lambda *a, **k: _report(True))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["fly-drone", "liveness-check", "--output", str(tmp_path / "l.json")],
+    )
+    cli.main()  # no SystemExit
+
+
+def test_liveness_bar_is_far_below_the_skill_bars():
+    from fly_drone.liveness import LIVENESS
+    from fly_drone.roam_eval import ACCEPTANCE
+
+    assert LIVENESS["L1_max_slow_fraction"] > ACCEPTANCE["A6_max_slow_fraction"]
+    assert LIVENESS["L2_min_coverage"] < ACCEPTANCE["A6_min_coverage"]
+    assert LIVENESS["L3_causal_metric"] == "slow_fraction"

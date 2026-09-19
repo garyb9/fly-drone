@@ -26,6 +26,13 @@ canonical constants (identical leak/threshold; only `noise_sigma` differs), and 
 activity is in-repo, so no fit has been run; the recording-fitted array is the remaining P2 step.
 Evidence: [`../../results/dynamics/FINDING-2026-09-19.md`](../../results/dynamics/FINDING-2026-09-19.md).
 
+**P3 liveness bar landed 2026-09-19; relay planned.** A teacher-free `liveness-check` scores whether
+the connectome-driven body is *alive* (mobility, exploration, sense-causality, anti-luck,
+non-degeneracy) independently of A1–A7. It is an additive diagnostic and a prerequisite for
+expanding capability, not a relaxation of acceptance. The declared optic-flow relay and its targets
+are specified in
+[`../plans/2026-09-19-fly-drone-10-liveness-relay.md`](../plans/2026-09-19-fly-drone-10-liveness-relay.md).
+
 **Related:** the goal contract is [`../../overview/README.md`](../../overview/README.md) §1;
 the current free-roam method is [`../../free-roam.md`](../../free-roam.md); the closed negative
 that motivated P0/P2 is [`../../results/encoder-v6/CONCLUSION-2026-09-18.md`](../../results/encoder-v6/CONCLUSION-2026-09-18.md);
@@ -179,7 +186,7 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 | 2    | P1 ascending feedback (landed; weak positive)                   | C1 (new identity) | probes               |
 | 3    | P2 connectome-constrained fit (infra landed; prior negative)    | C2 (new identity) | fit — ask first      |
 | 4    | P4 transfer/domain randomization                                | none              | training — ask first |
-| 5    | P3 visual relay                                                 | none              | probes               |
+| 5    | P3 liveness bar (landed) + visual relay                         | none              | probes               |
 | 6    | P5 evaluation additions                                         | none              | eval runs            |
 | 7    | P6 Scope A fly body                                             | goal broadening   | separate plan        |
 

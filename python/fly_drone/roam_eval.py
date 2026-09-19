@@ -497,6 +497,51 @@ def feedback_check(
     return report
 
 
+def liveness_check(
+    output,
+    episodes=50,
+    seconds=120,
+    level=3,
+    workers=6,
+    seed_base=1000,
+    bundle=None,
+    adapter=None,
+):
+    """Liveness gate: is the drone moving because the connectome is driven by its senses?
+
+    Additive and diagnostic; never touches ACCEPTANCE. Runs the declared bridge under the intact,
+    sensory-silenced and ghost conditions plus the non-connectome baselines, then scores the
+    teacher-free ``liveness`` criteria (mobility, exploration, sense-causality, anti-luck,
+    non-degeneracy).
+    """
+    from .distill import screen
+    from .liveness import liveness
+
+    key = f"adapter:{adapter}" if adapter else "adapter"
+    combos = [(key, c) for c in ("none", "sensory", "ghost")] + [
+        (b, "none") for b in BASELINES
+    ]
+    report = screen(
+        None,
+        output,
+        seeds=episodes,
+        seconds=seconds,
+        level=level,
+        workers=workers,
+        seed_base=seed_base,
+        combos=combos,
+        bundle=bundle,
+    )
+    report["policy"] = key
+    report["bundle"] = str(bundle) if bundle else None
+    report["bridge"] = "declared"
+    report["task"] = "free_roam"
+    report["teacher_in_behaviour_path"] = False
+    report["liveness"] = liveness(report["results"], key)
+    Path(output).write_text(json.dumps(report, indent=2))
+    return report
+
+
 # Encoder v5 checks, pre-registered 2026-09-14 before any v5 result (spec §5). Additive:
 # they never change ACCEPTANCE.
 # Both ranges measure the gap to the threat's centre. E1/E2 score the loom group (LC4,
