@@ -71,9 +71,33 @@ def side_masks(brain):
     return masks
 
 
-def _laterality(brain):
+def feature_positions(brain):
+    """Map each readout cell id to its position in ``brain.features()`` (cached)."""
+    positions = getattr(brain, "_adapter_positions", None)
+    if positions is None:
+        positions = {i: j for j, i in enumerate(brain.feature_ids)}
+        brain._adapter_positions = positions
+    return positions
+
+
+def _readouts(brain, features):
+    """``(escape, power)`` means read from the same neural vector the codec steers by.
+
+    Reading both signals from one vector is what makes the zero/shuffle ablations real:
+    the environment ablates the vector it hands the bridge, and the declared adapter has
+    no second, un-ablated channel into the connectome.
+    """
+    positions = feature_positions(brain)
+    means = {
+        key: float(np.mean([features[positions[i]] for i in ids]))
+        for key, ids in brain.readout_ids.items()
+        if key in ("escape", "power_l", "power_r")
+    }
+    return means["escape"], 0.5 * (means["power_l"] + means["power_r"])
+
+
+def _laterality(brain, features):
     left, right = side_masks(brain)
-    features = brain.features()
     return float(features[left].mean() - features[right].mean())
 
 
@@ -94,11 +118,12 @@ def _params(brain, settle=SETTLE_TICKS):
             brain.reset(11)
             brain.set_currents(np.asarray(cues, dtype=np.float32))
             brain.step(settle)
-            readouts = brain.read()
+            features = brain.features()
             names.append(name)
-            lat.append(_laterality(brain))
-            escape.append(float(readouts["escape"]))
-            power.append(0.5 * (readouts["power_l"] + readouts["power_r"]))
+            lat.append(_laterality(brain, features))
+            esc, pw = _readouts(brain, features)
+            escape.append(esc)
+            power.append(pw)
             targets.append(target)
     rest = [i for i, n in enumerate(names) if n == "rest"]
     rest_escape = float(np.mean([escape[i] for i in rest]))
@@ -201,13 +226,21 @@ class Adapter:
             {"bundle_hash": self.bundle_hash}, brain.bundle_hash, brain.alternate
         )
 
-    def command(self, brain):
-        """The body command ``[vx, vy, vz, yaw_rate]`` in ``[-1, 1]`` from neural activity."""
+    def command(self, brain, features=None):
+        """The body command ``[vx, vy, vz, yaw_rate]`` in ``[-1, 1]`` from neural activity.
+
+        ``features`` is the (possibly ablated) 2,022-vector the environment hands the body
+        bridge; when omitted the live ``brain.features()`` is read. Pass the environment's
+        ``observe()`` output so zero/shuffle/silencing conditions act on the codec.
+        """
         p = self.params
-        loom = _latch(float(brain.read()["escape"]), p["rest_escape"])
-        steer = (_laterality(brain) - p["rest_lat"]) * (1.0 - 2.0 * loom)
-        power = 0.5 * (brain.read()["power_l"] + brain.read()["power_r"])
-        activity = max(0.0, float(power) - p["rest_power"])
+        vector = (
+            brain.features() if features is None else np.asarray(features, dtype=float)
+        )
+        escape, power = _readouts(brain, vector)
+        loom = _latch(escape, p["rest_escape"])
+        steer = (_laterality(brain, vector) - p["rest_lat"]) * (1.0 - 2.0 * loom)
+        activity = max(0.0, power - p["rest_power"])
         yaw = p["g_yaw"] * steer
         return np.clip(
             [p["g_fwd"] * activity, p["side_fraction"] * yaw, p["g_climb"] * loom, yaw],
@@ -232,8 +265,12 @@ def load_default(path=DEFAULT_PATH):
     return _DEFAULT
 
 
-def declared_command(brain, path=None):
-    """Module entry point used by the environment and server: body command from neurons."""
+def declared_command(brain, features=None, path=None):
+    """Module entry point used by the environment and server: command from neural activity.
+
+    Pass the environment's (possibly ablated) feature vector as ``features`` so the causal
+    conditions apply to the declared bridge exactly as they do to a learned decoder.
+    """
     adapter = Adapter.load(path) if path else load_default()
     adapter.check(brain)
-    return adapter.command(brain)
+    return adapter.command(brain, features=features)

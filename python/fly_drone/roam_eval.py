@@ -237,7 +237,7 @@ def _probe_job(job):
                 elif controller == "adapter" or controller.startswith("adapter:"):
                     from .adapter import declared_command
 
-                    action = declared_command(brain, path=adapter_path)
+                    action = declared_command(brain, features=obs, path=adapter_path)
                 else:
                     action = brain.infer(obs) / env.plant.limits
                 obs, _, done, _, info = env.step(action)

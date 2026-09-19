@@ -375,7 +375,8 @@ class Session:
                     if declared_free_roam:
                         # The declared adapter is the default free-roam bridge: the
                         # command comes from neurons through fixed, calibrated constants.
-                        command = declared_command(env.brain)
+                        # Use observe() so live zero/shuffle/silencing reaches the codec.
+                        command = declared_command(env.brain, features=observed)
                         policy_status = "loaded"
                         explained = None
                     elif not active_policy:

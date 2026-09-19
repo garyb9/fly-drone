@@ -74,6 +74,22 @@ def test_light_turns_toward(brain, calibrated):
     assert left[3] > 0 and right[3] < 0
 
 
+def test_zeroed_features_remove_the_visual_drive(brain, calibrated):
+    settle(brain, [0, 0, 2, 0])
+    zeros = np.zeros(len(brain.feature_ids), dtype=float)
+    command = calibrated.command(brain, features=zeros)
+    assert command[0] == 0 and command[2] == 0  # no forward, no climb
+    assert abs(command[3]) < 0.02  # no lateral evidence
+
+
+def test_shuffled_features_change_the_command(brain, calibrated):
+    settle(brain, [0, 0, 2, 0])
+    base = calibrated.command(brain)
+    permutation = np.random.default_rng(0).permutation(len(brain.feature_ids))
+    shuffled = calibrated.command(brain, features=brain.features()[permutation])
+    assert not np.allclose(base, shuffled)
+
+
 def test_check_rejects_a_different_connectome(calibrated):
     calibrated.dataset_hash = "not-the-runtime"
     with pytest.raises(ValueError, match="dataset_hash"):

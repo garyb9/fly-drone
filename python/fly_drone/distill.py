@@ -362,7 +362,7 @@ def _screen_job(job):
                 elif adapter_path is not None or controller == "adapter":
                     from .adapter import declared_command
 
-                    action = declared_command(brain, path=adapter_path)
+                    action = declared_command(brain, features=obs, path=adapter_path)
                 else:
                     action = brain.infer(obs) / env.plant.limits
                 yaw_commands.append(float(action[3]))

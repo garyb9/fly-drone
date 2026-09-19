@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "adapter_version": "declared-v1:9635c755210e27eb",
+  "adapter_version": "declared-v1:6a7de373f09cd571",
   "dataset_hash": "60cb182151d80d910a9f23a1550908fefe2233234fa7f33bb7bc0f3d70311c39",
   "bundle_hash": "edc5439e291e65233e673b5baaed069f570f5003c245e414de2aa1e41b14aff5",
   "alternate": false,
@@ -13,6 +13,6 @@
     "rest_lat": -5.212e-05,
     "g_yaw": 210.726694,
     "g_climb": 1.0,
-    "g_fwd": 0.692031
+    "g_fwd": 0.69203
   }
 }
