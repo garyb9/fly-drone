@@ -1,14 +1,14 @@
 {
-  "note": "Best available v5 free-roam pair, NOT vetted against roam_eval.ACCEPTANCE. Never read by --accepted; regenerate with `fly-drone current-pointer --task free_roam`.",
+  "note": "Best available free-roam pair (frozen v6 when present), NOT vetted against roam_eval.ACCEPTANCE. Never read by --accepted; regenerate with `fly-drone current-pointer --task free_roam`.",
   "policies": {
     "free_roam": {
       "status": "interim",
-      "encoder": null,
-      "encoder_version": "bright-contrast-400-splay075-noaa-loom150-v4",
-      "decoder": "runs/v5/dagger/it0/warm-actor.json",
-      "source_run": "runs/v5/dagger/it0",
-      "gate_report": null,
-      "generated_at": "2026-09-15T08:36:15+03:00"
+      "encoder": "runs/v6/clone/encoder.pt",
+      "encoder_version": "learned-v6:01280e414169ff9c",
+      "decoder": "runs/v6/round0/decoder.json",
+      "source_run": "runs/v6/round0",
+      "gate_report": "runs/v6/round0/gate30-round0.json",
+      "generated_at": "2026-09-19T13:20:58+03:00"
     }
   }
 }

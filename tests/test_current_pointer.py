@@ -27,6 +27,21 @@ def test_scan_falls_back_to_dagger_it0_when_nothing_else_exists(tmp_path):
     assert entry["encoder_version"] == ENCODER_VERSION
 
 
+def test_scan_prefers_the_frozen_v6_pair_over_the_v5_fallback(tmp_path):
+    _write_actor(tmp_path / "runs" / "v5" / "dagger" / "it0" / "warm-actor.json")
+    _write_actor(
+        tmp_path / "runs" / "v6" / "round0" / "decoder.json",
+        encoder_version="learned-v6:01280e414169ff9c",
+    )
+    (tmp_path / "runs" / "v6" / "clone").mkdir(parents=True)
+    (tmp_path / "runs" / "v6" / "clone" / "encoder.pt").write_bytes(b"x")
+    entry = scan(root=tmp_path)
+    assert entry["status"] == "interim"
+    assert entry["encoder"] == "runs/v6/clone/encoder.pt"
+    assert entry["decoder"] == "runs/v6/round0/decoder.json"
+    assert entry["encoder_version"] == "learned-v6:01280e414169ff9c"
+
+
 def test_scan_reports_none_when_nothing_usable_exists(tmp_path):
     entry = scan(root=tmp_path)
     assert entry == {

@@ -18,6 +18,12 @@ from pathlib import Path
 from .brain import ENCODER_VERSION, ROOT
 
 MANIFEST = ROOT / "docs" / "results" / "current-policies.json"
+# The frozen v6 pair (encoder clone + round-0 decoder) is the best valid free-roam pair today and
+# the default the viewer should load. It is not vetted against roam_eval.ACCEPTANCE (no causal
+# dodge), so it stays "interim". Regenerate with `fly-drone current-pointer`.
+FROZEN_V6_ENCODER = "runs/v6/clone/encoder.pt"
+FROZEN_V6_DECODER = "runs/v6/round0/decoder.json"
+FROZEN_V6_GATE = "runs/v6/round0/gate30-round0.json"
 FALLBACK_DECODER = "runs/v5/dagger/it0/warm-actor.json"
 REQUIRED_ACTOR_KEYS = ("encoder_version", "layers", "action_limits", "feature_ids")
 
@@ -62,6 +68,28 @@ def _gated_candidate(root):
     }
 
 
+def _frozen_v6_candidate(root):
+    """The frozen v6 pair (learned encoder + round-0 decoder) when both files are present."""
+    encoder = root / FROZEN_V6_ENCODER
+    decoder = root / FROZEN_V6_DECODER
+    if not encoder.is_file() or not decoder.is_file():
+        return None
+    try:
+        data = json.loads(decoder.read_text())
+    except (ValueError, OSError):
+        return None
+    if any(k not in data for k in REQUIRED_ACTOR_KEYS):
+        return None
+    return {
+        "status": "interim",
+        "encoder": FROZEN_V6_ENCODER,
+        "encoder_version": data.get("encoder_version"),
+        "decoder": FROZEN_V6_DECODER,
+        "source_run": str(Path(FROZEN_V6_DECODER).parent),
+        "gate_report": FROZEN_V6_GATE if (root / FROZEN_V6_GATE).is_file() else None,
+    }
+
+
 def _fallback_candidate(root):
     path = root / FALLBACK_DECODER
     if not path.is_file():
@@ -85,15 +113,18 @@ def _fallback_candidate(root):
 def scan(task="free_roam", root=ROOT):
     """Find the best available free-roam pair without touching a live training run.
 
-    Preference order: a fully-passing evaluate_free_roam report ("gated"), else the
-    Stage-1 DAgger `it0` actor under the frozen v4 encoder ("interim", the only
-    finished, non-diagnostic checkpoint that isn't a failed/mid-flight sanity-gate
-    attempt), else "none" if even that is missing locally.
+    Preference order: a fully-passing evaluate_free_roam report ("gated"), else the frozen v6
+    pair ("interim", the best valid free-roam pair today), else the Stage-1 DAgger `it0` actor
+    under the frozen v4 encoder, else "none" if nothing usable is present locally.
     """
     if task != "free_roam":
         raise ValueError("current-pointer only supports the free_roam task today")
     root = Path(root)
-    candidate = _gated_candidate(root) or _fallback_candidate(root)
+    candidate = (
+        _gated_candidate(root)
+        or _frozen_v6_candidate(root)
+        or _fallback_candidate(root)
+    )
     if candidate is None:
         return {
             "status": "none",
@@ -116,9 +147,9 @@ def update(task="free_roam", root=ROOT, manifest=MANIFEST, dry_run=False):
     manifest = Path(manifest)
     payload = {
         "note": (
-            "Best available v5 free-roam pair, NOT vetted against roam_eval.ACCEPTANCE. "
-            "Never read by --accepted; regenerate with `fly-drone current-pointer "
-            "--task free_roam`."
+            "Best available free-roam pair (frozen v6 when present), NOT vetted against "
+            "roam_eval.ACCEPTANCE. Never read by --accepted; regenerate with "
+            "`fly-drone current-pointer --task free_roam`."
         ),
         "policies": {task: entry},
     }
