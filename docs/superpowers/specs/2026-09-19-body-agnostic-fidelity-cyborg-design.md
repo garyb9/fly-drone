@@ -18,11 +18,13 @@ a new `bundle_hash` and a `feedback-check` silencing gate. The gate passed causa
 or collisions. Evidence:
 [`../../results/feedback/FINDING-2026-09-19.md`](../../results/feedback/FINDING-2026-09-19.md).
 
-**P2 infrastructure landed 2026-09-19 (prior, not fitted).** `dynamics.bin` carries per-neuron
-leak/threshold and the core integrates them; a declared Shiu-2024 LIF prior is emitted as an
-additive alternate bundle (`data/malecns-dynamics`, marker `dynamics`). No recorded activity is
-in-repo, so no fit has been run; the recording-fitted array is the remaining P2 step. Gate evidence
-pending.
+**P2 infrastructure landed 2026-09-19 (prior negative; not fitted).** `dynamics.bin` carries
+per-neuron leak/threshold and the core integrates them; a declared Shiu-2024 LIF prior is emitted as
+an additive alternate bundle (`data/malecns-dynamics`, marker `dynamics`). The prior maps onto the
+canonical constants (identical leak/threshold; only `noise_sigma` differs), and the causal gate
+**failed to beat uniform LIF**, so the canonical bundle is kept per the §6 falsifier. No recorded
+activity is in-repo, so no fit has been run; the recording-fitted array is the remaining P2 step.
+Evidence: [`../../results/dynamics/FINDING-2026-09-19.md`](../../results/dynamics/FINDING-2026-09-19.md).
 
 **Related:** the goal contract is [`../../overview/README.md`](../../overview/README.md) §1;
 the current free-roam method is [`../../free-roam.md`](../../free-roam.md); the closed negative
@@ -175,7 +177,7 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 | 0b   | Cleanup (preserve actors, delete `runs/`, deprecation note)     | —                 | none                 |
 | 1    | P0 declared adapter + teacher-free gate (landed; gate negative) | none              | calibration          |
 | 2    | P1 ascending feedback (landed; weak positive)                   | C1 (new identity) | probes               |
-| 3    | P2 connectome-constrained fit (infra landed; prior only)        | C2 (new identity) | fit — ask first      |
+| 3    | P2 connectome-constrained fit (infra landed; prior negative)    | C2 (new identity) | fit — ask first      |
 | 4    | P4 transfer/domain randomization                                | none              | training — ask first |
 | 5    | P3 visual relay                                                 | none              | probes               |
 | 6    | P5 evaluation additions                                         | none              | eval runs            |
