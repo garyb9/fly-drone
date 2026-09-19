@@ -1,5 +1,10 @@
 # Architecture and scientific contract
 
+The connectome is the brain; the body is an embodiment. In v1 the body is a simulated quadrotor;
+the fidelity reference is the fly's own biomechanical body, and the deployment target is a physical
+drone. The direction and its staged contract changes are in
+[`superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md`](superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md).
+
 The default dataset contains all 166,700 MaleCNS neurons and 10,520,431 retained directed edges.
 No runtime performance fallback reduces the graph. Smaller synthetic assets only support unit
 tests.
@@ -26,11 +31,16 @@ tests.
 
 ## Contracts
 
-- **Only neurons reach the actor.** The policy input is the activity of 2,022 descending/VNC
-  motor cells. Simulator state and image features cannot bypass the graph. Simulator state is
-  used only by the stabiliser, rewards, calibration labels and evaluation.
+- **Only neurons reach the bridge.** The bridge input is the activity of 2,022 descending/VNC
+  motor cells (plus declared body feedback once C1 lands). Simulator state and image features
+  cannot bypass the graph. Simulator state is used only by the stabiliser, rewards, calibration
+  labels and evaluation.
+- **Declared bridge by default.** The default bridge is a calibrated adapter with no teacher in
+  the behaviour path; a learned decoder/encoder path is retained but deprecated. Only a bridge is
+  ever learned/fitted against the frozen graph.
 - **Frozen brain.** Wiring, weights, signs, neuron parameters and tonic bias never change during
-  learning. Only the decoder MLP is trained.
+  learning. Fitted dynamics and added feedback (spec C1/C2) are additive, versioned identities, not
+  edits to the canonical bundle.
 - **Identity binding.** Actors and calibrations store the dataset SHA-256, feature ids and
   `ENCODER_VERSION` (camera geometry, rendering, cue equations). Loading rejects any mismatch.
   Export checks Rust/PyTorch parity to 1e−4.

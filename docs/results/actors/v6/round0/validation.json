@@ -1,0 +1,47 @@
+{
+  "decoder": "/home/gb/projects/fly-drone/runs/v6/round0/decoder.json",
+  "encoder": "/home/gb/projects/fly-drone/runs/v6/clone/encoder.pt",
+  "seeds": [
+    9000,
+    9009
+  ],
+  "near_dodge_rate": 0.0625,
+  "balanced_dodge_rate": 0.058823529411764705,
+  "ghost_near_dodge_rate": 0.28125,
+  "beacons_per_min": 2.0,
+  "collisions_per_min": 3.9,
+  "E1": {
+    "loom_auc": 0.7260346799962568,
+    "positives": 1192,
+    "negatives": 12766,
+    "passed": false
+  },
+  "E2": {
+    "auc": {
+      "loom_threat": 0.7260346799962568,
+      "loom_beacon": 0.5192621415703028,
+      "light_beacon": 0.959566957462237,
+      "light_threat": 0.5157411688661262
+    },
+    "light_margin": 0.44382578859611077,
+    "loom_margin": 0.206772538425954,
+    "passed": true
+  },
+  "E1_policy": {
+    "loom_auc": 0.6825287243958862,
+    "positives": 1289,
+    "negatives": 13031,
+    "passed": false
+  },
+  "E2_policy": {
+    "auc": {
+      "loom_threat": 0.6825287243958862,
+      "loom_beacon": 0.39350903263707404,
+      "light_beacon": 0.9890152394253088,
+      "light_threat": 0.5143639393297322
+    },
+    "light_margin": 0.47465130009557654,
+    "loom_margin": 0.28901969175881215,
+    "passed": true
+  }
+}

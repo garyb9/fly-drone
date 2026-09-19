@@ -18,12 +18,12 @@ from pathlib import Path
 from .brain import ENCODER_VERSION, ROOT
 
 MANIFEST = ROOT / "docs" / "results" / "current-policies.json"
-# The frozen v6 pair (encoder clone + round-0 decoder) is the best valid free-roam pair today and
-# the default the viewer should load. It is not vetted against roam_eval.ACCEPTANCE (no causal
-# dodge), so it stays "interim". Regenerate with `fly-drone current-pointer`.
-FROZEN_V6_ENCODER = "runs/v6/clone/encoder.pt"
-FROZEN_V6_DECODER = "runs/v6/round0/decoder.json"
-FROZEN_V6_GATE = "runs/v6/round0/gate30-round0.json"
+# The v6 learned-encoder pair is now DEPRECATED (docs/results/encoder-v6/DEPRECATION.md) but its
+# artifacts are preserved under docs/results/actors/ so it stays loadable for reference. It is not
+# vetted against roam_eval.ACCEPTANCE (no causal dodge), so it stays "interim" if scanned.
+FROZEN_V6_ENCODER = "docs/results/actors/v6/clone/encoder.pt"
+FROZEN_V6_DECODER = "docs/results/actors/v6/round0/decoder.json"
+FROZEN_V6_GATE = "docs/results/actors/v6/round0/gate30-round0.json"
 FALLBACK_DECODER = "runs/v5/dagger/it0/warm-actor.json"
 REQUIRED_ACTOR_KEYS = ("encoder_version", "layers", "action_limits", "feature_ids")
 
@@ -147,9 +147,9 @@ def update(task="free_roam", root=ROOT, manifest=MANIFEST, dry_run=False):
     manifest = Path(manifest)
     payload = {
         "note": (
-            "Best available free-roam pair (frozen v6 when present), NOT vetted against "
-            "roam_eval.ACCEPTANCE. Never read by --accepted; regenerate with "
-            "`fly-drone current-pointer --task free_roam`."
+            "Deprecated learned-encoder free-roam pair (v6, preserved under docs/results/actors/), "
+            "NOT vetted against roam_eval.ACCEPTANCE. Never read by --accepted; the default bridge "
+            "is the declared adapter. See docs/results/encoder-v6/DEPRECATION.md."
         ),
         "policies": {task: entry},
     }

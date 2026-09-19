@@ -106,5 +106,31 @@ it rejects, in [`external-prior-art.md`](external-prior-art.md); the harvest des
   <https://github.com/strawlab/drosophila_eye_map>.
 - **flyhard** (MarkUnthank): the connectome-as-network recipe fly-self-driving builds on.
   <https://github.com/MarkUnthank/flyhard>.
-- **Eon Systems embodied brain emulation**:
-  <https://eon.systems/updates/embodied-brain-emulation>.
+- **Eon Systems embodied fly** (announced 2026-03-08; technical deep dive 2026-03-10): FlyWire
+  connectome + connectome-constrained dynamics driving **NeuroMechFly v2** in MuJoCo, closing the
+  perception→connectome→motor→body loop and claiming the first multi-behaviour whole-brain
+  embodiment. Company claim, not peer-reviewed. <https://eon.systems/updates>.
+- **fly-brain-full** (rndlabsoy): 138,639-neuron FlyWire v783 whole-brain simulation in a
+  NeuroMechFly v2 / MuJoCo biomechanical body, with vision, olfaction, gustation and flight.
+  <https://github.com/rndlabsoy/fly-brain-full>.
+- **flybrain** (snedea): 139,255-neuron FlyWire FAFB LIF in a browser, "the fly is not scripted";
+  behaviour emerges from propagation. <https://github.com/snedea/flybrain>.
+- **Neuromorphic simulation of the Drosophila connectome on Intel Loihi 2** (arXiv 2508.16792):
+  140k-neuron FlyWire network on 12 chips. <https://arxiv.org/abs/2508.16792>.
+
+## Connectome-constrained dynamics and fly bodies
+
+References for fitting dynamics to recordings with the wiring frozen, and for a fly-like body
+(this project's P2 and Scope A; see
+[`superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md`](superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md)).
+
+- **Lappalainen et al., Nature 2024**, "Connectome-constrained networks predict neural activity
+  across the fly visual system": fit unknown per-neuron/per-synapse parameters to recorded activity
+  with the wiring fixed. <https://doi.org/10.1038/s41586-024-07939-3>.
+- **Vaxenburg et al., Nature 2025**, `flybody`: whole-body MuJoCo fruit-fly model with wing
+  aerodynamics and tarsal adhesion. <https://www.nature.com/articles/s41586-025-09029-4> ·
+  <https://github.com/TuragaLab/flybody>.
+- **NeuroMechFly v2 / FlyGym** (NeLy-EPFL): biomechanical fly with retina, olfaction and
+  mechanosensory feedback; the body used by the Eon embodiment. <https://neuromechfly.org>.
+- **FlyView** (NeurIPS 2022): bio-informed optic-flow ground truth for panoramic stereo vision,
+  for validating a motion encoder. <https://proceedings.neurips.cc/paper_files/paper/2022/hash/b4005da5affc3ba527dcb992495ecd20-Abstract-Datasets_and_Benchmarks.html>.

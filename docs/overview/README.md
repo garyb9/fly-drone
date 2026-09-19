@@ -17,17 +17,23 @@ Projects that put a fly connectome in a body, and the pieces this project takes 
 
 ## 1. The goal, stated as a contract
 
-"The brain controls the drone" is easy to fake: script the drone and let the neurons flicker on a
+**The connectome is the brain; the body is an embodiment, not the intelligence.** Today the body is
+a simulated quadrotor — the cyborg milestone. The fidelity reference is the fly's own biomechanical
+body (`flybody`/NeuroMechFly); the deployment target is a physical drone. The v1 method, the staged
+contract changes (body feedback, fitted dynamics) and the cleanup are specified in
+[`../superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md`](../superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md).
+
+"The brain controls the body" is easy to fake: script the body and let the neurons flicker on a
 screen. Each clause below exists to rule out one way of faking it.
 
-| Clause                                                                                                                           | Rules out                                                                    | Enforced by                                               |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **Only neurons reach the decoder.** Input is the 2,022 descending + VNC motor traces.                                            | A decoder that secretly reads pose, target position or pixels                | `BrainRuntime.features`, actor identity binding           |
-| **The connectome is frozen.** Wiring, weights, signs, neuron parameters and tonic bias never change.                             | "Training the brain" into an arbitrary network that merely has 166,700 units | PPO and imitation update the decoder only                 |
-| **One decoder, no mode switch.**                                                                                                 | A hidden state machine choosing behaviours                                   | the server loads one free-roam actor                      |
-| **The body only executes.** The PID keeps the drone upright and tracks the intended velocity.                                    | A planner in the body                                                        | the PID sees true state but receives only velocity intent |
-| **Skills are causal.** A skill counts only if silencing its pathway removes it, and a blind (ghost) brain cannot pass by chance. | Behaviour that would happen anyway, such as drifting out of a ball's path    | pre-registered `roam_eval.ACCEPTANCE`                     |
-| **Honest teachers.** Labels use simulator geometry only for objects the eyes can see.                                            | Asking neurons to encode information that never entered them                 | `teacher.visible`, range gates                            |
+| Clause                                                                                                                                                     | Rules out                                                                    | Enforced by                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Only neurons reach the bridge.** The body bridge's input is the 2,022 descending + VNC motor traces (plus declared body feedback once C1 lands).         | A bridge that secretly reads pose, target position or pixels                 | `BrainRuntime.features`, actor identity binding                             |
+| **The connectome is frozen.** Wiring, weights, signs, neuron parameters and tonic bias never change; fitted dynamics and feedback are additive identities. | "Training the brain" into an arbitrary network that merely has 166,700 units | the declared adapter and the deprecated learned path update only the bridge |
+| **One bridge, no mode switch.**                                                                                                                            | A hidden state machine choosing behaviours                                   | the server loads one bridge (declared by default) for free roam             |
+| **The body only executes.** The PID keeps the drone upright and tracks the intended velocity.                                                              | A planner in the body                                                        | the PID sees true state but receives only velocity intent                   |
+| **Skills are causal.** A skill counts only if silencing its pathway removes it, and a blind (ghost) brain cannot pass by chance.                           | Behaviour that would happen anyway, such as drifting out of a ball's path    | pre-registered `roam_eval.ACCEPTANCE`                                       |
+| **Honest labels.** Any label uses simulator geometry only for objects the eyes can see; the default bridge uses no teacher at all.                         | Asking neurons to encode information that never entered them                 | `teacher.visible`, range gates                                              |
 
 **Where the goal leads.** The same brain should forage for light, avoid pillars and walls, and
 dodge thrown objects in arenas it has never seen, with every skill attributable to neurons.
@@ -35,8 +41,9 @@ After that: body feedback into the connectome through ascending neurons, richer 
 onboard compute running the full graph (§10).
 
 **What is not biological, and is declared as such.** The visual encoder is an engineered adapter
-(two image statistics per eye). The decoder is a learned translation, because flies have wings,
-not rotors. The stabiliser uses ideal simulated state.
+(two image statistics per eye). The body bridge is an engineered translation, because flies have
+wings, not rotors: by default a declared, calibrated adapter (no teacher), with the learned
+decoder/encoder retained as a deprecated option. The stabiliser uses ideal simulated state.
 
 ## 2. System at a glance
 
@@ -329,16 +336,16 @@ dodge rate says nothing about the brain.
 
 ## 9. Where we are
 
-| Milestone                            | Status          | Evidence                                                                                                      |
-| ------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| Visual steering (trial room)         | ✅ accepted     | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                                                 |
-| Looming avoidance (trial room)       | ✅ accepted     | 96%, balanced 0.92                                                                                            |
+| Milestone                            | Status          | Evidence                                                                                                                                                           |
+| ------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Visual steering (trial room)         | ✅ accepted     | 100%, balanced 1.00; ablations 0.00/0.00/0.17                                                                                                                      |
+| Looming avoidance (trial room)       | ✅ accepted     | 96%, balanced 0.92                                                                                                                                                 |
 | 0 · Encoder v4 sufficiency           | 🟡 v5/v6 chosen | gate failed (385 false loom escapes/8 min, level 0.49 vs 0.44); v5 code + rounds done (E1 0.686, no foraging), v6 retinotopic code landed, training pending (§7.4) |
-| 1 · Viewer diagnostics               | ✅              | axes, heading, velocity, command vectors                                                                      |
-| 2 · Body step response               | ✅              | vertical 0.69 s vs lateral 1.48 s to 80%                                                                      |
-| 3 · Teacher redesign                 | ✅              | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast                           |
-| 4 · Teacher gate (A3 on the teacher) | 🟡 dodge passed | A3 confirmed below; collision and foraging check (`roam-feasibility`) running                                 |
-| 5 · DAgger → PPO → evaluation        | next            | asks the user before long runs                                                                                |
+| 1 · Viewer diagnostics               | ✅              | axes, heading, velocity, command vectors                                                                                                                           |
+| 2 · Body step response               | ✅              | vertical 0.69 s vs lateral 1.48 s to 80%                                                                                                                           |
+| 3 · Teacher redesign                 | ✅              | climbing evade; committed avoid turn (collisions 2.0 → 0.1/min); random search cast                                                                                |
+| 4 · Teacher gate (A3 on the teacher) | 🟡 dodge passed | A3 confirmed below; collision and foraging check (`roam-feasibility`) running                                                                                      |
+| 5 · DAgger → PPO → evaluation        | next            | asks the user before long runs                                                                                                                                     |
 
 Threat aim decides whether dodging can prove sight (near-throw scoring, 10 seeds × 60 s, level 3):
 

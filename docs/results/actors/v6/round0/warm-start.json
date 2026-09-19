@@ -1,0 +1,53 @@
+{
+  "samples": 96000,
+  "held_out_flights": 12,
+  "loss_first": 0.24656902253627777,
+  "loss_last": 0.057268990110605954,
+  "drives": {
+    "threat": {
+      "train_mse": null,
+      "held_out_mse": null
+    },
+    "avoid": {
+      "train_mse": 0.04323451220989227,
+      "train_vx_mse": 0.02334916777908802,
+      "train_vy_mse": 7.505195753765292e-08,
+      "train_vz_mse": 1.099366819801162e-09,
+      "train_yaw_mse": 0.14958880841732025,
+      "held_out_mse": 0.11805818974971771,
+      "held_out_vx_mse": 0.03542178124189377,
+      "held_out_vy_mse": 7.870725227121511e-08,
+      "held_out_vz_mse": 1.0146458118143187e-09,
+      "held_out_yaw_mse": 0.4368109107017517
+    },
+    "beacon": {
+      "train_mse": 0.033975861966609955,
+      "train_vx_mse": 0.036168958991765976,
+      "train_vy_mse": 6.503776717181609e-08,
+      "train_vz_mse": 8.492058167774985e-10,
+      "train_yaw_mse": 0.09973443299531937,
+      "held_out_mse": 0.033533014357089996,
+      "held_out_vx_mse": 0.035448335111141205,
+      "held_out_vy_mse": 5.940396974324358e-08,
+      "held_out_vz_mse": 7.829717985075035e-10,
+      "held_out_yaw_mse": 0.098683662712574
+    },
+    "explore": {
+      "train_mse": 0.028536943718791008,
+      "train_vx_mse": 0.007946609519422054,
+      "train_vy_mse": 5.4807717475569007e-08,
+      "train_vz_mse": 7.005254154535123e-10,
+      "train_yaw_mse": 0.10620111227035522,
+      "held_out_mse": 0.03261376917362213,
+      "held_out_vx_mse": 0.010160540230572224,
+      "held_out_vy_mse": 5.2518583260052765e-08,
+      "held_out_vz_mse": 6.643521843763267e-10,
+      "held_out_yaw_mse": 0.120294488966465
+    }
+  },
+  "export_max_error": 3.1799077987448854e-06,
+  "encoder_version": "learned-v6:01280e414169ff9c",
+  "paths": [
+    "runs/v6/round0-data/it0.npz"
+  ]
+}

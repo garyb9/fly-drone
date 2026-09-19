@@ -1,13 +1,13 @@
 {
-  "note": "Best available free-roam pair (frozen v6 when present), NOT vetted against roam_eval.ACCEPTANCE. Never read by --accepted; regenerate with `fly-drone current-pointer --task free_roam`.",
+  "note": "Deprecated learned-encoder pair (v6), preserved under docs/results/actors/ for reference. NOT vetted against roam_eval.ACCEPTANCE and no longer the default bridge; see docs/results/encoder-v6/DEPRECATION.md. Never read by --accepted.",
   "policies": {
     "free_roam": {
-      "status": "interim",
-      "encoder": "runs/v6/clone/encoder.pt",
+      "status": "deprecated",
+      "encoder": "docs/results/actors/v6/clone/encoder.pt",
       "encoder_version": "learned-v6:01280e414169ff9c",
-      "decoder": "runs/v6/round0/decoder.json",
-      "source_run": "runs/v6/round0",
-      "gate_report": "runs/v6/round0/gate30-round0.json",
+      "decoder": "docs/results/actors/v6/round0/decoder.json",
+      "source_run": "docs/results/actors/v6/round0",
+      "gate_report": "docs/results/actors/v6/round0/gate30-round0.json",
       "generated_at": "2026-09-19T13:20:58+03:00"
     }
   }

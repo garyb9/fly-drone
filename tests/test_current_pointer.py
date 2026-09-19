@@ -27,18 +27,19 @@ def test_scan_falls_back_to_dagger_it0_when_nothing_else_exists(tmp_path):
     assert entry["encoder_version"] == ENCODER_VERSION
 
 
-def test_scan_prefers_the_frozen_v6_pair_over_the_v5_fallback(tmp_path):
+def test_scan_prefers_the_preserved_v6_pair_over_the_v5_fallback(tmp_path):
     _write_actor(tmp_path / "runs" / "v5" / "dagger" / "it0" / "warm-actor.json")
+    v6 = tmp_path / "docs" / "results" / "actors" / "v6"
     _write_actor(
-        tmp_path / "runs" / "v6" / "round0" / "decoder.json",
+        v6 / "round0" / "decoder.json",
         encoder_version="learned-v6:01280e414169ff9c",
     )
-    (tmp_path / "runs" / "v6" / "clone").mkdir(parents=True)
-    (tmp_path / "runs" / "v6" / "clone" / "encoder.pt").write_bytes(b"x")
+    (v6 / "clone").mkdir(parents=True)
+    (v6 / "clone" / "encoder.pt").write_bytes(b"x")
     entry = scan(root=tmp_path)
     assert entry["status"] == "interim"
-    assert entry["encoder"] == "runs/v6/clone/encoder.pt"
-    assert entry["decoder"] == "runs/v6/round0/decoder.json"
+    assert entry["encoder"] == "docs/results/actors/v6/clone/encoder.pt"
+    assert entry["decoder"] == "docs/results/actors/v6/round0/decoder.json"
     assert entry["encoder_version"] == "learned-v6:01280e414169ff9c"
 
 

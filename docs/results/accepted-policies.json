@@ -1,12 +1,12 @@
 {
-  "note": "Accepted decoders per task. runs/ is git-ignored: `serve --accepted` loads the ones present locally and reports the missing ones.",
+  "note": "Accepted decoders per task, preserved under docs/results/actors/ so they survive runs/ cleanup. `serve --accepted` loads the ones present locally and reports the missing ones.",
   "policies": {
     "visual": {
-      "actor": "runs/v4-closed-s04/actor.json",
+      "actor": "docs/results/actors/v4-closed-s04/actor.json",
       "evaluation": "docs/results/evaluation-visual-v4.json"
     },
     "looming": {
-      "actor": "runs/v4-loom-ft/actor.json",
+      "actor": "docs/results/actors/v4-loom-ft/actor.json",
       "evaluation": "docs/results/evaluation-looming-v4.json"
     }
   }

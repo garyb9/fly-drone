@@ -10,10 +10,12 @@ trajectory.
 
 ## Goal
 
-**The fly's connectome is the brain; the drone is its body — a cyborg.** The frozen connectome
-should fly the drone autonomously: it sees through the drone's cameras, only its descending and
-motor neurons reach the decoder, and the drone supplies reflexes (stabilisation), never decisions.
-Every skill must be causal — it disappears when the pathway carrying it is silenced. Start with
+**The fly's connectome is the brain; the body is an embodiment, not the intelligence.** Today the
+body is a simulated quadrotor — the cyborg milestone. The fidelity reference is the fly's own
+biomechanical body (`flybody`/NeuroMechFly); the deployment target is a physical drone. Only
+descending/motor (and, once added, ascending) neurons reach the body adapter; the wiring stays
+frozen; the body supplies reflexes (stabilisation), never decisions. Every skill must be causal — it
+disappears when the pathway carrying it is silenced. Start with
 [`docs/overview/README.md`](docs/overview/README.md) and the diagrams in
 [`docs/overview/architecture.html`](docs/overview/architecture.html); agents also read
 [`AGENTS.md`](AGENTS.md).
