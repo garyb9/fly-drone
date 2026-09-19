@@ -11,7 +11,11 @@ use std::convert::TryInto;
 
 const NEURONS_MAGIC: u32 = 0x4E59_4C46; // "FLYN" LE
 const GRAPH_MAGIC: u32 = 0x4759_4C46; // "FLYG" LE
+const DYNAMICS_MAGIC: u32 = 0x4459_4C46; // "FLYD" LE
 const NEURON_REC: usize = 24;
+// dynamics.bin: 12-byte header + n * (leak f32, v_threshold f32).
+const DYNAMICS_HEADER: usize = 12;
+const DYNAMICS_REC: usize = 8;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum FormatError {
@@ -32,6 +36,10 @@ pub enum FormatError {
     BadHeader {
         core_count: u32,
         count: u32,
+    },
+    /// A declared dynamics value is non-finite or outside the guarded range.
+    BadDynamics {
+        index: usize,
     },
 }
 
@@ -126,6 +134,67 @@ impl NeuronsFile {
             pos,
             group_id,
             flags,
+        })
+    }
+}
+
+/// Optional P2 additive bundle: per-neuron leak (per-tick membrane multiplier)
+/// and firing threshold. Absent for the canonical uniform-LIF bundle. Parsing
+/// rejects non-finite or saturated values so a bad fit cannot silently blow up
+/// the network; the wiring (graph/neurons) is untouched.
+pub struct DynamicsFile {
+    pub version: u32,
+    pub leak: Vec<f32>,
+    pub v_threshold: Vec<f32>,
+}
+
+impl DynamicsFile {
+    pub fn count(&self) -> usize {
+        self.leak.len()
+    }
+
+    pub fn parse(b: &[u8]) -> Result<Self, FormatError> {
+        if b.len() < DYNAMICS_HEADER {
+            return Err(FormatError::TooShort {
+                need: DYNAMICS_HEADER,
+                got: b.len(),
+            });
+        }
+        let magic = u32_at(b, 0);
+        if magic != DYNAMICS_MAGIC {
+            return Err(FormatError::BadMagic {
+                expected: DYNAMICS_MAGIC,
+                got: magic,
+            });
+        }
+        let version = u32_at(b, 4);
+        let n = u32_at(b, 8) as usize;
+        let need = n
+            .checked_mul(DYNAMICS_REC)
+            .and_then(|x| x.checked_add(DYNAMICS_HEADER))
+            .ok_or(FormatError::SizeOverflow)?;
+        if b.len() < need {
+            return Err(FormatError::TooShort { need, got: b.len() });
+        }
+        let mut leak = Vec::with_capacity(n);
+        let mut v_threshold = Vec::with_capacity(n);
+        for k in 0..n {
+            let o = DYNAMICS_HEADER + k * DYNAMICS_REC;
+            let l = f32_at(b, o);
+            let t = f32_at(b, o + 4);
+            if !l.is_finite() || !(0.0 < l && l <= 1.0) {
+                return Err(FormatError::BadDynamics { index: k });
+            }
+            if !t.is_finite() || !(0.0 < t && t <= 100.0) {
+                return Err(FormatError::BadDynamics { index: k });
+            }
+            leak.push(l);
+            v_threshold.push(t);
+        }
+        Ok(Self {
+            version,
+            leak,
+            v_threshold,
         })
     }
 }
@@ -314,6 +383,52 @@ mod tests {
         assert!(matches!(
             NeuronsFile::parse(&b),
             Err(FormatError::BadMagic { .. })
+        ));
+    }
+
+    fn dynamics_bytes() -> Vec<u8> {
+        let mut b = Vec::new();
+        b.extend(DYNAMICS_MAGIC.to_le_bytes());
+        b.extend(1u32.to_le_bytes());
+        b.extend(3u32.to_le_bytes());
+        for leak in [0.8f32, 0.9, 0.7] {
+            b.extend(leak.to_le_bytes());
+            b.extend(1.0f32.to_le_bytes());
+        }
+        b
+    }
+
+    #[test]
+    fn parses_dynamics_and_rejects_bad_values() {
+        let d = DynamicsFile::parse(&dynamics_bytes()).unwrap();
+        assert_eq!(d.version, 1);
+        assert_eq!(d.count(), 3);
+        assert!((d.leak[1] - 0.9).abs() < 1e-6);
+
+        let mut zero_leak = dynamics_bytes();
+        zero_leak[12..16].copy_from_slice(&0f32.to_le_bytes());
+        assert!(matches!(
+            DynamicsFile::parse(&zero_leak),
+            Err(FormatError::BadDynamics { index: 0 })
+        ));
+
+        let mut huge_threshold = dynamics_bytes();
+        huge_threshold[16..20].copy_from_slice(&250f32.to_le_bytes());
+        assert!(matches!(
+            DynamicsFile::parse(&huge_threshold),
+            Err(FormatError::BadDynamics { index: 0 })
+        ));
+
+        let mut bad_magic = dynamics_bytes();
+        bad_magic[0] ^= 0xFF;
+        assert!(matches!(
+            DynamicsFile::parse(&bad_magic),
+            Err(FormatError::BadMagic { .. })
+        ));
+
+        assert!(matches!(
+            DynamicsFile::parse(&dynamics_bytes()[..8]),
+            Err(FormatError::TooShort { .. })
         ));
     }
 

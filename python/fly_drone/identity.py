@@ -28,10 +28,13 @@ MODEL_KEYS = (
     # P1 (C1): a bundle that declares ascending/proprioceptive feedback inputs is an
     # additive, non-canonical identity, exactly like a sign or wiring variant.
     "feedback",
+    # P2 (C2): a bundle that carries fitted/declared per-neuron dynamics. Value is a
+    # dict with the parameter set and a sha256 of dynamics.bin, so the hash covers it.
+    "dynamics",
 )
 
 # A bundle carrying any of these keys is an alternate, non-canonical model.
-ALTERNATE_KEYS = ("wiring", "sign_convention", "feedback")
+ALTERNATE_KEYS = ("wiring", "sign_convention", "feedback", "dynamics")
 
 
 def canonical_model(manifest):

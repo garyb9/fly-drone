@@ -1,6 +1,7 @@
 use brain_core::{
     core::{
-        format::{GraphFile, NeuronsFile},
+        format::{DynamicsFile, GraphFile, NeuronsFile},
+        lif::LifParams,
         sim::{SimConfig, SimCore},
     },
     policy::Policy,
@@ -19,21 +20,32 @@ struct Brain {
 #[pymethods]
 impl Brain {
     #[new]
-    fn new(neurons: &[u8], graph: &[u8], seed: u64) -> PyResult<Self> {
+    #[pyo3(signature = (neurons, graph, seed, dynamics=None))]
+    fn new(neurons: &[u8], graph: &[u8], seed: u64, dynamics: Option<&[u8]>) -> PyResult<Self> {
         let n = NeuronsFile::parse(neurons).map_err(|e| err(format!("{e:?}")))?;
         let g = GraphFile::parse(graph).map_err(|e| err(format!("{e:?}")))?;
         if n.count() != g.n_nodes {
             return Err(err("graph size mismatch"));
         }
+        let mut inner = SimCore::new(
+            &n,
+            &g,
+            SimConfig {
+                seed,
+                ..Default::default()
+            },
+        );
+        if let Some(bytes) = dynamics {
+            let d = DynamicsFile::parse(bytes).map_err(|e| err(format!("{e:?}")))?;
+            if d.count() != n.count() {
+                return Err(err("dynamics size mismatch"));
+            }
+            if !inner.set_dynamics(d.leak, d.v_threshold) {
+                return Err(err("dynamics size mismatch"));
+            }
+        }
         Ok(Self {
-            inner: SimCore::new(
-                &n,
-                &g,
-                SimConfig {
-                    seed,
-                    ..Default::default()
-                },
-            ),
+            inner,
             eyes: Eyes::default(),
             policy: None,
         })
@@ -41,6 +53,17 @@ impl Brain {
     fn reset(&mut self, seed: u64) {
         self.inner.reset(seed);
         self.eyes.reset();
+    }
+    /// Override the scalar LIF globals (P2 dynamics prior); per-neuron leak and
+    /// threshold come from the dynamics blob passed to the constructor.
+    fn set_lif_globals(&mut self, v_reset: f32, refrac_ticks: u16, noise_sigma: f32) {
+        let p = self.inner.params();
+        self.inner.set_params(LifParams {
+            v_reset,
+            refrac_ticks,
+            noise_sigma,
+            ..p
+        });
     }
     fn clear_vision_history(&mut self) {
         self.eyes.reset();

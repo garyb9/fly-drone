@@ -69,11 +69,26 @@ impl LifState {
 /// Returns `(new_v, fired, new_refrac)`. While refractory, `v` is clamped to
 /// `v_reset`, no spike is emitted, and the refractory counter decrements.
 pub fn integrate_one(v: f32, refrac: u16, input: f32, p: &LifParams) -> (f32, bool, u16) {
+    integrate_one_with(v, refrac, input, p.leak, p.v_threshold, p)
+}
+
+/// Per-neuron variant of [`integrate_one`]: `leak` and `v_threshold` come from a
+/// declared dynamics bundle (P2) instead of the uniform [`LifParams`]. Reset,
+/// refractory and noise stay scalar, so an additive bundle changes only the two
+/// fitted fields and the canonical uniform-LIF path is bit-identical.
+pub fn integrate_one_with(
+    v: f32,
+    refrac: u16,
+    input: f32,
+    leak: f32,
+    v_threshold: f32,
+    p: &LifParams,
+) -> (f32, bool, u16) {
     if refrac > 0 {
         return (p.v_reset, false, refrac - 1);
     }
-    let v_new = p.leak * v + input;
-    if v_new >= p.v_threshold {
+    let v_new = leak * v + input;
+    if v_new >= v_threshold {
         (p.v_reset, true, p.refrac_ticks)
     } else {
         (v_new, false, 0)

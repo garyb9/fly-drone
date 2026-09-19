@@ -82,7 +82,17 @@ class BrainRuntime:
         neurons = (self.data / "neurons.bin").read_bytes()
         self.dataset_hash, self.bundle_hash = hashes(raw, neurons, manifest)
         self.alternate = is_alternate(manifest)
-        self.core = Brain(neurons, raw, seed)
+        # P2 (C2): an additive dynamics bundle carries per-neuron leak/threshold.
+        dynamics_path = self.data / "dynamics.bin"
+        dynamics = dynamics_path.read_bytes() if dynamics_path.is_file() else None
+        self.core = Brain(neurons, raw, seed, dynamics)
+        marker = manifest.get("dynamics")
+        if isinstance(marker, dict) and "refrac_ms" in marker:
+            self.core.set_lif_globals(
+                float(marker["v_reset"]),
+                round(float(marker["refrac_ms"]) / 5.0),
+                float(marker["noise_sigma"]),
+            )
         if self.core.neuron_count() != manifest["n_neurons"]:
             raise ValueError("manifest neuron count mismatch")
         self.cells = json.loads((self.data / "cells.json").read_text())

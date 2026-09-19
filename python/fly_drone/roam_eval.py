@@ -209,7 +209,12 @@ def _probe_job(job):
 
     controller, probe, seeds, vision, seconds, *rest = job
     encoder = rest[0] if rest and controller.startswith("policy:") else None
-    brain = BrainRuntime(encoder=encoder)
+    bundle = rest[1] if len(rest) > 1 else None
+    brain = (
+        BrainRuntime(encoder=encoder, data=bundle)
+        if bundle
+        else BrainRuntime(encoder=encoder)
+    )
     adapter_path = None
     if controller.startswith("policy:"):
         brain.load_policy(controller.split(":", 1)[1])
@@ -288,6 +293,7 @@ def skill_probes(
     seconds=None,
     seed_base=1000,
     encoder=None,
+    bundle=None,
 ):
     """A5: steer, approach, dodge and wall probes, balanced by side."""
     import multiprocessing
@@ -296,7 +302,7 @@ def skill_probes(
     seeds = np.arange(seed_base, seed_base + episodes)
     per = max(1, workers // len(PROBES))
     jobs = [
-        (controller, probe, chunk.tolist(), vision, seconds, encoder)
+        (controller, probe, chunk.tolist(), vision, seconds, encoder, bundle)
         for probe in PROBES
         for chunk in np.array_split(seeds, min(per, episodes))
         if len(chunk)
@@ -379,6 +385,8 @@ def adapter_check(
     workers=6,
     seed_base=1000,
     probes=True,
+    bundle=None,
+    adapter=None,
 ):
     """P0 gate: the declared adapter under the standard causal conditions, teacher-free.
 
@@ -388,7 +396,7 @@ def adapter_check(
     """
     from .distill import screen
 
-    key = "adapter"
+    key = f"adapter:{adapter}" if adapter else "adapter"
     combos = [(key, c) for c in CONDITIONS] + [(b, "none") for b in BASELINES]
     report = screen(
         None,
@@ -399,13 +407,17 @@ def adapter_check(
         workers=workers,
         seed_base=seed_base,
         combos=combos,
+        bundle=bundle,
     )
     report["policy"] = key
+    report["bundle"] = str(bundle) if bundle else None
     report["bridge"] = "declared"
     report["task"] = "free_roam"
     report["teacher_in_behaviour_path"] = False
     report["probes"] = (
-        skill_probes(key, episodes, workers, seed_base=seed_base) if probes else None
+        skill_probes(key, episodes, workers, seed_base=seed_base, bundle=bundle)
+        if probes
+        else None
     )
     report["acceptance"] = acceptance(report["results"], key, report["probes"])
     Path(output).write_text(json.dumps(report, indent=2))
@@ -435,6 +447,7 @@ def feedback_check(
     intact, feedback silenced, and ghost (invisible obstacle). Reuses the free-roam
     machinery; reports the per-metric causal interval honestly.
     """
+    from .adapter import DEFAULT_FEEDBACK_PATH
     from .brain import ROOT
     from .distill import screen
 
@@ -444,7 +457,10 @@ def feedback_check(
             f"feedback bundle not built: {bundle} "
             "(run `python scripts/make_feedback_bundle.py`)"
         )
-    key = f"adapter:{adapter}" if adapter else "adapter"
+    # The canonical adapter is (correctly) refused on the alternate feedback bundle,
+    # so default to the feedback-pinned artifact.
+    adapter = adapter or DEFAULT_FEEDBACK_PATH
+    key = f"adapter:{adapter}"
     combos = [(key, c) for c in ("none", "feedback", "ghost")]
     report = screen(
         None,

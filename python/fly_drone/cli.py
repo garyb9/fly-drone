@@ -271,6 +271,10 @@ def main():
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed-base", type=int, default=1000)
     p.add_argument("--no-probes", action="store_true")
+    p.add_argument(
+        "--bundle", help="alternate bundle to evaluate (e.g. data/malecns-dynamics)"
+    )
+    p.add_argument("--adapter", help="adapter .json pinned to that bundle")
     p = sub.add_parser(
         "feedback-check",
         help="P1 causal test: body feedback changes behaviour (additive, diagnostic)",
@@ -484,6 +488,8 @@ def main():
             args.workers,
             args.seed_base,
             probes=not args.no_probes,
+            bundle=args.bundle,
+            adapter=args.adapter,
         )
         print(json.dumps(report["acceptance"], indent=2))
         if not report["acceptance"]["passed"]:

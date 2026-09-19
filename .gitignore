@@ -9,6 +9,7 @@ runs/
 data/malecns-rewired/
 data/malecns-sign-*/
 data/malecns-feedback/
+data/malecns-dynamics/
 *.egg-info/
 .env
 *.so

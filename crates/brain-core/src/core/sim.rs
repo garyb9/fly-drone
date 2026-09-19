@@ -5,7 +5,7 @@
 //! Driven by the `#[wasm_bindgen] Sim` wrapper in `lib.rs`.
 
 use crate::core::format::{GraphFile, NeuronsFile};
-use crate::core::lif::{integrate_one, LifParams, LifState};
+use crate::core::lif::{integrate_one_with, LifParams, LifState};
 use crate::core::rng::SplitMix64;
 use crate::core::roles::Roles;
 
@@ -49,6 +49,9 @@ pub struct SimCore {
     sign: Vec<f32>, // +1.0 or -1.0 per neuron
     silenced: Vec<bool>,
     bias: Vec<f32>, // tonic drive per neuron (0 for now)
+    // P2 additive dynamics: per-neuron leak and threshold, uniform by default.
+    leak: Vec<f32>,
+    v_threshold: Vec<f32>,
 
     state: LifState,
     input_cur: Vec<f32>,
@@ -89,6 +92,8 @@ impl SimCore {
             sign,
             silenced: vec![false; n],
             bias: vec![0.0; n],
+            leak: vec![cfg.params.leak; n],
+            v_threshold: vec![cfg.params.v_threshold; n],
             state: LifState::new(n),
             input_cur: vec![0.0; n],
             input_next: vec![0.0; n],
@@ -112,6 +117,19 @@ impl SimCore {
     }
     pub fn set_params(&mut self, p: LifParams) {
         self.params = p;
+    }
+    pub fn params(&self) -> LifParams {
+        self.params
+    }
+    /// Install per-neuron dynamics from a declared bundle (P2). Returns false on a
+    /// length mismatch so a caller cannot half-apply a bundle.
+    pub fn set_dynamics(&mut self, leak: Vec<f32>, v_threshold: Vec<f32>) -> bool {
+        if leak.len() != self.n || v_threshold.len() != self.n {
+            return false;
+        }
+        self.leak = leak;
+        self.v_threshold = v_threshold;
+        true
     }
     pub fn set_dt_ms(&mut self, dt_ms: f32) {
         self.dt_ms = dt_ms;
@@ -229,8 +247,14 @@ impl SimCore {
                     continue;
                 }
                 let input = self.input_cur[i] + self.bias[i] + noise;
-                let (v_new, fired, refrac_new) =
-                    integrate_one(self.state.v[i], self.state.refrac[i], input, &self.params);
+                let (v_new, fired, refrac_new) = integrate_one_with(
+                    self.state.v[i],
+                    self.state.refrac[i],
+                    input,
+                    self.leak[i],
+                    self.v_threshold[i],
+                    &self.params,
+                );
                 self.state.v[i] = v_new;
                 self.state.refrac[i] = refrac_new;
                 self.state.spike[i] = fired as u8;
@@ -413,6 +437,33 @@ mod tests {
             "edge into inactive neuron must be skipped"
         );
         assert_eq!(s.debug_v(2), 0.0);
+    }
+
+    #[test]
+    fn set_dynamics_changes_firing_and_rejects_length_mismatch() {
+        let (nb, gb) = tiny();
+        let nf = NeuronsFile::parse(&nb).unwrap();
+        let gf = GraphFile::parse(&gb).unwrap();
+        let cfg = SimConfig {
+            seed: 1,
+            params: LifParams {
+                noise_sigma: 0.0,
+                ..LifParams::default()
+            },
+            ..SimConfig::default()
+        };
+        let mut s = SimCore::new(&nf, &gf, cfg);
+        // Uniform leak/threshold: 0.9 is below the 1.0 threshold, so no spike.
+        s.add_input(0, 0.9);
+        s.step(1);
+        assert_eq!(s.spikes()[0], 0);
+
+        assert!(!s.set_dynamics(vec![0.5; 2], vec![1.0; 3]));
+        assert!(s.set_dynamics(vec![0.7788; 3], vec![0.5; 3]));
+        s.reset(1);
+        s.add_input(0, 0.9);
+        s.step(1);
+        assert_eq!(s.spikes()[0], 1, "lower declared threshold must fire");
     }
 
     #[test]
