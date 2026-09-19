@@ -22,7 +22,16 @@ from .env import PATHWAYS, TASKS, ConnectomeEnv, EpisodeTracker
 from .fly import FlyMirror
 from .roam_eval import FREE_CELLS
 
-ABLATION_MODES = ("none", "zero", "sensory", "shuffle", "light", "loom", "ghost")
+ABLATION_MODES = (
+    "none",
+    "zero",
+    "sensory",
+    "shuffle",
+    "light",
+    "loom",
+    "ghost",
+    "feedback",
+)
 POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
 # Frames between attribution refreshes. explain() costs ~90 ms, so the live viewer
 # gets a fresh gradient-x-input readout a few times a second without taxing the loop.
@@ -105,9 +114,31 @@ class Session:
         task_policies=None,
         encoder=None,
         bridge=None,
+        bundle=None,
+        adapter=None,
+        feedback=False,
     ):
         self.policy = policy
         self.encoder = encoder
+        self.bundle = str(bundle) if bundle else None
+        self.adapter = adapter
+        # An alternate bundle needs its own pinned adapter, or the canonical one is
+        # (correctly) refused. Default to the committed artifact matching the bundle.
+        if self.adapter:
+            self.adapter = str(self.adapter)
+        elif self.bundle:
+            from .adapter import DEFAULT_DYNAMICS_PATH, DEFAULT_FEEDBACK_PATH
+
+            name = Path(self.bundle).name
+            if "feedback" in name and DEFAULT_FEEDBACK_PATH.is_file():
+                self.adapter = str(DEFAULT_FEEDBACK_PATH)
+            elif "dynamics" in name and DEFAULT_DYNAMICS_PATH.is_file():
+                self.adapter = str(DEFAULT_DYNAMICS_PATH)
+        # A feedback bundle means the user wants to see the closed loop; the UI's
+        # "feedback" ablation is the control.
+        self.feedback = bool(feedback) or bool(
+            self.bundle and (Path(self.bundle) / "feedback-mappings.json").is_file()
+        )
         self.task_policies = {task: None for task in TASKS}
         self.task_policies.update(task_policies or {})
         self.task_policies["visual"] = policy
@@ -148,8 +179,15 @@ class Session:
     def run(self):
         env = None
         try:
-            brain = BrainRuntime(encoder=self.encoder) if self.encoder else None
-            env = ConnectomeEnv(brain=brain) if brain is not None else ConnectomeEnv()
+            if self.bundle:
+                brain = BrainRuntime(encoder=self.encoder, data=self.bundle)
+                env = ConnectomeEnv(brain=brain, feedback=self.feedback)
+            elif self.encoder:
+                brain = BrainRuntime(encoder=self.encoder)
+                env = ConnectomeEnv(brain=brain)
+            else:
+                brain = None
+                env = ConnectomeEnv(feedback=self.feedback)
             fly = FlyMirror()
             task_policies = self.task_policies
             active_policy = None
@@ -173,10 +211,14 @@ class Session:
                     env.brain.silence_sensors()
                 elif env.ablation in PATHWAYS:
                     env.brain.silence_inputs(PATHWAYS[env.ablation])
+                elif env.ablation == "feedback":
+                    env.brain.silence_feedback()
                 for name in sorted(silenced):
                     # "sensory" is the whole visual field; light/loom are single pathways.
                     if name == "sensory":
                         env.brain.silence_sensors()
+                    elif name == "feedback":
+                        env.brain.silence_feedback()
                     else:
                         env.brain.silence_inputs(PATHWAYS[name])
 
@@ -343,9 +385,9 @@ class Session:
                                     )
                             elif op == "pathway":
                                 name = c["name"]
-                                if name not in (*PATHWAYS, "sensory"):
+                                if name not in (*PATHWAYS, "sensory", "feedback"):
                                     raise ValueError(
-                                        "pathway must be sensory, light or loom"
+                                        "pathway must be sensory, light, loom or feedback"
                                     )
                                 if c.get("silenced", True):
                                     silenced.add(name)
@@ -376,7 +418,9 @@ class Session:
                         # The declared adapter is the default free-roam bridge: the
                         # command comes from neurons through fixed, calibrated constants.
                         # Use observe() so live zero/shuffle/silencing reaches the codec.
-                        command = declared_command(env.brain, features=observed)
+                        command = declared_command(
+                            env.brain, features=observed, path=self.adapter
+                        )
                         policy_status = "loaded"
                         explained = None
                     elif not active_policy:
@@ -530,9 +574,19 @@ def make_app(
     port=8000,
     encoder=None,
     bridge=None,
+    bundle=None,
+    adapter=None,
+    feedback=False,
 ):
     session = Session(
-        policy, looming_policy, task_policies, encoder=encoder, bridge=bridge
+        policy,
+        looming_policy,
+        task_policies,
+        encoder=encoder,
+        bridge=bridge,
+        bundle=bundle,
+        adapter=adapter,
+        feedback=feedback,
     )
 
     @asynccontextmanager

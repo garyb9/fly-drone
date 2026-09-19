@@ -55,6 +55,17 @@ def main():
         help="free-roam body bridge: the declared adapter (default) or an explicit "
         "learned decoder (requires --policy/--current/--task-policy)",
     )
+    p.add_argument(
+        "--bundle",
+        help="alternate bundle dir to fly, e.g. data/malecns-feedback or "
+        "data/malecns-dynamics (generated; see the make_*_bundle scripts)",
+    )
+    p.add_argument("--adapter", help="adapter .json pinned to --bundle")
+    p.add_argument(
+        "--feedback",
+        action="store_true",
+        help="inject declared body feedback (on by default for a feedback bundle)",
+    )
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
     p = sub.add_parser("baseline")
@@ -601,6 +612,9 @@ def main():
                 args.port,
                 encoder=encoder,
                 bridge=args.bridge,
+                bundle=args.bundle,
+                adapter=args.adapter,
+                feedback=args.feedback,
             ),
             host="127.0.0.1",
             port=args.port,

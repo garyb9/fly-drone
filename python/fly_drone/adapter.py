@@ -31,6 +31,8 @@ from .identity import check_bundle_pin
 DEFAULT_PATH = ROOT / "docs" / "results" / "adapter" / "adapter.json"
 # The same codec re-pinned to the P1 feedback bundle (an alternate identity).
 DEFAULT_FEEDBACK_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-feedback.json"
+# The same codec re-pinned to the P2 dynamics bundle (an alternate identity).
+DEFAULT_DYNAMICS_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-dynamics.json"
 # Escape readout level above rest that counts as a full loom response (rest ~0, loom
 # ~0.74-0.87 in the battery). Declared, not fitted.
 ESCAPE_SCALE = 0.5
