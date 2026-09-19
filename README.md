@@ -1,8 +1,10 @@
 # Fly / Drone
 
 A full MaleCNS fly connectome inside a simulated quadrotor. Camera pixels enter a frozen Rust
-spiking network of 166,700 neurons, a learned decoder turns descending/motor neural activity into
-motion commands, and a stabilising controller drives four MuJoCo rotors.
+spiking network of 166,700 neurons, a declared, calibrated body adapter turns descending/motor
+neural activity into motion commands, and a stabilising controller drives four MuJoCo rotors. A
+learned decoder/encoder path is retained but deprecated (see
+[`docs/results/encoder-v6/DEPRECATION.md`](docs/results/encoder-v6/DEPRECATION.md)).
 
 The browser shows the drone, its two eyes, a live anatomical activity graph, and an illustrative
 fly receiving the same neural outputs. The drone is the primary body; the fly has an independent

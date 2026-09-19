@@ -150,9 +150,15 @@ Details: [`../neuron-model.md`](../neuron-model.md).
 ## 5. From neurons to rotors: what the drone is told
 
 **Which fly actions map to the drone?** No neuron is hand-assigned to a rotor or an axis. A fly
-steers with wings, and a quadrotor has four velocity-like degrees of freedom, so the mapping is
-**learned**: a small decoder reads the activity of the cells that carry the brain's motor commands
-(all 1,314 descending neurons and 708 VNC motor neurons) and outputs motion intent.
+steers with wings, and a quadrotor has four velocity-like degrees of freedom, so some engineering
+translation is unavoidable. By default that translation is a **declared, calibrated adapter**
+([`adapter.py`](../../python/fly_drone/adapter.py), P0): a fixed map from a small set of neural
+readouts to the motion intent, calibrated on a declared stimulus battery with no teacher. The
+learned decoder below is retained but deprecated.
+
+The deprecated learned path maps the activity of the cells that carry the brain's motor commands
+(all 1,314 descending neurons and 708 VNC motor neurons) through a small MLP decoder to the same
+motion intent:
 
 $$
 \hat x = (f - \mu) \oslash \sigma, \qquad
@@ -170,8 +176,9 @@ $$
 | $a_2 \to v_z$      | climb / dive   |         0.3 m/s |           0.2 m/s |
 | $a_3 \to \dot\psi$ | turn           |       0.8 rad/s |         0.8 rad/s |
 
-The anatomical readouts (wing, thrust, steer, escape; 2–30 cells each) drive only the illustrative
-fly in the viewer, and they have no effect on the drone.
+The declared adapter steers from the left/right laterality of the 2,022 descending/motor traces plus
+the `escape` and power readouts. The remaining anatomical readouts (wing, thrust, steer; 2–30 cells
+each) drive only the illustrative fly in the viewer and have no effect on the drone.
 
 **Body.** Velocity intent integrates into a bounded position-hold setpoint. A cascaded PID (position
 → attitude → torques) and a mixer produce four rotor speeds. Vertical is direct thrust. Lateral

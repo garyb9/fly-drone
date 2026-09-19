@@ -1,6 +1,11 @@
 # Free roam: one connectome decoder flies an open arena
 
-Code: `python/fly_drone/{arena,plant,env,feasibility,teacher,distill,attribution,roam_eval,server}.py`.
+**Default bridge (P0).** Free roam now defaults to the **declared, calibrated adapter**
+([`adapter.py`](../python/fly_drone/adapter.py)), a teacher-free codec from neural readouts to
+`[vx, vy, vz, yaw_rate]`; pass `--bridge learned` (with a decoder) to fly the deprecated learned
+path described below. The gate is `fly-drone adapter-check`.
+
+Code: `python/fly_drone/{adapter,arena,plant,env,feasibility,teacher,distill,attribution,roam_eval,server}.py`.
 Plan: [`superpowers/plans`](superpowers/plans/) (free-roam plan, 2026-09-13).
 
 ## 1. What "the brain controls it" means here
