@@ -85,6 +85,11 @@ ANCHOR_DECAY_FRAMES = 350_000  # per environment, linear to zero over a full rou
 # explores. A lighter default than the encoder anchor: the decoder action is small and bounded.
 DECODER_ANCHOR_WEIGHT = 0.2
 DECODER_ANCHOR_DECAY_FRAMES = 150_000
+# In-loss BC anchor for decoder rounds (the reward-penalty anchor above was too weak: both v6
+# decoder rounds collapsed when the actor unfroze). The actor loss gains
+# ``bc_weight * mean((tanh(mu) - a_ref)^2)`` on the replay batch, so every update is pulled toward
+# the reference decoder (TD3+BC-style) instead of being constrained only through the reward.
+DECODER_BC_WEIGHT = 1.0
 SATURATION_WEIGHT = 0.05
 SATURATION_LO = 0.2
 SATURATION_HI = 1.8
@@ -620,17 +625,24 @@ class WarmupSAC(SAC):
         if self.actor_frozen:
             self._train_critic_only(gradient_steps, batch_size)
             return
+        bc_anchor = getattr(self, "decoder_anchor", None)
+        if bc_anchor is not None:
+            self._train_with_predictive(gradient_steps, batch_size, bc_anchor=bc_anchor)
+            return
         if self.predictor is None or self.predictive_weight <= 0:
             return super().train(gradient_steps, batch_size)
         self._train_with_predictive(gradient_steps, batch_size)
 
-    def _train_with_predictive(self, gradient_steps, batch_size):
-        """SAC's `train` with the predictive auxiliary loss added to the actor loss.
+    def _train_with_predictive(self, gradient_steps, batch_size, bc_anchor=None):
+        """SAC's `train` with an optional auxiliary loss on the actor update.
 
-        Mirrors stable-baselines3 2.9.0 ``SAC.train``; the only change is the auxiliary term and
-        its logging. The encoder features (the currents) must predict the next DN trace from the
-        current one, and their variance is kept up, so a near-constant encoder is directly
-        penalised — the failure the frozen-decoder reward alone does not prevent.
+        Mirrors stable-baselines3 2.9.0 ``SAC.train``. Two additive terms share this loop:
+        - the predictive auxiliary objective (encoder rounds): the encoder's currents must predict
+          the next DN trace, and their variance is kept up, so a near-constant encoder is directly
+          penalised;
+        - the in-loss BC anchor (decoder rounds, `bc_anchor` set): the actor's mean is pulled toward
+          a frozen reference decoder's action on the same DN traces, so the clone cannot be
+          destroyed by the RL update.
         """
         from stable_baselines3.common.utils import polyak_update
         from torch.nn import functional as F
@@ -646,7 +658,7 @@ class WarmupSAC(SAC):
         self._update_learning_rate(optimizers)
 
         ent_coef_losses, ent_coefs = [], []
-        actor_losses, critic_losses, predictive_losses = [], [], []
+        actor_losses, critic_losses, predictive_losses, bc_losses = [], [], [], []
         for gradient_step in range(gradient_steps):
             replay_data = self.replay_buffer.sample(
                 batch_size, env=self._vec_normalize_env
@@ -710,6 +722,19 @@ class WarmupSAC(SAC):
             )
             min_qf_pi, _ = torch.min(q_values_pi, dim=1, keepdim=True)
             actor_loss = (ent_coef * log_prob - min_qf_pi).mean()
+            if bc_anchor is not None:
+                # Pull the mean action toward the frozen reference decoder on the same DN batch,
+                # so the RL update cannot destroy the cloned skill.
+                mean_actions, _, _ = self.actor.get_action_dist_params(
+                    replay_data.observations
+                )
+                dn = replay_data.observations["dn"].detach().cpu().numpy()
+                reference = torch.as_tensor(
+                    bc_anchor.action(dn), device=self.device, dtype=mean_actions.dtype
+                )
+                bc_loss = F.mse_loss(torch.tanh(mean_actions), reference)
+                actor_loss = actor_loss + self.bc_weight * bc_loss
+                bc_losses.append(float(bc_loss.detach()))
             actor_losses.append(float(actor_loss.detach()))
             self.actor.optimizer.zero_grad()
             actor_loss.backward()
@@ -719,15 +744,16 @@ class WarmupSAC(SAC):
             # predictor, so the actor optimizer stays SB3-loadable. The encoder features must
             # predict the next DN trace, and their variance is kept up, so a near-constant encoder
             # is directly penalised — the failure the frozen-decoder reward alone does not prevent.
-            features = self.actor.features_extractor(replay_data.observations)
-            currents = torch.tanh(features)
-            prediction = self.predictor(replay_data.observations["dn"], currents)
-            aux = F.mse_loss(prediction, replay_data.next_observations["dn"])
-            aux = aux + PREDICTIVE_VAR_WEIGHT * variance_loss(currents)
-            predictive_losses.append(float(aux.detach()))
-            self.aux_optimizer.zero_grad()
-            aux.backward()
-            self.aux_optimizer.step()
+            if self.predictor is not None and self.predictive_weight > 0:
+                features = self.actor.features_extractor(replay_data.observations)
+                currents = torch.tanh(features)
+                prediction = self.predictor(replay_data.observations["dn"], currents)
+                aux = F.mse_loss(prediction, replay_data.next_observations["dn"])
+                aux = aux + PREDICTIVE_VAR_WEIGHT * variance_loss(currents)
+                predictive_losses.append(float(aux.detach()))
+                self.aux_optimizer.zero_grad()
+                aux.backward()
+                self.aux_optimizer.step()
 
             if gradient_step % self.target_update_interval == 0:
                 polyak_update(
@@ -740,7 +766,10 @@ class WarmupSAC(SAC):
         self.logger.record("train/ent_coef", np.mean(ent_coefs))
         self.logger.record("train/actor_loss", np.mean(actor_losses))
         self.logger.record("train/critic_loss", np.mean(critic_losses))
-        self.logger.record("train/predictive_loss", np.mean(predictive_losses))
+        if predictive_losses:
+            self.logger.record("train/predictive_loss", np.mean(predictive_losses))
+        if bc_losses:
+            self.logger.record("train/bc_loss", np.mean(bc_losses))
         if len(ent_coef_losses) > 0:
             self.logger.record("train/ent_coef_loss", np.mean(ent_coef_losses))
 
@@ -1746,7 +1775,9 @@ def _factory(learner, rank, seed, decoder, encoder, level, spatial=False, anchor
                     encoder=encoder,
                     level=level,
                     spatial=spatial,
-                    anchor=anchor,
+                    # A decoder round anchors in the actor loss (`_attach_decoder_anchor`), not
+                    # through the env reward; only the encoder learner uses the env anchor.
+                    anchor=anchor if learner == "encoder" else None,
                 )
             )
         env.reset(seed=seed + rank)
@@ -1790,6 +1821,39 @@ def _attach_predictor(model, weight):
         + list(predictor.parameters()),
         lr=model.actor.optimizer.param_groups[0]["lr"],
     )
+    return model
+
+
+def _encoder_version(path):
+    """Version string of a learned encoder .pt (v5 scalar or v6 spatial)."""
+    from .brain import _is_spatial
+
+    if _is_spatial(str(path)):
+        from .spatial_encoder import SpatialEncoder
+
+        return SpatialEncoder.load(path).version
+    from .encoder import LearnedEncoder
+
+    return LearnedEncoder.load(path).version
+
+
+def _attach_decoder_anchor(model, path, encoder=None, weight=DECODER_BC_WEIGHT):
+    """Attach the in-loss BC anchor for a decoder round (after build/load, like the predictor).
+
+    The reward-penalty anchor in `SacRoamEnv` was too weak: both v6 decoder rounds collapsed once
+    the actor unfroze. This puts the constraint in the actor loss instead, so every update is
+    pulled toward the frozen reference decoder's action on the same DN traces.
+    """
+    anchor = DecoderReference.load(path)
+    if encoder is not None:
+        version = _encoder_version(encoder)
+        if anchor.encoder_version != version:
+            raise ValueError(
+                f"decoder anchor was exported for encoder {anchor.encoder_version!r}, "
+                f"round encoder is {version!r}"
+            )
+    model.decoder_anchor = anchor
+    model.bc_weight = float(weight)
     return model
 
 
@@ -1949,6 +2013,8 @@ def train_round(
         if learner == "encoder":
             stats = json.loads(Path(decoder).read_text())
             set_dn_stats(model, stats["mean"], stats["scale"])
+        if learner == "decoder" and anchor:
+            _attach_decoder_anchor(model, anchor, encoder)
         callbacks = CallbackList(
             [
                 CheckpointCallback(

@@ -602,6 +602,56 @@ def test_warmup_survives_save_and_load(tmp_path):
     assert restored.actor_warmup == 7 and restored.actor_frozen
 
 
+def test_decoder_in_loss_bc_anchor_is_logged_and_pulls_the_actor(tmp_path):
+    import json
+
+    from fly_drone.sac import _attach_decoder_anchor
+
+    n = 16
+    payload = {
+        "version": 1,
+        "encoder_version": "learned-v6:" + "0" * 16,
+        "dataset_hash": "h",
+        "mean": [0.0] * n,
+        "scale": [1.0] * n,
+        "layers": [{"weights": [[0.0] * n] * 4, "bias": [0.0] * 4}],
+        "action_limits": [1.0, 1.0, 1.0, 1.0],
+    }
+    path = tmp_path / "anchor.json"
+    path.write_text(json.dumps(payload))
+    model = small_warmup_model(actor_warmup=0)
+    _attach_decoder_anchor(model, path)
+    assert model.decoder_anchor is not None and model.bc_weight > 0
+    model.num_timesteps = 0
+    model.train(gradient_steps=4, batch_size=16)
+    assert "train/bc_loss" in model.logger.name_to_value
+    assert "train/actor_loss" in model.logger.name_to_value
+
+
+def test_attach_decoder_anchor_rejects_a_mismatched_encoder(tmp_path):
+    import json
+
+    from fly_drone.sac import _attach_decoder_anchor
+
+    version = LearnedEncoder.fresh(seed=6).save(tmp_path / "e.pt")
+    n = 16
+    payload = {
+        "version": 1,
+        "encoder_version": "learned-v5:" + "0" * 16,
+        "dataset_hash": "h",
+        "mean": [0.0] * n,
+        "scale": [1.0] * n,
+        "layers": [{"weights": [[0.0] * n] * 4, "bias": [0.0] * 4}],
+        "action_limits": [1.0, 1.0, 1.0, 1.0],
+    }
+    path = tmp_path / "anchor.json"
+    path.write_text(json.dumps(payload))
+    model = small_warmup_model(actor_warmup=0)
+    assert version != payload["encoder_version"]
+    with pytest.raises(ValueError, match="decoder anchor"):
+        _attach_decoder_anchor(model, path, encoder=tmp_path / "e.pt")
+
+
 def test_train_round_rejects_a_missing_frozen_partner_before_spawning(tmp_path):
     with pytest.raises(ValueError, match="frozen decoder"):
         train_round("encoder", tmp_path / "e", 10, encoder="x.pt")
