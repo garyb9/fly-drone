@@ -8,6 +8,7 @@ web/dist/
 runs/
 data/malecns-rewired/
 data/malecns-sign-*/
+data/malecns-feedback/
 *.egg-info/
 .env
 *.so

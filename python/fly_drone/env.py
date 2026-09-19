@@ -101,6 +101,7 @@ class ConnectomeEnv(gym.Env):
         respawn=False,
         spec=None,
         frame_transform=None,
+        feedback=False,
     ):
         if task not in HORIZON_FRAMES:
             raise ValueError(f"unknown task {task!r}")
@@ -115,6 +116,9 @@ class ConnectomeEnv(gym.Env):
         self.frame_transform = frame_transform
         self.plant = DronePlant(vision=vision, arena=self._wanted_arena())
         self.ablation = ablation
+        # P1 (C1): only a bundle that declares feedback roles can be driven by body state.
+        self.feedback = bool(feedback) and bool(getattr(self.brain, "feedback_ids", {}))
+        self.feedback_state = None
         self.action_space = spaces.Box(-1, 1, (4,), np.float32)
         self.observation_space = spaces.Box(
             0, 1, (len(self.brain.feature_ids),), np.float32
@@ -184,10 +188,18 @@ class ConnectomeEnv(gym.Env):
             self._reset_roam(rng)
         else:
             self._reset_trial(rng, side)
+        if self.feedback:
+            if self.feedback_state is None:
+                from .feedback import FeedbackState
+
+                self.feedback_state = FeedbackState(self.plant)
+            self.feedback_state.reset()
         if self.ablation == "sensory":
             self.brain.silence_sensors()
         elif self.ablation in PATHWAYS:
             self.brain.silence_inputs(PATHWAYS[self.ablation])
+        elif self.ablation == "feedback":
+            self.brain.silence_feedback()
         if self.plant.arena is not None:
             self.plant.set_ghost(self.ablation == "ghost")
         if self.brain.learned:
@@ -409,11 +421,17 @@ class ConnectomeEnv(gym.Env):
         self.command = np.clip(action, -1, 1) * self.plant.limits
         self._move_objects()
         self._sense()
+        if self.feedback:
+            # One rendered frame per environment step; flow holds across the 8 sub-ticks.
+            self.feedback_state.observe_frame(self.plant.images)
         self.trace = []
         brain_ms = 0.0
         for _ in range(8):
             for idx, value in self.interventions.items():
                 self.brain.core.stimulate([idx], value)
+            if self.feedback and self.ablation != "feedback":
+                # Body -> brain: the brain is told what the body is doing, nothing more.
+                self.brain.inject_feedback(self.feedback_state.currents())
             brain_t0 = time.perf_counter()
             self.brain.step()
             brain_ms += (time.perf_counter() - brain_t0) * 1000.0

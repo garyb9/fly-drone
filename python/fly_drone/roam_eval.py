@@ -412,6 +412,75 @@ def adapter_check(
     return report
 
 
+# P1 (C1) causal test. Additive and diagnostic: it never changes ACCEPTANCE. Feedback
+# counts as causal only if silencing it moves behaviour (paired-bootstrap 95% interval
+# of intact - silenced excludes zero) on at least one declared metric. The ghost row is
+# context: an invisible obstacle must not reproduce the intact feedback effect by chance.
+FEEDBACK_METRICS = ("beacons_per_min", "collisions_per_min", "slow_fraction")
+
+
+def feedback_check(
+    output,
+    episodes=50,
+    seconds=120,
+    level=3,
+    workers=6,
+    seed_base=1000,
+    bundle=None,
+    adapter=None,
+):
+    """P1 gate: does body feedback causally change behaviour?
+
+    Runs the declared adapter on the additive feedback bundle in three conditions:
+    intact, feedback silenced, and ghost (invisible obstacle). Reuses the free-roam
+    machinery; reports the per-metric causal interval honestly.
+    """
+    from .brain import ROOT
+    from .distill import screen
+
+    bundle = str(bundle or ROOT / "data/malecns-feedback")
+    if not (Path(bundle) / "feedback-mappings.json").is_file():
+        raise FileNotFoundError(
+            f"feedback bundle not built: {bundle} "
+            "(run `python scripts/make_feedback_bundle.py`)"
+        )
+    key = f"adapter:{adapter}" if adapter else "adapter"
+    combos = [(key, c) for c in ("none", "feedback", "ghost")]
+    report = screen(
+        None,
+        output,
+        seeds=episodes,
+        seconds=seconds,
+        level=level,
+        workers=workers,
+        seed_base=seed_base,
+        combos=combos,
+        bundle=bundle,
+        feedback=True,
+    )
+    results = report["results"]
+    intact, silenced = (results[f"{key}|{c}"] for c in ("none", "feedback"))
+    causal = {}
+    for metric in FEEDBACK_METRICS:
+        ci = paired_bootstrap(_per_seed(intact, metric), _per_seed(silenced, metric))
+        causal[metric] = {
+            "intact": float(np.mean(_per_seed(intact, metric))),
+            "silenced": float(np.mean(_per_seed(silenced, metric))),
+            "ci_intact_minus_silenced": ci,
+            "changed": bool(ci[1] < 0 or ci[0] > 0),
+        }
+    report["policy"] = key
+    report["bundle"] = bundle
+    report["bridge"] = "declared+feedback"
+    report["task"] = "free_roam"
+    report["teacher_in_behaviour_path"] = False
+    report["causal"] = causal
+    report["changed_metrics"] = [m for m, c in causal.items() if c["changed"]]
+    report["passed"] = bool(report["changed_metrics"])
+    Path(output).write_text(json.dumps(report, indent=2))
+    return report
+
+
 # Encoder v5 checks, pre-registered 2026-09-14 before any v5 result (spec §5). Additive:
 # they never change ACCEPTANCE.
 # Both ranges measure the gap to the threat's centre. E1/E2 score the loom group (LC4,

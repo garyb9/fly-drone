@@ -93,6 +93,13 @@ class BrainRuntime:
         sensory = json.loads((self.data / "sensory-mappings.json").read_text())[
             "inputs"
         ]
+        # P1 (C1): a feedback bundle adds declared ascending/proprioceptive input
+        # roles. They are injected from body state each tick, never via set_currents.
+        feedback_path = self.data / "feedback-mappings.json"
+        self.feedback_ids = {}
+        if feedback_path.is_file():
+            roles = json.loads(feedback_path.read_text())["roles"]
+            self.feedback_ids = {k: list(v["cells"]) for k, v in roles.items()}
         self.encoder = encoder
         self.pathway_ids = {}
         self.maps = None
@@ -129,6 +136,9 @@ class BrainRuntime:
         if any(not ids for ids in self.input_ids.values()):
             raise ValueError("required sensory role is empty")
         self.inputs = {k: self.core.input_role(k, v) for k, v in self.input_ids.items()}
+        self.feedback_inputs = {
+            k: self.core.input_role(k, v) for k, v in self.feedback_ids.items()
+        }
         self.readout_ids = {k: v for k, v in groups["roles"]["readout"].items() if v}
         for side in ("l", "r"):
             self.readout_ids["power_" + side] = [
@@ -360,6 +370,19 @@ class BrainRuntime:
         """Silence one sensory pathway, e.g. ("looming_l", "looming_r")."""
         ids = {**self.input_ids, **self.pathway_ids}
         self.core.silence(sorted(set(sum((ids[r] for r in roles), []))), True)
+
+    def inject_feedback(self, currents):
+        """Add this tick's declared body-feedback currents (roles not present are ignored)."""
+        for role, value in currents.items():
+            inject = self.feedback_inputs.get(role)
+            if inject is not None:
+                self.core.inject(inject, float(value))
+
+    def silence_feedback(self):
+        """Silence every declared feedback input; the P1 causal control."""
+        ids = sorted(set(sum(self.feedback_ids.values(), [])))
+        if ids:
+            self.core.silence(ids, True)
 
     def clear_vision_history(self):
         """Forget previous frames so a respawn does not read as dark-area growth."""

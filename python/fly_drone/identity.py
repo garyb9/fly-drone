@@ -25,10 +25,13 @@ MODEL_KEYS = (
     "selection",
     "wiring",
     "sign_convention",
+    # P1 (C1): a bundle that declares ascending/proprioceptive feedback inputs is an
+    # additive, non-canonical identity, exactly like a sign or wiring variant.
+    "feedback",
 )
 
 # A bundle carrying any of these keys is an alternate, non-canonical model.
-ALTERNATE_KEYS = ("wiring", "sign_convention")
+ALTERNATE_KEYS = ("wiring", "sign_convention", "feedback")
 
 
 def canonical_model(manifest):

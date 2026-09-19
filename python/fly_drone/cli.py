@@ -256,6 +256,10 @@ def main():
         help="calibrate the declared body adapter on the stimulus battery (P0)",
     )
     p.add_argument("--output", default="docs/results/adapter/adapter.json")
+    p.add_argument(
+        "--bundle",
+        help="alternate bundle to calibrate against (e.g. data/malecns-feedback)",
+    )
     p = sub.add_parser(
         "adapter-check",
         help="teacher-free causal gate for the declared body adapter (P0)",
@@ -267,6 +271,22 @@ def main():
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed-base", type=int, default=1000)
     p.add_argument("--no-probes", action="store_true")
+    p = sub.add_parser(
+        "feedback-check",
+        help="P1 causal test: body feedback changes behaviour (additive, diagnostic)",
+    )
+    p.add_argument("--output", default="runs/feedback/check.json")
+    p.add_argument(
+        "--bundle", help="feedback bundle dir (default data/malecns-feedback)"
+    )
+    p.add_argument(
+        "--adapter", help="feedback-pinned adapter .json (default: canonical)"
+    )
+    p.add_argument("--episodes", type=int, default=50)
+    p.add_argument("--seconds", type=float, default=120)
+    p.add_argument("--level", type=int, default=3)
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--seed-base", type=int, default=1000)
     p = sub.add_parser("encoder-checks")
     p.add_argument("--policy", required=True)
     p.add_argument("--encoder", help="omit for the v4 baseline")
@@ -438,8 +458,10 @@ def main():
         print(json.dumps(payload, indent=2))
     elif args.command == "adapter-calibrate":
         from .adapter import Adapter
+        from .brain import BrainRuntime
 
-        adapter = Adapter.calibrate()
+        brain = BrainRuntime(data=args.bundle) if args.bundle else None
+        adapter = Adapter.calibrate(brain)
         adapter.save(args.output)
         print(
             json.dumps(
@@ -468,6 +490,37 @@ def main():
             print(
                 "adapter-check FAILED: the declared adapter did not meet the "
                 "pre-registered A-criteria (teacher-free).",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+    elif args.command == "feedback-check":
+        from .roam_eval import feedback_check
+
+        report = feedback_check(
+            args.output,
+            args.episodes,
+            args.seconds,
+            args.level,
+            args.workers,
+            args.seed_base,
+            bundle=args.bundle,
+            adapter=args.adapter,
+        )
+        print(
+            json.dumps(
+                {
+                    "bundle": report["bundle"],
+                    "changed_metrics": report["changed_metrics"],
+                    "causal": report["causal"],
+                    "passed": report["passed"],
+                },
+                indent=2,
+            )
+        )
+        if not report["passed"]:
+            print(
+                "feedback-check: body feedback did not causally change behaviour "
+                "(honest negative; the wiring is still additive and reversible).",
                 file=sys.stderr,
             )
             raise SystemExit(1)
