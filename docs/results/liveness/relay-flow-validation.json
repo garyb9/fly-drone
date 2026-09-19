@@ -1,0 +1,18 @@
+{
+  "relay_version": "optic-flow-relay-v1",
+  "frames": 120,
+  "seed": 0,
+  "yaw_segment": {
+    "pearson_yaw_flow_vs_yaw_rate": {
+      "l": 0.9691484819998057,
+      "r": 0.9856843944007642
+    }
+  },
+  "pitch_segment": {
+    "pearson_pitch_flow_vs_vertical_accel": {
+      "l": -0.02121320919622966,
+      "r": -0.021429155585945294
+    }
+  },
+  "note": "Declared translation model; sign convention is declared, correlation is magnitude."
+}

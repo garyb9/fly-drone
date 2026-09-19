@@ -102,6 +102,7 @@ class ConnectomeEnv(gym.Env):
         spec=None,
         frame_transform=None,
         feedback=False,
+        relay=False,
     ):
         if task not in HORIZON_FRAMES:
             raise ValueError(f"unknown task {task!r}")
@@ -119,6 +120,9 @@ class ConnectomeEnv(gym.Env):
         # P1 (C1): only a bundle that declares feedback roles can be driven by body state.
         self.feedback = bool(feedback) and bool(getattr(self.brain, "feedback_ids", {}))
         self.feedback_state = None
+        # P3: only a brain built with the declared relay defines its direction-selective roles.
+        self.relay = bool(relay) and bool(getattr(self.brain, "relay_ids", {}))
+        self.relay_state = None
         self.action_space = spaces.Box(-1, 1, (4,), np.float32)
         self.observation_space = spaces.Box(
             0, 1, (len(self.brain.feature_ids),), np.float32
@@ -194,12 +198,20 @@ class ConnectomeEnv(gym.Env):
 
                 self.feedback_state = FeedbackState(self.plant)
             self.feedback_state.reset()
+        if self.relay:
+            if self.relay_state is None:
+                from .relay import RelayState
+
+                self.relay_state = RelayState()
+            self.relay_state.reset()
         if self.ablation == "sensory":
             self.brain.silence_sensors()
         elif self.ablation in PATHWAYS:
             self.brain.silence_inputs(PATHWAYS[self.ablation])
         elif self.ablation == "feedback":
             self.brain.silence_feedback()
+        elif self.ablation == "relay":
+            self.brain.silence_relay()
         if self.plant.arena is not None:
             self.plant.set_ghost(self.ablation == "ghost")
         if self.brain.learned:
@@ -424,6 +436,9 @@ class ConnectomeEnv(gym.Env):
         if self.feedback:
             # One rendered frame per environment step; flow holds across the 8 sub-ticks.
             self.feedback_state.observe_frame(self.plant.images)
+        if self.relay:
+            # P3 optic flow is per rendered frame; the eight sub-ticks reuse it.
+            self.relay_state.observe_frame(self.plant.images)
         self.trace = []
         brain_ms = 0.0
         for _ in range(8):
@@ -432,6 +447,9 @@ class ConnectomeEnv(gym.Env):
             if self.feedback and self.ablation != "feedback":
                 # Body -> brain: the brain is told what the body is doing, nothing more.
                 self.brain.inject_feedback(self.feedback_state.currents())
+            if self.relay and self.ablation != "relay":
+                # Pixels -> brain: declared optic flow drives direction-selective motion cells.
+                self.brain.inject_relay(self.relay_state.currents())
             brain_t0 = time.perf_counter()
             self.brain.step()
             brain_ms += (time.perf_counter() - brain_t0) * 1000.0

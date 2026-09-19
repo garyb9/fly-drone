@@ -1,8 +1,19 @@
 # Liveness bar + P3 visual relay — plan
 
-**Status: authorized 2026-09-19.** Part A (liveness bar) and Part B (declared optic-flow relay)
-are additive. `roam_eval.ACCEPTANCE`, `CONDITIONS` and A1–A7 are never touched. The canonical
-bundle and accepted actors stay byte-identical. No teacher enters the behaviour path.
+**Status: Part A landed, Part B landed (infra + offline validation), 2026-09-19.** The liveness bar
+(`liveness.py`, `liveness-check`) and the declared optic-flow relay (`relay.py`, `--visual relay`)
+are in. The relay's yaw flow validates against simulator egomotion (r ≈ 0.97–0.99); the pitch channel
+is declared but weak under vertical translation. No behaviour gate has been run yet — the 15-seed
+smoke and 50-seed gate are the next steps and need sign-off.
+
+**Documented deviations from the first draft.** The relay uses global phase correlation on the
+rendered eye images (sub-pixel) rather than ommatidial sampling; the measured eye geometry is not
+needed for a declared translation model and the ommatidial join is absent. The relay adapter is
+`adapter-relay.json` with `visual="relay"` folded into the version (as planned); canonical
+`adapter.json` is unchanged.
+
+Part A and Part B are additive. `roam_eval.ACCEPTANCE`, `CONDITIONS` and A1–A7 are never touched.
+The canonical bundle and accepted actors stay byte-identical. No teacher enters the behaviour path.
 
 **Goal.** Define a measured, teacher-free "feels alive" bar, then let the frozen connectome drive
 the drone through a declared optic-flow relay so the bar becomes reachable — without a teacher, a

@@ -362,3 +362,31 @@ clone reaches light r 0.998 / loom r 0.934 (v5: 0.978 / 0.962).
 (`roam_eval.encoder_scores` dispatches on the current-vector width). E1/E2 bars are unchanged, and
 are reported against the v4 baseline (0.687 policy-flown / 0.732 fixed probe).
 
+
+## 8. Declared optic-flow relay (P3, additive)
+
+`python/fly_drone/relay.py` is an opt-in, deterministic, **declared** front-end that gives the
+connectome direction-selective motion it never had from the pooled v4 cues. It is not a learned
+encoder and it does not change the canonical bundle or `ACCEPTANCE`.
+
+- **Feature.** Per rendered frame, each eye's luma is phase-correlated against the previous frame
+  (Hann window, parabolic sub-pixel peak) to give a signed horizontal (yaw) and vertical (pitch)
+  global translation, converted to radians with the camera field of view (`HFOV_DEG`, `VFOV_DEG`).
+  The estimator is a declared global-translation model; it is validated offline, never injected from
+  geometry.
+- **Targets.** The signed axes are rectified into eight roles and injected onto the
+  direction-selective motion subtypes (`relay.RELAY_TYPES`): `T4a/T5a` and `T4b/T5b` horizontal,
+  `T4c/T5c` and `T4d/T5d` vertical, by side. The connectome has no cell↔ommatidium join, so subtype
+  tuning is the declared prior and the direct drive is a declared shortcut past the
+  photoreceptor→lamina relay (consistent with the fly.ai finding, `external-prior-art.md`).
+- **Plumbing.** `BrainRuntime(relay=True)` defines the roles; `ConnectomeEnv(relay=True)` injects the
+  currents each brain tick (one flow estimate per rendered frame, held across the eight sub-ticks),
+  exactly like P1 feedback. Ablation `relay` silences only these roles; `sensory` silences them with
+  the rest of the visual field.
+- **Identity.** `adapter-relay.json` carries `visual="relay"` folded into its `declared-v1:` version;
+  the canonical `adapter.json` is byte-identical. Select with `--visual relay`.
+- **Validation.** `scripts/validate_relay_flow.py` correlates the declared flow against the plant's
+  own camera egomotion (labels only): yaw flow r ≈ 0.97–0.99 against yaw rate. Pitch flow under pure
+  vertical translation is weak (r ≈ 0) — expected for a forward-facing camera with distant walls —
+  so the vertical channel is declared but expected to contribute little in free roam.
+  Artifact: `docs/results/liveness/relay-flow-validation.json`.

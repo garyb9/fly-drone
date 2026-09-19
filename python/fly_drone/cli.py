@@ -66,6 +66,12 @@ def main():
         action="store_true",
         help="inject declared body feedback (on by default for a feedback bundle)",
     )
+    p.add_argument(
+        "--visual",
+        choices=["v4", "relay"],
+        default="v4",
+        help="declared sensory front-end (relay adds P3 optic flow)",
+    )
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
     p = sub.add_parser("baseline")
@@ -271,6 +277,12 @@ def main():
         "--bundle",
         help="alternate bundle to calibrate against (e.g. data/malecns-feedback)",
     )
+    p.add_argument(
+        "--visual",
+        choices=["v4", "relay"],
+        default="v4",
+        help="declared sensory front-end this adapter is pinned to",
+    )
     p = sub.add_parser(
         "adapter-check",
         help="teacher-free causal gate for the declared body adapter (P0)",
@@ -286,6 +298,12 @@ def main():
         "--bundle", help="alternate bundle to evaluate (e.g. data/malecns-dynamics)"
     )
     p.add_argument("--adapter", help="adapter .json pinned to that bundle")
+    p.add_argument(
+        "--visual",
+        choices=["v4", "relay"],
+        default="v4",
+        help="declared sensory front-end (relay adds P3 optic flow)",
+    )
     p = sub.add_parser(
         "feedback-check",
         help="P1 causal test: body feedback changes behaviour (additive, diagnostic)",
@@ -314,6 +332,12 @@ def main():
     p.add_argument("--level", type=int, default=3)
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed-base", type=int, default=1000)
+    p.add_argument(
+        "--visual",
+        choices=["v4", "relay"],
+        default="v4",
+        help="declared sensory front-end (relay adds P3 optic flow)",
+    )
     p = sub.add_parser("encoder-checks")
     p.add_argument("--policy", required=True)
     p.add_argument("--encoder", help="omit for the v4 baseline")
@@ -488,7 +512,8 @@ def main():
         from .brain import BrainRuntime
 
         brain = BrainRuntime(data=args.bundle) if args.bundle else None
-        adapter = Adapter.calibrate(brain)
+        visual = None if args.visual == "v4" else args.visual
+        adapter = Adapter.calibrate(brain, visual=visual)
         adapter.save(args.output)
         print(
             json.dumps(
@@ -513,6 +538,7 @@ def main():
             probes=not args.no_probes,
             bundle=args.bundle,
             adapter=args.adapter,
+            relay=args.visual == "relay",
         )
         print(json.dumps(report["acceptance"], indent=2))
         if not report["acceptance"]["passed"]:
@@ -565,6 +591,7 @@ def main():
             args.seed_base,
             bundle=args.bundle,
             adapter=args.adapter,
+            relay=args.visual == "relay",
         )
         print(json.dumps(report["liveness"], indent=2))
         if not report["liveness"]["passed"]:
@@ -648,6 +675,7 @@ def main():
                 bundle=args.bundle,
                 adapter=args.adapter,
                 feedback=args.feedback,
+                relay=args.visual == "relay",
             ),
             host="127.0.0.1",
             port=args.port,

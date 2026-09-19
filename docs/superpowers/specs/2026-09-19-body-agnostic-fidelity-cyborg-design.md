@@ -155,7 +155,10 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 
 - **P3 Visual relay.** Validate/activate photoreceptor→lamina rather than only pooled v4 cues
   (fly.ai finding #2: the histaminergic relay). Validate the motion path against FlyView optic-flow
-  ground truth.
+  ground truth. *Landed 2026-09-19:* a declared, opt-in optic-flow front-end (`relay.py`) drives the
+  T4/T5 direction-selective subtypes; the liveness bar is the prerequisite gate. Validation against
+  simulator egomotion is recorded (`results/liveness/relay-flow-validation.json`); FlyView remains
+  the external follow-on. See `plans/2026-09-19-fly-drone-10-liveness-relay.md`.
 - **P4 Transfer.** Domain randomization (arena, lighting, textures, camera/body noise), the
   pre-specified unseen-layout generalisation, quadrotor system-ID, latency and actuator noise — the
   sim-to-real package.

@@ -75,7 +75,7 @@ class FrameStack:
 
 
 class BrainRuntime:
-    def __init__(self, seed=42, data=DATA, encoder=None):
+    def __init__(self, seed=42, data=DATA, encoder=None, relay=False):
         self.data = Path(data)
         manifest = json.loads((self.data / "manifest.json").read_text())
         raw = (self.data / "graph.bin").read_bytes()
@@ -110,6 +110,23 @@ class BrainRuntime:
         if feedback_path.is_file():
             roles = json.loads(feedback_path.read_text())["roles"]
             self.feedback_ids = {k: list(v["cells"]) for k, v in roles.items()}
+        # P3: an opt-in declared optic-flow relay drives direction-selective motion cells.
+        # It is a v4 declared bridge; a learned encoder owns its own current path.
+        self.relay = bool(relay)
+        self.relay_ids = {}
+        if self.relay:
+            if encoder is not None:
+                raise ValueError(
+                    "the optic-flow relay is a declared bridge (no learned encoder)"
+                )
+            from .relay import RELAY_TYPES, SIDES
+
+            for key, types in RELAY_TYPES.items():
+                for side in SIDES:
+                    ids = self._cells(side, types)
+                    if not ids:
+                        raise ValueError(f"relay role {key}_{side} is empty")
+                    self.relay_ids[f"{key}_{side}"] = ids
         self.encoder = encoder
         self.pathway_ids = {}
         self.maps = None
@@ -148,6 +165,9 @@ class BrainRuntime:
         self.inputs = {k: self.core.input_role(k, v) for k, v in self.input_ids.items()}
         self.feedback_inputs = {
             k: self.core.input_role(k, v) for k, v in self.feedback_ids.items()
+        }
+        self.relay_inputs = {
+            k: self.core.input_role(k, v) for k, v in self.relay_ids.items()
         }
         self.readout_ids = {k: v for k, v in groups["roles"]["readout"].items() if v}
         for side in ("l", "r"):
@@ -374,7 +394,8 @@ class BrainRuntime:
         )
 
     def silence_sensors(self):
-        self.core.silence(sorted(set(sum(self.input_ids.values(), []))), True)
+        ids = sum(self.input_ids.values(), []) + sum(self.relay_ids.values(), [])
+        self.core.silence(sorted(set(ids)), True)
 
     def silence_inputs(self, roles):
         """Silence one sensory pathway, e.g. ("looming_l", "looming_r")."""
@@ -391,6 +412,19 @@ class BrainRuntime:
     def silence_feedback(self):
         """Silence every declared feedback input; the P1 causal control."""
         ids = sorted(set(sum(self.feedback_ids.values(), [])))
+        if ids:
+            self.core.silence(ids, True)
+
+    def inject_relay(self, currents):
+        """Add this tick's declared optic-flow currents (roles not present are ignored)."""
+        for role, value in currents.items():
+            inject = self.relay_inputs.get(role)
+            if inject is not None:
+                self.core.inject(inject, float(value))
+
+    def silence_relay(self):
+        """Silence every declared relay input; the P3 causal control."""
+        ids = sorted(set(sum(self.relay_ids.values(), [])))
         if ids:
             self.core.silence(ids, True)
 

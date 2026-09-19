@@ -31,6 +31,7 @@ ABLATION_MODES = (
     "loom",
     "ghost",
     "feedback",
+    "relay",
 )
 POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
 # Frames between attribution refreshes. explain() costs ~90 ms, so the live viewer
@@ -117,11 +118,13 @@ class Session:
         bundle=None,
         adapter=None,
         feedback=False,
+        relay=False,
     ):
         self.policy = policy
         self.encoder = encoder
         self.bundle = str(bundle) if bundle else None
         self.adapter = adapter
+        self.relay = bool(relay)
         # An alternate bundle needs its own pinned adapter, or the canonical one is
         # (correctly) refused. Default to the committed artifact matching the bundle.
         if self.adapter:
@@ -134,6 +137,11 @@ class Session:
                 self.adapter = str(DEFAULT_FEEDBACK_PATH)
             elif "dynamics" in name and DEFAULT_DYNAMICS_PATH.is_file():
                 self.adapter = str(DEFAULT_DYNAMICS_PATH)
+        if self.relay and not self.adapter:
+            from .adapter import DEFAULT_RELAY_PATH
+
+            if DEFAULT_RELAY_PATH.is_file():
+                self.adapter = str(DEFAULT_RELAY_PATH)
         # A feedback bundle means the user wants to see the closed loop; the UI's
         # "feedback" ablation is the control.
         self.feedback = bool(feedback) or bool(
@@ -180,14 +188,20 @@ class Session:
         env = None
         try:
             if self.bundle:
-                brain = BrainRuntime(encoder=self.encoder, data=self.bundle)
-                env = ConnectomeEnv(brain=brain, feedback=self.feedback)
+                brain = BrainRuntime(
+                    encoder=self.encoder, data=self.bundle, relay=self.relay
+                )
+                env = ConnectomeEnv(
+                    brain=brain, feedback=self.feedback, relay=self.relay
+                )
             elif self.encoder:
                 brain = BrainRuntime(encoder=self.encoder)
                 env = ConnectomeEnv(brain=brain)
             else:
-                brain = None
-                env = ConnectomeEnv(feedback=self.feedback)
+                brain = BrainRuntime(relay=self.relay)
+                env = ConnectomeEnv(
+                    brain=brain, feedback=self.feedback, relay=self.relay
+                )
             fly = FlyMirror()
             task_policies = self.task_policies
             active_policy = None
@@ -213,12 +227,16 @@ class Session:
                     env.brain.silence_inputs(PATHWAYS[env.ablation])
                 elif env.ablation == "feedback":
                     env.brain.silence_feedback()
+                elif env.ablation == "relay":
+                    env.brain.silence_relay()
                 for name in sorted(silenced):
                     # "sensory" is the whole visual field; light/loom are single pathways.
                     if name == "sensory":
                         env.brain.silence_sensors()
                     elif name == "feedback":
                         env.brain.silence_feedback()
+                    elif name == "relay":
+                        env.brain.silence_relay()
                     else:
                         env.brain.silence_inputs(PATHWAYS[name])
 
@@ -577,6 +595,7 @@ def make_app(
     bundle=None,
     adapter=None,
     feedback=False,
+    relay=False,
 ):
     session = Session(
         policy,
@@ -587,6 +606,7 @@ def make_app(
         bundle=bundle,
         adapter=adapter,
         feedback=feedback,
+        relay=relay,
     )
 
     @asynccontextmanager

@@ -17,11 +17,16 @@ from .teacher import DRIVES
 NOISE_AXES = (0, 1, 3)
 
 
-def _roam_env(level, brain=None, feedback=False):
+def _roam_env(level, brain=None, feedback=False, relay=False):
     from .env import ConnectomeEnv
 
     return ConnectomeEnv(
-        task="free_roam", level=level, respawn=True, brain=brain, feedback=feedback
+        task="free_roam",
+        level=level,
+        respawn=True,
+        brain=brain,
+        feedback=feedback,
+        relay=relay,
     )
 
 
@@ -309,10 +314,11 @@ def _screen_job(job):
     encoder = rest[0] if rest else None
     bundle = rest[1] if len(rest) > 1 else None
     feedback = bool(rest[2]) if len(rest) > 2 else False
+    relay = bool(rest[3]) if len(rest) > 3 else False
     brain = (
-        BrainRuntime(encoder=encoder, data=bundle)
+        BrainRuntime(encoder=encoder, data=bundle, relay=relay)
         if bundle
-        else BrainRuntime(encoder=encoder)
+        else BrainRuntime(encoder=encoder, relay=relay)
     )
     bypass = None
     adapter_path = None
@@ -333,7 +339,7 @@ def _screen_job(job):
                 f"(got encoder={encoder!r}); pass a saved encoder path"
             )
         bypass = SAC.load(controller.split(":", 1)[1], device="cpu")
-    env = _roam_env(level, brain, feedback=feedback)
+    env = _roam_env(level, brain, feedback=feedback, relay=relay)
     env.ablation = ablation
     runs = []
     try:
@@ -454,6 +460,7 @@ def screen(
     encoder=None,
     bundle=None,
     feedback=False,
+    relay=False,
 ):
     """Closed-loop screen; combos lists explicit (controller, ablation) pairs.
 
@@ -482,6 +489,7 @@ def screen(
             encoder if c.startswith(learned) else None,
             bundle,
             feedback,
+            relay,
         )
         for c, a in combos
         for chunk in np.array_split(all_seeds, min(per, seeds))

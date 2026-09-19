@@ -33,6 +33,8 @@ DEFAULT_PATH = ROOT / "docs" / "results" / "adapter" / "adapter.json"
 DEFAULT_FEEDBACK_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-feedback.json"
 # The same codec re-pinned to the P2 dynamics bundle (an alternate identity).
 DEFAULT_DYNAMICS_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-dynamics.json"
+# The same codec on the P3 declared optic-flow relay front-end (an additive bridge version).
+DEFAULT_RELAY_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-relay.json"
 # Escape readout level above rest that counts as a full loom response (rest ~0, loom
 # ~0.74-0.87 in the battery). Declared, not fitted.
 ESCAPE_SCALE = 0.5
@@ -159,30 +161,33 @@ def _params(brain, settle=SETTLE_TICKS):
     return params
 
 
-def _version(params, dataset_hash):
-    payload = json.dumps(
-        {"params": params, "dataset_hash": dataset_hash},
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode()
-    return "declared-v1:" + hashlib.sha256(payload).hexdigest()[:16]
+def _version(params, dataset_hash, visual=None):
+    payload = {"params": params, "dataset_hash": dataset_hash}
+    if visual:
+        # A declared sensory front-end changes the bridge, so it belongs in its identity.
+        payload["visual"] = visual
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return "declared-v1:" + hashlib.sha256(encoded).hexdigest()[:16]
 
 
 class Adapter:
     """A calibrated declared codec, bound to the connectome it was calibrated on."""
 
-    def __init__(self, params, dataset_hash, bundle_hash, alternate=False):
+    def __init__(self, params, dataset_hash, bundle_hash, alternate=False, visual=None):
         self.params = params
         self.dataset_hash = dataset_hash
         self.bundle_hash = bundle_hash
         self.alternate = alternate
-        self.version = _version(params, dataset_hash)
+        self.visual = visual
+        self.version = _version(params, dataset_hash, visual)
 
     @classmethod
-    def calibrate(cls, brain=None, settle=SETTLE_TICKS):
-        brain = brain or BrainRuntime()
+    def calibrate(cls, brain=None, settle=SETTLE_TICKS, visual=None):
+        brain = brain or BrainRuntime(relay=visual == "relay")
         params = _params(brain, settle)
-        return cls(params, brain.dataset_hash, brain.bundle_hash, brain.alternate)
+        return cls(
+            params, brain.dataset_hash, brain.bundle_hash, brain.alternate, visual
+        )
 
     @classmethod
     def from_payload(cls, payload):
@@ -191,6 +196,7 @@ class Adapter:
             payload["dataset_hash"],
             payload["bundle_hash"],
             bool(payload.get("alternate", False)),
+            payload.get("visual"),
         )
 
     @classmethod
@@ -203,7 +209,7 @@ class Adapter:
 
     @property
     def payload(self):
-        return {
+        payload = {
             "version": 1,
             "adapter_version": self.version,
             "dataset_hash": self.dataset_hash,
@@ -212,6 +218,9 @@ class Adapter:
             "note": "Declared body adapter (P0); no teacher, no learned policy.",
             "params": self.params,
         }
+        if self.visual:
+            payload["visual"] = self.visual
+        return payload
 
     def save(self, path):
         path = Path(path)

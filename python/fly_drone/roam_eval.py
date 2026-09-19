@@ -210,10 +210,11 @@ def _probe_job(job):
     controller, probe, seeds, vision, seconds, *rest = job
     encoder = rest[0] if rest and controller.startswith("policy:") else None
     bundle = rest[1] if len(rest) > 1 else None
+    relay = bool(rest[2]) if len(rest) > 2 else False
     brain = (
-        BrainRuntime(encoder=encoder, data=bundle)
+        BrainRuntime(encoder=encoder, data=bundle, relay=relay)
         if bundle
-        else BrainRuntime(encoder=encoder)
+        else BrainRuntime(encoder=encoder, relay=relay)
     )
     adapter_path = None
     if controller.startswith("policy:"):
@@ -221,7 +222,12 @@ def _probe_job(job):
     elif controller == "adapter" or controller.startswith("adapter:"):
         adapter_path = controller.split(":", 1)[1] if ":" in controller else None
     env = ConnectomeEnv(
-        task="free_roam", level=0, respawn=False, brain=brain, vision=vision
+        task="free_roam",
+        level=0,
+        respawn=False,
+        brain=brain,
+        vision=vision,
+        relay=relay,
     )
     runs = []
     try:
@@ -294,6 +300,7 @@ def skill_probes(
     seed_base=1000,
     encoder=None,
     bundle=None,
+    relay=False,
 ):
     """A5: steer, approach, dodge and wall probes, balanced by side."""
     import multiprocessing
@@ -302,7 +309,7 @@ def skill_probes(
     seeds = np.arange(seed_base, seed_base + episodes)
     per = max(1, workers // len(PROBES))
     jobs = [
-        (controller, probe, chunk.tolist(), vision, seconds, encoder, bundle)
+        (controller, probe, chunk.tolist(), vision, seconds, encoder, bundle, relay)
         for probe in PROBES
         for chunk in np.array_split(seeds, min(per, episodes))
         if len(chunk)
@@ -387,6 +394,7 @@ def adapter_check(
     probes=True,
     bundle=None,
     adapter=None,
+    relay=False,
 ):
     """P0 gate: the declared adapter under the standard causal conditions, teacher-free.
 
@@ -394,8 +402,11 @@ def adapter_check(
     declared bridge's behaviour path. Reuses ``ACCEPTANCE`` unchanged, so a pass here
     means the same thing it means for a learned actor.
     """
+    from .adapter import DEFAULT_RELAY_PATH
     from .distill import screen
 
+    if relay and not adapter:
+        adapter = str(DEFAULT_RELAY_PATH)
     key = f"adapter:{adapter}" if adapter else "adapter"
     combos = [(key, c) for c in CONDITIONS] + [(b, "none") for b in BASELINES]
     report = screen(
@@ -408,14 +419,17 @@ def adapter_check(
         seed_base=seed_base,
         combos=combos,
         bundle=bundle,
+        relay=relay,
     )
     report["policy"] = key
     report["bundle"] = str(bundle) if bundle else None
-    report["bridge"] = "declared"
+    report["bridge"] = "declared+relay" if relay else "declared"
     report["task"] = "free_roam"
     report["teacher_in_behaviour_path"] = False
     report["probes"] = (
-        skill_probes(key, episodes, workers, seed_base=seed_base, bundle=bundle)
+        skill_probes(
+            key, episodes, workers, seed_base=seed_base, bundle=bundle, relay=relay
+        )
         if probes
         else None
     )
@@ -506,6 +520,7 @@ def liveness_check(
     seed_base=1000,
     bundle=None,
     adapter=None,
+    relay=False,
 ):
     """Liveness gate: is the drone moving because the connectome is driven by its senses?
 
@@ -514,9 +529,12 @@ def liveness_check(
     teacher-free ``liveness`` criteria (mobility, exploration, sense-causality, anti-luck,
     non-degeneracy).
     """
+    from .adapter import DEFAULT_RELAY_PATH
     from .distill import screen
     from .liveness import liveness
 
+    if relay and not adapter:
+        adapter = str(DEFAULT_RELAY_PATH)
     key = f"adapter:{adapter}" if adapter else "adapter"
     combos = [(key, c) for c in ("none", "sensory", "ghost")] + [
         (b, "none") for b in BASELINES
@@ -531,10 +549,11 @@ def liveness_check(
         seed_base=seed_base,
         combos=combos,
         bundle=bundle,
+        relay=relay,
     )
     report["policy"] = key
     report["bundle"] = str(bundle) if bundle else None
-    report["bridge"] = "declared"
+    report["bridge"] = "declared+relay" if relay else "declared"
     report["task"] = "free_roam"
     report["teacher_in_behaviour_path"] = False
     report["liveness"] = liveness(report["results"], key)
