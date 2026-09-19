@@ -376,6 +376,12 @@ better than it is, and the ghost condition is what catches that.
 
 ## 10. Next
 
+**P0 landed (negative).** The declared, teacher-free adapter is the default bridge and `adapter-check`
+is the gate; it failed (`docs/results/adapter/FINDING-2026-09-19.md`). The steps below are the
+superseded learned-decoder plan; the v1 route is now P0 → P1 ascending feedback → P2
+connectome-constrained dynamics in the
+[body-agnostic spec](../superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md).
+
 1. Finish the teacher gate: `roam-feasibility` for collisions and foraging (the dodge part passed).
 2. Realisability probe: can features (and, separately, raw cues) predict each drive's label with R² ≥ 0.5?
 3. DAgger iterations 0–3, screening each student.
