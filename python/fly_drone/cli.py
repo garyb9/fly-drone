@@ -48,6 +48,13 @@ def main():
         help="load best-available (not necessarily accepted) policies from "
         "docs/results/current-policies.json",
     )
+    p.add_argument(
+        "--bridge",
+        choices=["declared", "learned"],
+        default="declared",
+        help="free-roam body bridge: the declared adapter (default) or an explicit "
+        "learned decoder (requires --policy/--current/--task-policy)",
+    )
     p = sub.add_parser("assay")
     p.add_argument("--output", default="runs/sensory-assay.json")
     p = sub.add_parser("baseline")
@@ -75,7 +82,15 @@ def main():
     p.add_argument("--frames", type=int, default=100)
     p.add_argument("--task", choices=list(TASKS), default="visual")
     p = sub.add_parser("evaluate")
-    p.add_argument("--policy", required=True)
+    p.add_argument(
+        "--policy", help="learned actor .json (required for --bridge learned)"
+    )
+    p.add_argument(
+        "--bridge",
+        choices=["declared", "learned"],
+        default="declared",
+        help="free-roam body bridge: the declared adapter (default) or a learned actor",
+    )
     p.add_argument("--episodes", type=int, default=50)
     p.add_argument("--seconds", type=float, help="default: per-task evaluation length")
     p.add_argument("--output", default="runs/evaluation.json")
@@ -497,6 +512,13 @@ def main():
             for task, path in missing.items():
                 print(f"current {task} policy not found locally: {path}", flush=True)
             for task, path in present.items():
+                if task == "free_roam" and args.bridge == "declared":
+                    print(
+                        "current free_roam decoder ignored: --bridge declared "
+                        "(pass --bridge learned to fly it)",
+                        flush=True,
+                    )
+                    continue
                 entry = current_pointer.current_entry(task)
                 # A learned-encoder pairing (v5/v6) flies the frozen connectome with the encoder's
                 # currents; a v4 entry has no encoder and uses the default sensory mapping.
@@ -513,7 +535,14 @@ def main():
             if not Path(encoder).exists():
                 raise SystemExit(f"encoder not found: {encoder}")
         uvicorn.run(
-            make_app(policy, looming_policy, task_policies, args.port, encoder=encoder),
+            make_app(
+                policy,
+                looming_policy,
+                task_policies,
+                args.port,
+                encoder=encoder,
+                bridge=args.bridge,
+            ),
             host="127.0.0.1",
             port=args.port,
         )
@@ -590,6 +619,10 @@ def main():
             )
         )
     elif args.task == "free_roam":
+        if args.bridge == "learned" and not args.policy:
+            raise SystemExit(
+                "evaluate --task free_roam --bridge learned needs --policy"
+            )
         from .roam_eval import evaluate_free_roam
 
         report = evaluate_free_roam(
@@ -599,9 +632,12 @@ def main():
             args.seconds or 120,
             args.workers,
             encoder=args.encoder,
+            bridge=args.bridge,
         )
         print(json.dumps(report["acceptance"], indent=2))
     else:
+        if not args.policy:
+            raise SystemExit("evaluate needs --policy for non-free-roam tasks")
         from .training import evaluate
 
         if args.encoder:

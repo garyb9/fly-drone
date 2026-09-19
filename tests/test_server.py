@@ -84,6 +84,20 @@ def test_metadata_reports_task_policy_status(tmp_path):
             assert metadata["task_policy_status"]["visual"] == "none"
 
 
+def test_session_bridge_selection_is_explicit():
+    from fly_drone.server import Session
+
+    assert Session().bridge == "declared"
+    assert Session(task_policies={"free_roam": "x"}).bridge == "learned"
+    assert (
+        Session(bridge="declared", task_policies={"free_roam": "x"}).bridge
+        == "declared"
+    )
+    assert Session(bridge="learned").bridge == "learned"
+    with pytest.raises(ValueError, match="bridge"):
+        Session(bridge="bogus")
+
+
 def test_service_rejects_unrelated_origin():
     from starlette.websockets import WebSocketDisconnect
 
@@ -124,7 +138,9 @@ def test_replay_reset_task_ablation_and_policy_guard():
             assert len(message["walls"]) == 4 and len(message["bands"]) == 4
             assert len(message["pillars"]) == 16 and message["half_size"] == 8.0
             frame = next_frame(ws)
-            assert frame["policy_status"] == "none" and frame["attribution"] is None
+            # Default bridge is the declared adapter: loaded, but no learned attribution.
+            assert frame["policy_status"] == "loaded" and frame["attribution"] is None
+            assert frame["active_policy"] == "declared-adapter"
             assert (
                 frame["free_roam"]["level"] == 3 and frame["free_roam"]["beacons"] == 0
             )

@@ -324,8 +324,8 @@ def skill_probes(
 
 
 def evaluate_free_roam(
-    policy,
-    output,
+    policy=None,
+    output="runs/evaluation.json",
     episodes=50,
     seconds=120,
     workers=6,
@@ -333,10 +333,17 @@ def evaluate_free_roam(
     seed_base=1000,
     probes=True,
     encoder=None,
+    bridge="learned",
 ):
     from .distill import screen
 
-    key = f"policy:{Path(policy).resolve()}"
+    declared = bridge == "declared"
+    if declared:
+        key = "adapter"
+    else:
+        if not policy:
+            raise ValueError("the learned free-roam bridge needs a policy path")
+        key = f"policy:{Path(policy).resolve()}"
     combos = [(key, c) for c in CONDITIONS] + [(b, "none") for b in BASELINES]
     report = screen(
         None,
@@ -349,8 +356,10 @@ def evaluate_free_roam(
         combos=combos,
         encoder=encoder,
     )
-    report["policy"] = str(Path(policy).resolve())
+    report["policy"] = key
     report["task"] = "free_roam"
+    report["bridge"] = bridge
+    report["teacher_in_behaviour_path"] = False if declared else None
     report["encoder"] = str(encoder) if encoder else None
     report["probes"] = (
         skill_probes(key, episodes, workers, seed_base=seed_base, encoder=encoder)

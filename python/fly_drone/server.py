@@ -14,6 +14,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
+from .adapter import declared_command
 from .arena import LEVELS, clearance
 from .attribution import for_brain
 from .brain import ROOT, BrainRuntime
@@ -98,7 +99,12 @@ def list_reports():
 
 class Session:
     def __init__(
-        self, policy=None, looming_policy=None, task_policies=None, encoder=None
+        self,
+        policy=None,
+        looming_policy=None,
+        task_policies=None,
+        encoder=None,
+        bridge=None,
     ):
         self.policy = policy
         self.encoder = encoder
@@ -110,6 +116,13 @@ class Session:
         unknown = set(self.task_policies) - set(TASKS)
         if unknown:
             raise ValueError(f"unknown task policies: {sorted(unknown)}")
+        if bridge not in (None, "declared", "learned"):
+            raise ValueError(f"unknown bridge {bridge!r}")
+        # Explicit flag wins. Otherwise a supplied free-roam decoder means the learned
+        # bridge; no decoder means the declared adapter. Never switches mid-run.
+        self.bridge = bridge or (
+            "learned" if self.task_policies.get("free_roam") else "declared"
+        )
         self.commands = queue.Queue(maxsize=64)
         self.stop = threading.Event()
         self.lock = threading.Lock()
@@ -219,14 +232,18 @@ class Session:
                 "cameras": env.plant.cameras(),
                 "neurons": len(cells),
                 "features": len(env.brain.feature_ids),
-                "policy": "trained" if self.policy else "PID baseline",
+                "policy": "declared"
+                if self.bridge == "declared"
+                else ("trained" if self.policy else "PID baseline"),
                 "tasks": list(TASKS),
                 "ablations": list(ABLATION_MODES),
                 "levels": sorted(LEVELS),
                 "dataset_hash": env.brain.dataset_hash,
                 "room": env.plant.room(),
                 "task_policy_status": {
-                    task: "loaded" if path else "none"
+                    task: "loaded"
+                    if (self.bridge == "declared" and task == "free_roam") or path
+                    else "none"
                     for task, path in self.task_policies.items()
                 },
             }
@@ -352,23 +369,32 @@ class Session:
                 if not paused:
                     # observe() applies the zero/shuffle ablations exactly as evaluation.
                     observed = env.observe()
-                    if not active_policy:
+                    declared_free_roam = (
+                        self.bridge == "declared" and env.task == "free_roam"
+                    )
+                    if declared_free_roam:
+                        # The declared adapter is the default free-roam bridge: the
+                        # command comes from neurons through fixed, calibrated constants.
+                        command = declared_command(env.brain)
+                        policy_status = "loaded"
+                        explained = None
+                    elif not active_policy:
                         policy_status = "none"
+                        command = np.zeros(4)
+                        explained = None
                     elif not np.allclose(policy_limits, env.plant.limits):
                         # A legacy-room actor would be mis-scaled in the arena: hold.
                         policy_status = "limits mismatch"
+                        command = np.zeros(4)
+                        explained = None
                     else:
                         policy_status = "loaded"
-                    if policy_status == "loaded":
                         command = env.brain.infer(observed) / env.plant.limits
                         # Attribution is a debug view costing ~90 ms/frame; refresh it a few
                         # times a second (ATTRIBUTION_EVERY), not every frame.
                         if attributor is not None and seq % ATTRIBUTION_EVERY == 0:
                             explained = attributor.explain(observed)
                             explained_seq = seq
-                    else:
-                        command = np.zeros(4)
-                        explained = None
                     _, _, done, truncated, info = env.step(command)
                     # env.step runs the connectome; it reports the per-brain-tick cost so the
                     # HUD compares like with like (docs/hardware-estimate.md §2, 5 ms/tick).
@@ -444,7 +470,11 @@ class Session:
                     "seed": seed,
                     "active_policy": str(Path(active_policy).name)
                     if active_policy
-                    else None,
+                    else (
+                        "declared-adapter"
+                        if self.bridge == "declared" and env.task == "free_roam"
+                        else None
+                    ),
                     "outcome": {
                         "bearing": info["bearing"],
                         "target_distance": info["target_distance"],
@@ -493,9 +523,16 @@ class Session:
 
 
 def make_app(
-    policy=None, looming_policy=None, task_policies=None, port=8000, encoder=None
+    policy=None,
+    looming_policy=None,
+    task_policies=None,
+    port=8000,
+    encoder=None,
+    bridge=None,
 ):
-    session = Session(policy, looming_policy, task_policies, encoder=encoder)
+    session = Session(
+        policy, looming_policy, task_policies, encoder=encoder, bridge=bridge
+    )
 
     @asynccontextmanager
     async def lifespan(app):

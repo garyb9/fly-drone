@@ -69,7 +69,11 @@ export function setupBrain(viewer: Viewer, m: Metadata): void {
   initialized = true;
   setText(
     els.mode,
-    m.policy === "trained" ? "CONNECTOME POLICY" : "PID BASELINE · BRAIN OBSERVING",
+    m.policy === "declared"
+      ? "DECLARED ADAPTER · CONNECTOME"
+      : m.policy === "trained"
+        ? "CONNECTOME POLICY"
+        : "PID BASELINE · BRAIN OBSERVING",
   );
   renderRoamLevels(viewer, m.levels);
   if (m.cameras) stage.setEyeGeometry({ splay: m.cameras.splay, fovyDeg: m.cameras.fovy_deg });
