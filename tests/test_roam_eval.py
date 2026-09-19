@@ -1,8 +1,9 @@
 import json
+import sys
 
 import numpy as np
 import pytest
-from fly_drone import distill
+from fly_drone import cli, distill
 from fly_drone.brain import BrainRuntime
 from fly_drone.encoder import LearnedEncoder
 from fly_drone.roam_eval import (
@@ -340,6 +341,58 @@ def test_round_gate_report_lists_every_round_with_its_verdict():
     assert (
         report[1]["ghost_near_dodge_rate"] == 0.815 and report[1]["E2_passed"] is False
     )
+
+
+def test_screen_job_runs_the_declared_adapter_without_a_teacher():
+    controller, ablation, runs = distill._screen_job(
+        ("adapter", [3], 0.4, 3, "none", None)
+    )
+    assert controller == "adapter" and ablation == "none"
+    assert len(runs) == 1
+    assert {"seed", "beacons_per_min", "collisions_per_min"} <= runs[0].keys()
+
+
+def test_probe_job_runs_the_declared_adapter():
+    probe, runs = _probe_job(("adapter", "steer", [1], False, 1.2))
+    assert probe == "steer" and len(runs) == 1
+
+
+def _adapter_report(passed):
+    return {
+        "acceptance": {"passed": passed},
+        "results": {},
+        "probes": None,
+    }
+
+
+def test_adapter_check_exits_nonzero_on_failure(monkeypatch, tmp_path):
+    from fly_drone import roam_eval
+
+    monkeypatch.setattr(
+        roam_eval, "adapter_check", lambda *a, **k: _adapter_report(False)
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["fly-drone", "adapter-check", "--output", str(tmp_path / "c.json")],
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main()
+    assert excinfo.value.code == 1
+
+
+def test_adapter_check_exits_zero_when_the_gate_passes(monkeypatch, tmp_path):
+    from fly_drone import roam_eval
+
+    monkeypatch.setattr(
+        roam_eval, "adapter_check", lambda *a, **k: _adapter_report(True)
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["fly-drone", "adapter-check", "--output", str(tmp_path / "c.json")],
+    )
+    cli.main()  # no SystemExit
 
 
 def test_eval_defaults_use_the_teacher_probe_and_clamp_workers():

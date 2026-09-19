@@ -241,6 +241,17 @@ def main():
         help="calibrate the declared body adapter on the stimulus battery (P0)",
     )
     p.add_argument("--output", default="docs/results/adapter/adapter.json")
+    p = sub.add_parser(
+        "adapter-check",
+        help="teacher-free causal gate for the declared body adapter (P0)",
+    )
+    p.add_argument("--output", default="runs/adapter/check.json")
+    p.add_argument("--episodes", type=int, default=50)
+    p.add_argument("--seconds", type=float, default=120)
+    p.add_argument("--level", type=int, default=3)
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--seed-base", type=int, default=1000)
+    p.add_argument("--no-probes", action="store_true")
     p = sub.add_parser("encoder-checks")
     p.add_argument("--policy", required=True)
     p.add_argument("--encoder", help="omit for the v4 baseline")
@@ -425,6 +436,26 @@ def main():
                 indent=2,
             )
         )
+    elif args.command == "adapter-check":
+        from .roam_eval import adapter_check
+
+        report = adapter_check(
+            args.output,
+            args.episodes,
+            args.seconds,
+            args.level,
+            args.workers,
+            args.seed_base,
+            probes=not args.no_probes,
+        )
+        print(json.dumps(report["acceptance"], indent=2))
+        if not report["acceptance"]["passed"]:
+            print(
+                "adapter-check FAILED: the declared adapter did not meet the "
+                "pre-registered A-criteria (teacher-free).",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
     elif args.command == "roam-feasibility":
         from .feasibility import run
 

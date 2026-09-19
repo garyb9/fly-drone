@@ -210,8 +210,11 @@ def _probe_job(job):
     controller, probe, seeds, vision, seconds, *rest = job
     encoder = rest[0] if rest and controller.startswith("policy:") else None
     brain = BrainRuntime(encoder=encoder)
+    adapter_path = None
     if controller.startswith("policy:"):
         brain.load_policy(controller.split(":", 1)[1])
+    elif controller == "adapter" or controller.startswith("adapter:"):
+        adapter_path = controller.split(":", 1)[1] if ":" in controller else None
     env = ConnectomeEnv(
         task="free_roam", level=0, respawn=False, brain=brain, vision=vision
     )
@@ -231,6 +234,10 @@ def _probe_job(job):
                     side = env.roam["threat"]["side"]
                 if controller == "teacher":
                     action = teacher_action(env)[0]
+                elif controller == "adapter" or controller.startswith("adapter:"):
+                    from .adapter import declared_command
+
+                    action = declared_command(brain, path=adapter_path)
                 else:
                     action = brain.infer(obs) / env.plant.limits
                 obs, _, done, _, info = env.step(action)
@@ -349,6 +356,47 @@ def evaluate_free_roam(
         skill_probes(key, episodes, workers, seed_base=seed_base, encoder=encoder)
         if probes
         else None
+    )
+    report["acceptance"] = acceptance(report["results"], key, report["probes"])
+    Path(output).write_text(json.dumps(report, indent=2))
+    return report
+
+
+def adapter_check(
+    output,
+    episodes=50,
+    seconds=120,
+    level=3,
+    workers=6,
+    seed_base=1000,
+    probes=True,
+):
+    """P0 gate: the declared adapter under the standard causal conditions, teacher-free.
+
+    The teacher is a simulator-geometry baseline comparator only; it is never in the
+    declared bridge's behaviour path. Reuses ``ACCEPTANCE`` unchanged, so a pass here
+    means the same thing it means for a learned actor.
+    """
+    from .distill import screen
+
+    key = "adapter"
+    combos = [(key, c) for c in CONDITIONS] + [(b, "none") for b in BASELINES]
+    report = screen(
+        None,
+        output,
+        seeds=episodes,
+        seconds=seconds,
+        level=level,
+        workers=workers,
+        seed_base=seed_base,
+        combos=combos,
+    )
+    report["policy"] = key
+    report["bridge"] = "declared"
+    report["task"] = "free_roam"
+    report["teacher_in_behaviour_path"] = False
+    report["probes"] = (
+        skill_probes(key, episodes, workers, seed_base=seed_base) if probes else None
     )
     report["acceptance"] = acceptance(report["results"], key, report["probes"])
     Path(output).write_text(json.dumps(report, indent=2))

@@ -307,8 +307,12 @@ def _screen_job(job):
     encoder = rest[0] if rest else None
     brain = BrainRuntime(encoder=encoder)
     bypass = None
+    adapter_path = None
     if controller.startswith("policy:"):
         brain.load_policy(controller.split(":", 1)[1])
+    elif controller == "adapter" or controller.startswith("adapter:"):
+        # P0 declared bridge: neural activity -> body command, no teacher, no actor.
+        adapter_path = controller.split(":", 1)[1] if ":" in controller else None
     elif controller.startswith("bypass:"):
         from stable_baselines3 import SAC
 
@@ -355,6 +359,10 @@ def _screen_job(job):
                         "geometry": np.zeros(8, np.float32),
                     }
                     action = bypass.predict(bypass_obs, deterministic=True)[0]
+                elif adapter_path is not None or controller == "adapter":
+                    from .adapter import declared_command
+
+                    action = declared_command(brain, path=adapter_path)
                 else:
                     action = brain.infer(obs) / env.plant.limits
                 yaw_commands.append(float(action[3]))
