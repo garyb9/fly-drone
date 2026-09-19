@@ -3,6 +3,14 @@
 **Status:** proposed, authorized 2026-09-19. Documentation and goal reframing first; no source
 under `python/fly_drone/` or `crates/` changes until this spec and the reframed goal land.
 
+**P0 landed 2026-09-19 (negative).** The declared adapter is the default free-roam bridge and the
+teacher-free gate (`adapter-check`) is implemented. The gate **failed**: the connectome plus a
+declared readout adapter cannot fly the drone to `ACCEPTANCE` (0.03 vs teacher 0.73 beacons/min;
+A1/A2/A3/A6 fail). Evidence and numbers:
+[`../../results/adapter/FINDING-2026-09-19.md`](../../results/adapter/FINDING-2026-09-19.md).
+`ACCEPTANCE` and the accepted actors are unchanged. P1/P2 proceed as the proposed next contract
+changes (each needs user sign-off).
+
 **Related:** the goal contract is [`../../overview/README.md`](../../overview/README.md) §1;
 the current free-roam method is [`../../free-roam.md`](../../free-roam.md); the closed negative
 that motivated P0/P2 is [`../../results/encoder-v6/CONCLUSION-2026-09-18.md`](../../results/encoder-v6/CONCLUSION-2026-09-18.md);
@@ -148,17 +156,17 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 
 ## 9. Sequencing (v1)
 
-| Step | What                                                        | Contract          | Compute              |
-| ---- | ----------------------------------------------------------- | ----------------- | -------------------- |
-| 0    | Goal reframing + prior-art additions + this spec            | —                 | none                 |
-| 0b   | Cleanup (preserve actors, delete `runs/`, deprecation note) | —                 | none                 |
-| 1    | P0 declared adapter + teacher-free gate                     | none              | calibration          |
-| 2    | P1 ascending feedback                                       | C1 (new identity) | probes               |
-| 3    | P2 connectome-constrained fit                               | C2 (new identity) | fit — ask first      |
-| 4    | P4 transfer/domain randomization                            | none              | training — ask first |
-| 5    | P3 visual relay                                             | none              | probes               |
-| 6    | P5 evaluation additions                                     | none              | eval runs            |
-| 7    | P6 Scope A fly body                                         | goal broadening   | separate plan        |
+| Step | What                                                            | Contract          | Compute              |
+| ---- | --------------------------------------------------------------- | ----------------- | -------------------- |
+| 0    | Goal reframing + prior-art additions + this spec                | —                 | none                 |
+| 0b   | Cleanup (preserve actors, delete `runs/`, deprecation note)     | —                 | none                 |
+| 1    | P0 declared adapter + teacher-free gate (landed; gate negative) | none              | calibration          |
+| 2    | P1 ascending feedback                                           | C1 (new identity) | probes               |
+| 3    | P2 connectome-constrained fit                                   | C2 (new identity) | fit — ask first      |
+| 4    | P4 transfer/domain randomization                                | none              | training — ask first |
+| 5    | P3 visual relay                                                 | none              | probes               |
+| 6    | P5 evaluation additions                                         | none              | eval runs            |
+| 7    | P6 Scope A fly body                                             | goal broadening   | separate plan        |
 
 Each step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`,
 `.venv/bin/ruff format python tests && .venv/bin/ruff check python tests`, then commit and push.
