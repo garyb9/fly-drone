@@ -1,10 +1,13 @@
 # Liveness bar + P3 visual relay — plan
 
-**Status: Part A landed, Part B landed (infra + offline validation), 2026-09-19.** The liveness bar
+**Status: Part A landed, Part B landed, relay smoke negative (2026-09-20).** The liveness bar
 (`liveness.py`, `liveness-check`) and the declared optic-flow relay (`relay.py`, `--visual relay`)
 are in. The relay's yaw flow validates against simulator egomotion (r ≈ 0.97–0.99); the pitch channel
-is declared but weak under vertical translation. No behaviour gate has been run yet — the 15-seed
-smoke and 50-seed gate are the next steps and need sign-off.
+is declared but weak under vertical translation. The 15-seed smoke is **negative on liveness**
+(canonical and relay both fail L1/L2; relay is neutral-to-worse), so v4 stays the default and the
+50-seed gate is skipped. Evidence:
+[`../../results/liveness/FINDING-2026-09-20.md`](../../results/liveness/FINDING-2026-09-20.md). The
+next lever is control/excitability, not more sensory channels.
 
 **Documented deviations from the first draft.** The relay uses global phase correlation on the
 rendered eye images (sub-pixel) rather than ommatidial sampling; the measured eye geometry is not

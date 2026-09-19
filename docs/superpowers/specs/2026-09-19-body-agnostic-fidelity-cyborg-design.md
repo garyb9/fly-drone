@@ -158,7 +158,9 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
   ground truth. *Landed 2026-09-19:* a declared, opt-in optic-flow front-end (`relay.py`) drives the
   T4/T5 direction-selective subtypes; the liveness bar is the prerequisite gate. Validation against
   simulator egomotion is recorded (`results/liveness/relay-flow-validation.json`); FlyView remains
-  the external follow-on. See `plans/2026-09-19-fly-drone-10-liveness-relay.md`.
+  the external follow-on. The 15-seed liveness smoke is **negative** (relay neutral-to-worse; v4
+  kept), so the next lever is control/excitability, not more sensory channels
+  (`results/liveness/FINDING-2026-09-20.md`). See `plans/2026-09-19-fly-drone-10-liveness-relay.md`.
 - **P4 Transfer.** Domain randomization (arena, lighting, textures, camera/body noise), the
   pre-specified unseen-layout generalisation, quadrotor system-ID, latency and actuator noise — the
   sim-to-real package.
