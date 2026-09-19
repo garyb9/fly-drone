@@ -236,6 +236,11 @@ def main():
     p = sub.add_parser("current-pointer")
     p.add_argument("--task", default="free_roam", choices=["free_roam"])
     p.add_argument("--dry-run", action="store_true")
+    p = sub.add_parser(
+        "adapter-calibrate",
+        help="calibrate the declared body adapter on the stimulus battery (P0)",
+    )
+    p.add_argument("--output", default="docs/results/adapter/adapter.json")
     p = sub.add_parser("encoder-checks")
     p.add_argument("--policy", required=True)
     p.add_argument("--encoder", help="omit for the v4 baseline")
@@ -405,6 +410,21 @@ def main():
 
         payload = current_pointer.update(args.task, dry_run=args.dry_run)
         print(json.dumps(payload, indent=2))
+    elif args.command == "adapter-calibrate":
+        from .adapter import Adapter
+
+        adapter = Adapter.calibrate()
+        adapter.save(args.output)
+        print(
+            json.dumps(
+                {
+                    "adapter_version": adapter.version,
+                    "output": args.output,
+                    "params": adapter.params,
+                },
+                indent=2,
+            )
+        )
     elif args.command == "roam-feasibility":
         from .feasibility import run
 
