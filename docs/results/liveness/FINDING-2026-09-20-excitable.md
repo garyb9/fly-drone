@@ -72,6 +72,18 @@ depend on visual laterality rather than raw power above rest.
 Keep the canonical v4 bridge. The excitability prior is a promising enabler, not an adopted model;
 no 50-seed gate yet. The liveness bar is unchanged.
 
+## Next (prepared, not yet gated)
+
+The relay + excitability combo adapter is calibrated
+(`docs/results/adapter/adapter-relay-excitable.json`, `declared-v1:ee178055ca94bc4b`) and the live
+viewer is running on it:
+`serve --bundle data/malecns-excitable --visual relay \
+--adapter docs/results/adapter/adapter-relay-excitable.json`.
+The combo gate itself was **not run** at this point — it is the next step, and needs sign-off.
+At 0.85 the relay spreads to 164 descending cells (vs 72 at canonical), so the open question is
+whether vision can now *steer* the excited network, and whether the adapter should be changed to
+keep its forward drive dependent on visual laterality rather than raw power above rest.
+
 ## Reproduce
 
 ```bash
