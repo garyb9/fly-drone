@@ -386,26 +386,29 @@ so the per-neuron lever is untested (`docs/results/dynamics/FINDING-2026-09-19.m
 — landed and kept; the optic-flow relay is a recorded negative
 (`docs/results/liveness/FINDING-2026-09-20.md`).
 
-**P4 is the current route**, specified in
+**P4 closed 2026-09-20 (negative with a real positive inside it)**, specified in
 [`../superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md`](../superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md).
-The drone idles for a measured reason, not a mysterious one:
+The drone idled for a measured reason, not a mysterious one:
 
-1. **The codec cannot command a speed that counts as moving.** With the committed
+1. **The codec could not command a speed that counts as moving.** With the committed
    `g_fwd = 0.69203` and `rest_power = 0.439525`, no declared stimulus but a full one-sided loom
-   commands more than the 0.05 m/s "moving" threshold; a bright light in both eyes commands 3 cm/s.
-   The ceiling is 39 % of the body's speed range.
+   commanded more than the 0.05 m/s threshold; a bright light in both eyes commanded 3 cm/s.
 2. **The brain has no ongoing activity.** Exactly one population carries tonic drive (DLMn/DVMn,
-   `b = 0.85`); the other 166,698 neurons sit at `bias = 0` under a unit threshold, with
-   `mean_feature_activity = 0.0048` at rest.
+   `b = 0.85`); the other 166,698 neurons sit at `bias = 0` under a unit threshold.
 3. **9,189 neurons (5.5 %) transmit nothing** — every out-edge weight is zero for histamine,
    dopamine, octopamine, serotonin and unresolved transmitters. Restoring modulatory transmission
    needs an upstream bundle rebuild and is deferred.
-4. **The liveness bar cannot see the complaint.** L1/L2 are teacher-anchored and blind to motion
-   structure; they are being re-anchored on published fly free-flight statistics.
+4. **The liveness bar could not see the complaint.** L1/L2 were teacher-anchored and blind to
+   motion structure; they are now re-anchored on published fly free-flight statistics (L6–L8).
 
-Workstream A fixes the codec (bridge only, no contract change); workstream B adds ongoing state as
-contract change C3 (additive, versioned, silenceable). Both are gated on a 2×2 against the existing
-causal controls, with `ACCEPTANCE` A1–A7 untouched.
+**What P4 found.** Codec v2 (steering from the wing steering motoneurons, two-sided drive,
+span-normalised) fixes the idling: on the canonical bundle `slow_fraction` fell 0.444 → 0.031 and
+coverage rose 2.1 % → 10.4 %, causally. C3a tonic drive on the steering motoneurons was **rejected**
+by its silencing gate (no metric changed); C3b excitability was **dropped** for lack of a citable
+resting baseline. No cell passed L1–L8: **L7 saccadic turning stays ~0.01 Hz**, so the next unmet
+property is the brain's ongoing dynamics, not the senses. Evidence:
+[`../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md).
+`ACCEPTANCE` A1–A7 were untouched.
 
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
 fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:

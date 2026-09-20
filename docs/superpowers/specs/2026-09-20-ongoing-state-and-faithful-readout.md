@@ -1,9 +1,15 @@
 # Ongoing state and a faithful readout — design
 
-**Status:** A0–A3 landed 2026-09-20 (`motion_stats.py`, L6–L8, `command_audit.py`, codec v2);
-B1 (C3a tonic) landed; **B2 (C3b) dropped** — no comparable published resting baseline exists, see
-[`../../results/liveness/FINDING-2026-09-20-c3b-dropped.md`](../../results/liveness/FINDING-2026-09-20-c3b-dropped.md).
-The 2×2 gate has not been run yet. Supersedes the "add more senses" branch of P3.
+**Status:** closed 2026-09-20. A0–A3 landed (`motion_stats.py`, L6–L8, `command_audit.py`, codec v2).
+The 15-seed 2×2 smoke is a **negative with a real positive inside it**: codec v2 cuts
+`slow_fraction` 0.444 → 0.031 and lifts coverage 2.1 % → 10.4 %, but no cell passes L1–L8 — L7
+saccadic turning stays ~0.01 Hz, so the next constraint is the brain's ongoing dynamics, not the
+senses. C3a tonic is **rejected** by its 15-seed `tonic-check` (no metric changes); B1's additive
+machinery stays but is a recorded negative. B2 (C3b) is **dropped** (no comparable published
+resting baseline). The 50-seed step-3 gate was skipped: L7 cannot pass, so no seed count would
+change the verdict. Evidence:
+[`../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md).
+Supersedes the "add more senses" branch of P3.
 
 **Why now.** The frozen connectome drives the body through a declared, teacher-free codec and threat
 escape is real and causal — but the drone idles most of the time. Three rounds of sensory-side
