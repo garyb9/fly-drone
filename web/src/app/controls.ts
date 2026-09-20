@@ -174,6 +174,11 @@ export function initControls(viewer: Viewer): void {
   els["roam-ghost"].onclick = () =>
     viewer.send({ op: "ghost", value: !viewer.latest?.free_roam?.ghost });
   els["roam-restore"].onclick = () => viewer.send({ op: "restore" });
+  els["roam-codec"].onclick = () => {
+    // Switch the declared bridge and reset the sim so the new codec flies from a clean state.
+    const next = (viewer.latest?.codec ?? "v2") === "v2" ? "v1" : "v2";
+    viewer.send({ op: "codec", value: next });
+  };
   els["cb-safe"].onclick = () => {
     const safe = els["cb-safe"].getAttribute("aria-pressed") !== "true";
     localStorage.setItem(CVD_SAFE_KEY, safe ? "1" : "0");

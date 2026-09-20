@@ -5,6 +5,13 @@
 `[vx, vy, vz, yaw_rate]`; pass `--bridge learned` (with a decoder) to fly the deprecated learned
 path described below. The gate is `fly-drone adapter-check`.
 
+**Default codec (P4).** The shipped default is **codec v2** (`adapter-v2.json`), which fixed the
+idling (`slow_fraction` 0.44 → 0.03; see
+[`results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md)).
+Switch back to the legacy canonical codec with `fly-drone serve --codec v1`, or live in the viewer's
+free-roam bar (**bridge → Codec v1/v2**, which swaps the bridge and resets the sim). `--adapter`
+still overrides both for an alternate bundle. The canonical `adapter.json` is unchanged.
+
 Code: `python/fly_drone/{adapter,arena,plant,env,feasibility,teacher,distill,attribution,roam_eval,server}.py`.
 Plan: [`superpowers/plans`](superpowers/plans/) (free-roam plan, 2026-09-13).
 

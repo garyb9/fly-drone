@@ -16,6 +16,13 @@ def _resolve_adapter(value):
     return value
 
 
+def _bridge_codec_adapter(codec):
+    """The committed adapter for the shipped ``--codec`` switch (v2 default, v1 legacy)."""
+    from .adapter import codec_adapter
+
+    return str(codec_adapter(codec))
+
+
 def _infer_spatial(learner, encoder, init):
     """Whether a round runs the v6 spatial encoder, from the frozen partner it names."""
     from .brain import _is_spatial
@@ -70,6 +77,12 @@ def main():
         "data/malecns-dynamics (generated; see the make_*_bundle scripts)",
     )
     p.add_argument("--adapter", help="adapter .json pinned to --bundle")
+    p.add_argument(
+        "--codec",
+        choices=["v2", "v1"],
+        default="v2",
+        help="declared bridge codec: v2 (default, P4 faithful readout) or v1 (legacy canonical)",
+    )
     p.add_argument(
         "--feedback",
         action="store_true",
@@ -741,7 +754,14 @@ def main():
                 encoder=encoder,
                 bridge=args.bridge,
                 bundle=args.bundle,
-                adapter=args.adapter,
+                # An alternate bundle/relay picks its own pinned adapter; otherwise --codec
+                # selects the shipped default (v2) or the legacy v1, and --adapter overrides.
+                adapter=args.adapter
+                or (
+                    None
+                    if args.bundle or args.visual == "relay"
+                    else _bridge_codec_adapter(args.codec)
+                ),
                 feedback=args.feedback,
                 relay=args.visual == "relay",
             ),

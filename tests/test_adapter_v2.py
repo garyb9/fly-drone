@@ -50,6 +50,20 @@ def test_canonical_adapter_stays_byte_identical(brain, tmp_path):
     assert adapter_module.DEFAULT_PATH.read_bytes() == before
 
 
+def test_shipped_default_bridge_is_codec_v2(brain):
+    assert adapter_module.DEFAULT_CODEC == "v2"
+    assert adapter_module.DEFAULT_BRIDGE_PATH == adapter_module.DEFAULT_V2_PATH
+    # The default path (no --adapter/--codec) loads the v2 identity, not the legacy one.
+    assert adapter_module.load_default().version.startswith("declared-v2:")
+
+
+def test_codec_adapter_maps_the_switch_and_rejects_unknown():
+    assert adapter_module.codec_adapter("v1") == adapter_module.DEFAULT_PATH
+    assert adapter_module.codec_adapter("v2") == adapter_module.DEFAULT_V2_PATH
+    with pytest.raises(ValueError, match="unknown codec"):
+        adapter_module.codec_adapter("v3")
+
+
 def test_forward_drive_is_two_sided(v2, brain):
     p = v2.params
     below = vector(

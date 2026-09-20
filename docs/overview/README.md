@@ -419,6 +419,11 @@ near-miss** (liveness is intrinsic, not vision-attributable); P4 closes here. Ev
 [`../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md).
 `ACCEPTANCE` A1–A7 were untouched.
 
+**Shipped default.** Codec v2 is now the default declared bridge (the simulation no longer idles
+out of the box). Use `fly-drone serve --codec v1` (or `--adapter v1`) to fly the legacy canonical
+codec, or the viewer's free-roam **bridge → Codec** switch, which swaps the bridge and resets the
+sim live. The canonical `adapter.json` and `adapter-check.json` are unchanged.
+
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
 fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:
 [`../hardware-estimate.md`](../hardware-estimate.md)). A state-in-synapses (path-integration)

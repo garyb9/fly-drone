@@ -114,6 +114,7 @@ export type Frame = {
   task: string;
   ablation: string;
   seed: number;
+  codec?: string | null;
   active_policy: string | null;
   policy_status?: "none" | "loaded" | "limits mismatch";
   outcome: Outcome;

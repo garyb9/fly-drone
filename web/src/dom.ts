@@ -93,6 +93,7 @@ export const DOM_IDS = {
   "roam-silence-loom": "button",
   "roam-ghost": "button",
   "roam-restore": "button",
+  "roam-codec": "button",
   "roam-levels": "div",
   "roam-event": "div",
   "roam-visibility": "span",

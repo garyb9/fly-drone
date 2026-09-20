@@ -22,6 +22,7 @@ def test_service_pause_reset_and_disconnect():
         with client.websocket_connect("/ws") as ws:
             metadata = ws.receive_json()
             assert metadata["type"] == "metadata" and metadata["neurons"] == 166700
+            assert metadata["codecs"] == ["v1", "v2"]
             next_frame(ws)
             ws.send_json({"op": "pause", "value": True})
             while not (frame := next_frame(ws))["paused"]:
@@ -34,6 +35,12 @@ def test_service_pause_reset_and_disconnect():
             while (frame := next_frame(ws))["episode"] == 0:
                 pass
             assert frame["episode"] == 1 and frame["fly"]["ticks"] <= 16
+            # The shipped bridge is v2; the codec op switches to v1 and resets the sim.
+            assert frame["codec"] == "v2"
+            ws.send_json({"op": "codec", "value": "v1"})
+            while (frame := next_frame(ws))["codec"] != "v1":
+                pass
+            assert frame["episode"] == 2
             last = frame["physics_tick"]
         time.sleep(0.2)
         with client.websocket_connect("/ws") as ws:
@@ -96,6 +103,16 @@ def test_session_bridge_selection_is_explicit():
     assert Session(bridge="learned").bridge == "learned"
     with pytest.raises(ValueError, match="bridge"):
         Session(bridge="bogus")
+
+
+def test_session_defaults_to_the_shipped_v2_bridge():
+    from fly_drone.adapter import DEFAULT_V2_PATH
+    from fly_drone.server import Session, codec_name
+
+    assert Session().adapter == str(DEFAULT_V2_PATH)
+    assert codec_name(Session().adapter) == "v2"
+    assert codec_name(str(DEFAULT_V2_PATH)) == "v2"
+    assert codec_name(None) is None
 
 
 def test_service_rejects_unrelated_origin():

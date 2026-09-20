@@ -17,6 +17,11 @@ The command is one fixed formula. When calm it steers toward the more active sid
 (a light); when ``escape`` fires it flips to steer away, sidesteps and climbs. This
 is a declared reflex-level interpretation of the connectome's activity, not a hidden
 mode switch: the same constants run for every frame of a run.
+
+The shipped default is **codec v2** (``DEFAULT_BRIDGE_PATH``), which reads steering from the wing
+steering motoneurons and drives forward two-sided; it fixed the idling measured in P4. Codec v1
+(the readouts below) remains as ``DEFAULT_PATH`` and is selected with ``--codec v1`` / ``--adapter
+v1``.
 """
 
 import hashlib
@@ -39,6 +44,25 @@ DEFAULT_RELAY_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-relay.json
 DEFAULT_V2_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-v2.json"
 # The codec re-pinned to the P4 (C3a) tonic bundle (an alternate identity).
 DEFAULT_TONIC_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-tonic.json"
+# The shipped declared bridge. P4 made codec v2 (which fixes the idling) the default; pass
+# ``--codec v1`` / ``--adapter v1`` to fly the legacy canonical codec. The canonical files
+# (``adapter.json``, ``adapter-check.json``) are unchanged either way.
+DEFAULT_CODEC = "v2"
+DEFAULT_BRIDGE_PATH = DEFAULT_V2_PATH
+# The committed codec artifacts, by the name used on the command line and in the viewer.
+CODEC_PATHS = {"v1": DEFAULT_PATH, "v2": DEFAULT_V2_PATH}
+
+
+def codec_adapter(name):
+    """The committed adapter path for a codec name (``v1``/``v2``); raise if unknown."""
+    try:
+        return CODEC_PATHS[str(name)]
+    except KeyError as err:
+        raise ValueError(
+            f"unknown codec {name!r}: expected one of {sorted(CODEC_PATHS)}"
+        ) from err
+
+
 # Escape readout level above rest that counts as a full loom response (rest ~0, loom
 # ~0.74-0.87 in the battery). Declared, not fitted.
 ESCAPE_SCALE = 0.5
@@ -383,20 +407,22 @@ class Adapter:
         )
 
 
-_DEFAULT = None
+_DEFAULT: dict = {}
 
 
-def load_default(path=DEFAULT_PATH):
-    """The calibrated adapter committed at P0, loaded once per process."""
-    global _DEFAULT
-    if _DEFAULT is None:
+def load_default(path=None):
+    """The shipped declared bridge (codec v2), loaded once per path per process."""
+    if path is None:
+        path = DEFAULT_BRIDGE_PATH
+    key = str(path)
+    if key not in _DEFAULT:
         if not Path(path).is_file():
             raise FileNotFoundError(
                 f"declared adapter not calibrated: {path} "
                 "(run `fly-drone adapter-calibrate`)"
             )
-        _DEFAULT = Adapter.load(path)
-    return _DEFAULT
+        _DEFAULT[key] = Adapter.load(path)
+    return _DEFAULT[key]
 
 
 def declared_command(brain, features=None, path=None):

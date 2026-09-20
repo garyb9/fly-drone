@@ -14,7 +14,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
-from .adapter import declared_command
+from .adapter import CODEC_PATHS, declared_command
 from .arena import LEVELS, clearance
 from .attribution import for_brain
 from .brain import ROOT, BrainRuntime
@@ -37,6 +37,14 @@ POLICY_ROOTS = (ROOT / "runs", ROOT / "docs" / "results")
 # Frames between attribution refreshes. explain() costs ~90 ms, so the live viewer
 # gets a fresh gradient-x-input readout a few times a second without taxing the loop.
 ATTRIBUTION_EVERY = 12
+
+
+def codec_name(path):
+    """The command-line codec name (``v1``/``v2``) for an adapter path, else ``None``."""
+    if not path:
+        return None
+    name = Path(path).name
+    return next((k for k, p in CODEC_PATHS.items() if Path(p).name == name), None)
 
 
 def safe_policy_path(path):
@@ -142,6 +150,11 @@ class Session:
 
             if DEFAULT_RELAY_PATH.is_file():
                 self.adapter = str(DEFAULT_RELAY_PATH)
+        if not self.adapter:
+            # The shipped declared bridge: codec v2 (P4). Switch live with the ``codec`` op.
+            from .adapter import DEFAULT_BRIDGE_PATH
+
+            self.adapter = str(DEFAULT_BRIDGE_PATH)
         # A feedback bundle means the user wants to see the closed loop; the UI's
         # "feedback" ablation is the control.
         self.feedback = bool(feedback) or bool(
@@ -298,6 +311,7 @@ class Session:
                 "tasks": list(TASKS),
                 "ablations": list(ABLATION_MODES),
                 "levels": sorted(LEVELS),
+                "codecs": sorted(CODEC_PATHS),
                 "dataset_hash": env.brain.dataset_hash,
                 "room": env.plant.room(),
                 "task_policy_status": {
@@ -329,6 +343,19 @@ class Session:
                         break
                     try:
                         op = c.get("op")
+                        if op == "codec":
+                            from .adapter import codec_adapter
+
+                            self.adapter = str(codec_adapter(c.get("value")))
+                            # Reset the sim so the new bridge flies from a clean state.
+                            c = {
+                                "op": "reset",
+                                "seed": seed,
+                                "task": env.task,
+                                "level": env.level,
+                                "ablation": env.ablation,
+                            }
+                            op = "reset"
                         if op == "pause":
                             paused = bool(c["value"])
                         elif op == "reset":
@@ -531,6 +558,7 @@ class Session:
                     "task": env.task,
                     "ablation": env.ablation,
                     "seed": seed,
+                    "codec": codec_name(self.adapter),
                     "active_policy": str(Path(active_policy).name)
                     if active_policy
                     else (
