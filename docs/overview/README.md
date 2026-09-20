@@ -405,10 +405,13 @@ The drone idled for a measured reason, not a mysterious one:
 span-normalised) fixes the idling: on the canonical bundle `slow_fraction` fell 0.444 → 0.031 and
 coverage rose 2.1 % → 10.4 %, causally. C3a tonic drive on the steering motoneurons was **rejected**
 by its silencing gate (no metric changed); C3b excitability was **dropped** for lack of a citable
-resting baseline. No cell passed L1–L8: **L7 saccadic turning stays ~0.01 Hz**, so the next unmet
-property is the brain's ongoing dynamics, not the senses. Evidence:
-[`../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md).
-`ACCEPTANCE` A1–A7 were untouched.
+resting baseline. No cell passed L1–L8, but a follow-up free audit showed the **L7** failure is a
+**body** gap: the saccade detector fires at 3 rad/s while the quadrotor's yaw authority is 0.8 rad/s,
+so no controller — not even the accepted RL teacher — can register a saccade. It is the same
+structural mismatch as the old teacher-anchored L1/L2, now fly-body-anchored. Evidence:
+[`../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md),
+[`../results/liveness/FINDING-2026-09-20-l7-body-threshold.md`](../results/liveness/FINDING-2026-09-20-l7-body-threshold.md).
+The other open gap is **L2 coverage** (0.104 vs 0.15). `ACCEPTANCE` A1–A7 were untouched.
 
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
 fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:

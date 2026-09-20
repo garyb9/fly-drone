@@ -2,9 +2,11 @@
 
 **Status:** closed 2026-09-20. A0–A3 landed (`motion_stats.py`, L6–L8, `command_audit.py`, codec v2).
 The 15-seed 2×2 smoke is a **negative with a real positive inside it**: codec v2 cuts
-`slow_fraction` 0.444 → 0.031 and lifts coverage 2.1 % → 10.4 %, but no cell passes L1–L8 — L7
-saccadic turning stays ~0.01 Hz, so the next constraint is the brain's ongoing dynamics, not the
-senses. C3a tonic is **rejected** by its 15-seed `tonic-check` (no metric changes); B1's additive
+`slow_fraction` 0.444 → 0.031 and lifts coverage 2.1 % → 10.4 %, but no cell passes L1–L8. A
+follow-up free audit ([`FINDING-2026-09-20-l7-body-threshold.md`](../../results/liveness/FINDING-2026-09-20-l7-body-threshold.md))
+shows L7's failure is a **body** gap, not a brain one: the detector fires at 3 rad/s but the
+quadrotor's yaw authority is 0.8 rad/s (clean-frame ceiling 1.12 rad/s), so no controller — not even
+the accepted RL teacher — can register a saccade. C3a tonic is **rejected** by its 15-seed `tonic-check` (no metric changes); B1's additive
 machinery stays but is a recorded negative. B2 (C3b) is **dropped** (no comparable published
 resting baseline). The 50-seed step-3 gate was skipped: L7 cannot pass, so no seed count would
 change the verdict. Evidence:

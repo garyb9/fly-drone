@@ -74,11 +74,11 @@ Two criteria remain unmet, and neither is a threshold artefact:
 
 - **L2 exploration** on the best cell is 0.104 vs the 0.15 bar. The drone now *moves* across the
   arena but has no goal, so it does not sweep 15 % of it in 60 s.
-- **L7 saccadic turning** is ~0.01 Hz against the cited free-flight window 0.2–2 Hz. v2 gives the
-  brain a faithful throttle, but the steering command is smooth: the connectome + codec do not
-  generate body saccades. This is the sharpest result — the idling was a readout problem, and once
-  it is fixed the *next* unmet property is a property of the brain's ongoing dynamics, not of the
-  sensors.
+- **L7 saccadic turning** is ~0.01 Hz against the cited free-flight window 0.2–2 Hz. A follow-up
+  free audit ([`FINDING-2026-09-20-l7-body-threshold.md`](FINDING-2026-09-20-l7-body-threshold.md))
+  shows this is **not** a brain deficit: the detector fires at 3 rad/s but the body's yaw authority
+  is 0.8 rad/s, and every "detection" was a crash-respawn teleport. It is a body/fly-body-anchored
+  threshold mismatch, like the old L1/L2 teacher-anchoring. Still open: L2 coverage.
 
 L6 passes for v2 (7.9 bouts/min, 7.7 s move bouts) — with the caveat recorded in
 [`../../references.md`](../../references.md) that its window is an adult-*walking* proxy, because no
@@ -103,11 +103,14 @@ turning. **Report it; do not retreat to a teacher.**
 
 ## 7. Next lever (not taken here)
 
-The result points at the brain's ongoing dynamics, not more sensory channels:
-a declared, silenceable mechanism that produces pulsatile steering (body saccades), and a goal or
-search process for coverage. Both are contract-change candidates (C4+) and need a new spec and
-explicit sign-off. The rejected, unanchored C3b knob is **not** to be re-used as a saccade
-generator.
+The result splits into two independent open problems:
+(a) **L2 coverage** — the drone moves but has no search process;
+(b) **L7 saccadic turning** — a *body* gap, not a brain one (the quadrotor's 0.8 rad/s yaw authority
+cannot reach L7's 3 rad/s detector). See
+[`FINDING-2026-09-20-l7-body-threshold.md`](FINDING-2026-09-20-l7-body-threshold.md) for the audit
+and the three bar/body options; it needs a user decision before any change.
+
+The rejected, unanchored C3b knob is **not** to be re-used as a saccade generator.
 
 ## Reproduce
 

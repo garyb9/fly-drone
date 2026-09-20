@@ -1,0 +1,39 @@
+{
+  "adapter": "/home/gb/projects/fly-drone/docs/results/adapter/adapter-v2.json",
+  "level": 3,
+  "seconds": 60,
+  "frames": 1500,
+  "plant_yaw_limit_rad_s": 0.8,
+  "saccade_threshold_rad_s": 3.0,
+  "threshold_reachable": false,
+  "clean_ceiling_rad_s": 1.1164,
+  "runs": [
+    {
+      "seed": 0,
+      "max_abs_yaw_rate": 7.91,
+      "p999_abs_yaw_rate": 4.4579,
+      "clean_max_abs_yaw_rate": 0.4904,
+      "detections": 3,
+      "detections_at_teleport": 3,
+      "teleport_frames": 30
+    },
+    {
+      "seed": 1,
+      "max_abs_yaw_rate": 2.8205,
+      "p999_abs_yaw_rate": 1.7186,
+      "clean_max_abs_yaw_rate": 1.1164,
+      "detections": 0,
+      "detections_at_teleport": 0,
+      "teleport_frames": 30
+    },
+    {
+      "seed": 2,
+      "max_abs_yaw_rate": 3.9606,
+      "p999_abs_yaw_rate": 1.8482,
+      "clean_max_abs_yaw_rate": 0.8688,
+      "detections": 1,
+      "detections_at_teleport": 1,
+      "teleport_frames": 25
+    }
+  ]
+}
