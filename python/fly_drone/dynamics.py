@@ -62,6 +62,28 @@ def uniform_arrays(n):
     return leak, threshold
 
 
+# Declared excitability prior (P3 follow-up). The model is threshold-bound: with raw contact
+# weights and a unit threshold, the network sits near spike threshold and weak sensory drive
+# does not propagate (scripts/readout_audit.py; external-prior-art.md fly.ai finding #2). This
+# declared prior scales the per-neuron threshold down by a fixed factor so typical input can
+# fire. It is a declared interpretation, not fitted to activity, and carries its own version.
+EXCITABLE_PARAMS = {
+    "version": "declared-excitable-v1",
+    "source": "declared threshold-scale prior; no activity fit",
+    "threshold_scale": 0.5,
+    "v_reset": 0.0,
+    "refrac_ms": 2.0,
+    "noise_sigma": 0.02,
+}
+
+
+def excitable_arrays(n, scale=EXCITABLE_PARAMS["threshold_scale"]):
+    """Leak unchanged; per-neuron threshold scaled by a declared excitability factor."""
+    leak = np.full(n, shiu_leak(), dtype=np.float32)
+    threshold = np.full(n, shiu_threshold() * float(scale), dtype=np.float32)
+    return leak, threshold
+
+
 def encode(leak, v_threshold):
     """``dynamics.bin`` bytes: 12-byte header + n * (leak f32, v_threshold f32)."""
     leak = np.asarray(leak, dtype="<f4")
