@@ -227,6 +227,25 @@ class ConnectomeEnv(gym.Env):
         self.previous_distance = info["target_distance"]
         return self.observe(), info
 
+    def sensory_groups(self):
+        """Viewer sensory readout: brain cue groups plus declared relay flow magnitudes.
+
+        The relay axes are signed; the scope renders [0, 2] currents, so it gets the axis
+        magnitude scaled by the injection gain (which direction is active is in ``relay_state``).
+        """
+        groups = self.brain.sensory_groups()
+        if self.relay and self.relay_state is not None:
+            from .relay import FLOW_GAIN
+
+            for side in ("l", "r"):
+                groups[f"flow_yaw_{side}"] = min(
+                    2.0, FLOW_GAIN * abs(self.relay_state.yaw[side])
+                )
+                groups[f"flow_pitch_{side}"] = min(
+                    2.0, FLOW_GAIN * abs(self.relay_state.pitch[side])
+                )
+        return groups
+
     def _sense(self):
         """v4 renders now; v5 encodes the stack rendered at the end of the previous step."""
         if self.brain.learned:
