@@ -1,0 +1,248 @@
+{
+  "settle_ticks": 40,
+  "stim_ticks": 80,
+  "seed": 11,
+  "n_features": 2022,
+  "results": {
+    "v4:light_l": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.02018,
+        "wing_r": 0.02031,
+        "thrust": 0.04699,
+        "power_l": 0.03774,
+        "steer_l": 0.00226,
+        "power_r": 0.03467,
+        "steer_r": 0.0
+      },
+      "descending_drive_max": 0.57757,
+      "descending_drive_mean": 0.002151,
+      "descending_changed_0p02": 34
+    },
+    "v4:light_r": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.04795,
+        "wing_r": 0.04536,
+        "thrust": 0.07955,
+        "power_l": 0.08537,
+        "steer_l": 0.00329,
+        "power_r": 0.06319,
+        "steer_r": 0.01915
+      },
+      "descending_drive_max": 0.77058,
+      "descending_drive_mean": 0.0043,
+      "descending_changed_0p02": 58
+    },
+    "v4:loom_l": {
+      "readout_delta": {
+        "escape": 0.81959,
+        "wing_l": 0.15273,
+        "wing_r": 0.15419,
+        "thrust": 0.14933,
+        "power_l": 0.16063,
+        "steer_l": 0.14588,
+        "power_r": 0.14464,
+        "steer_r": 0.15851
+      },
+      "descending_drive_max": 0.95085,
+      "descending_drive_mean": 0.024208,
+      "descending_changed_0p02": 186
+    },
+    "v4:loom_r": {
+      "readout_delta": {
+        "escape": 0.85105,
+        "wing_l": 0.20212,
+        "wing_r": 0.13381,
+        "thrust": 0.19561,
+        "power_l": 0.22445,
+        "steer_l": 0.20374,
+        "power_r": 0.16933,
+        "steer_r": 0.08495
+      },
+      "descending_drive_max": 0.95085,
+      "descending_drive_mean": 0.022966,
+      "descending_changed_0p02": 192
+    },
+    "v4:light_both": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.06296,
+        "wing_r": 0.05817,
+        "thrust": 0.10634,
+        "power_l": 0.11715,
+        "steer_l": 0.01351,
+        "power_r": 0.10032,
+        "steer_r": 0.01547
+      },
+      "descending_drive_max": 0.73982,
+      "descending_drive_mean": 0.006577,
+      "descending_changed_0p02": 87
+    },
+    "relay:all_0.6": {
+      "readout_delta": {
+        "escape": 0.73934,
+        "wing_l": 0.08995,
+        "wing_r": 0.06556,
+        "thrust": 0.05863,
+        "power_l": 0.06177,
+        "steer_l": 0.12966,
+        "power_r": 0.04513,
+        "steer_r": 0.08439
+      },
+      "descending_drive_max": 0.82799,
+      "descending_drive_mean": 0.016888,
+      "descending_changed_0p02": 186
+    },
+    "relay:cruise_yaw": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.02794,
+        "wing_r": 0.02499,
+        "thrust": 0.02291,
+        "power_l": 0.01654,
+        "steer_l": 0.05815,
+        "power_r": 0.01515,
+        "steer_r": 0.05164
+      },
+      "descending_drive_max": 0.6533,
+      "descending_drive_mean": 0.005635,
+      "descending_changed_0p02": 72
+    },
+    "relay:cruise_pitch": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.0,
+        "wing_r": 0.0,
+        "thrust": 0.0,
+        "power_l": 0.0,
+        "steer_l": 0.0,
+        "power_r": 0.0,
+        "steer_r": 0.0
+      },
+      "descending_drive_max": 0.0,
+      "descending_drive_mean": 0.0,
+      "descending_changed_0p02": 0
+    },
+    "relay:pitch_dn_l": {
+      "readout_delta": {
+        "escape": 0.04851,
+        "wing_l": 0.00824,
+        "wing_r": 0.00782,
+        "thrust": 0.0,
+        "power_l": 0.0,
+        "steer_l": 0.02246,
+        "power_r": 0.0,
+        "steer_r": 0.02134
+      },
+      "descending_drive_max": 0.86121,
+      "descending_drive_mean": 0.003545,
+      "descending_changed_0p02": 24
+    },
+    "relay:pitch_dn_r": {
+      "readout_delta": {
+        "escape": 0.06277,
+        "wing_l": 0.01038,
+        "wing_r": 0.01128,
+        "thrust": 0.0,
+        "power_l": 0.0,
+        "steer_l": 0.0283,
+        "power_r": 0.0,
+        "steer_r": 0.03076
+      },
+      "descending_drive_max": 0.86121,
+      "descending_drive_mean": 0.003539,
+      "descending_changed_0p02": 27
+    },
+    "relay:pitch_up_l": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.06865,
+        "wing_r": 0.06289,
+        "thrust": 0.15351,
+        "power_l": 0.13194,
+        "steer_l": 0.0,
+        "power_r": 0.11077,
+        "steer_r": 0.0
+      },
+      "descending_drive_max": 0.79281,
+      "descending_drive_mean": 0.00305,
+      "descending_changed_0p02": 23
+    },
+    "relay:pitch_up_r": {
+      "readout_delta": {
+        "escape": 0.06033,
+        "wing_l": 0.10543,
+        "wing_r": 0.09081,
+        "thrust": 0.20301,
+        "power_l": 0.19976,
+        "steer_l": 0.01185,
+        "power_r": 0.16803,
+        "steer_r": 0.00657
+      },
+      "descending_drive_max": 0.77559,
+      "descending_drive_mean": 0.004827,
+      "descending_changed_0p02": 67
+    },
+    "relay:yaw_neg_l": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.0,
+        "wing_r": 0.0,
+        "thrust": 0.0,
+        "power_l": 0.0,
+        "steer_l": 0.0,
+        "power_r": 0.0,
+        "steer_r": 0.0
+      },
+      "descending_drive_max": 0.47963,
+      "descending_drive_mean": 0.004262,
+      "descending_changed_0p02": 64
+    },
+    "relay:yaw_neg_r": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.0,
+        "wing_r": 0.0,
+        "thrust": 0.0,
+        "power_l": 0.0,
+        "steer_l": 0.0,
+        "power_r": 0.0,
+        "steer_r": 0.0
+      },
+      "descending_drive_max": 0.4527,
+      "descending_drive_mean": 0.003605,
+      "descending_changed_0p02": 57
+    },
+    "relay:yaw_pos_l": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.01092,
+        "wing_r": 0.00061,
+        "thrust": -0.00204,
+        "power_l": -0.00246,
+        "steer_l": 0.03245,
+        "power_r": -0.00027,
+        "steer_r": 0.00196
+      },
+      "descending_drive_max": 0.84874,
+      "descending_drive_mean": 0.006307,
+      "descending_changed_0p02": 62
+    },
+    "relay:yaw_pos_r": {
+      "readout_delta": {
+        "escape": 0.0,
+        "wing_l": 0.01469,
+        "wing_r": 0.02595,
+        "thrust": 0.00875,
+        "power_l": 0.00393,
+        "steer_l": 0.03576,
+        "power_r": 0.0072,
+        "steer_r": 0.06292
+      },
+      "descending_drive_max": 0.86121,
+      "descending_drive_mean": 0.007936,
+      "descending_changed_0p02": 84
+    }
+  }
+}
