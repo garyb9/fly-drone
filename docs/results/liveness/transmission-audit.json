@@ -1,0 +1,63 @@
+{
+  "bundle": "malecns",
+  "n_neurons": 166700,
+  "n_edges": 10520431,
+  "silent_out_neurons": 9189,
+  "silent_out_edges": 332316,
+  "per_transmitter": {
+    "acetylcholine": {
+      "cells": 103720,
+      "with_out_edges": 103310,
+      "silent_out": 0,
+      "mean_abs_out_weight": 603.035
+    },
+    "dopamine": {
+      "cells": 392,
+      "with_out_edges": 391,
+      "silent_out": 391,
+      "mean_abs_out_weight": 0.0
+    },
+    "gaba": {
+      "cells": 22069,
+      "with_out_edges": 22045,
+      "silent_out": 0,
+      "mean_abs_out_weight": 996.681
+    },
+    "glutamate": {
+      "cells": 29302,
+      "with_out_edges": 29085,
+      "silent_out": 0,
+      "mean_abs_out_weight": 589.685
+    },
+    "histamine": {
+      "cells": 7891,
+      "with_out_edges": 6179,
+      "silent_out": 6179,
+      "mean_abs_out_weight": 0.0
+    },
+    "octopamine": {
+      "cells": 101,
+      "with_out_edges": 82,
+      "silent_out": 82,
+      "mean_abs_out_weight": 0.0
+    },
+    "serotonin": {
+      "cells": 48,
+      "with_out_edges": 48,
+      "silent_out": 48,
+      "mean_abs_out_weight": 0.0
+    },
+    "unclear": {
+      "cells": 2999,
+      "with_out_edges": 2489,
+      "silent_out": 2489,
+      "mean_abs_out_weight": 0.0
+    },
+    "unknown": {
+      "cells": 178,
+      "with_out_edges": 0,
+      "silent_out": 0,
+      "mean_abs_out_weight": 0.0
+    }
+  }
+}

@@ -10,6 +10,7 @@ data/malecns-rewired/
 data/malecns-sign-*/
 data/malecns-feedback/
 data/malecns-dynamics/
+data/malecns-excitable/
 *.egg-info/
 .env
 *.so

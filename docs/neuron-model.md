@@ -72,6 +72,18 @@ their anatomical edges but **inject zero direct current**, so in this model they
 anatomically present and electrically silent. This is a modelling hypothesis recorded in
 `manifest.json`, not measured physiology.
 
+Measured from the canonical `graph.bin` (2026-09-20): **9,189 neurons (5.5 % of the network) have
+out-edges whose weights are all exactly zero**, spanning 332,316 edges (3.2 %) — histamine 6,179,
+unresolved 2,489, dopamine 391, octopamine 82, serotonin 48. They integrate input and spike; they
+transmit nothing. Two consequences are easy to miss. The histaminergic photoreceptor→lamina relay
+carries no signal at all, so the P3 optic-flow relay injects into T4/T5 _past_ a dead layer rather
+than through it. And because `make_sign_bundle.py` retags only the inhibitory bit in `neurons.bin`
+(`graph.bin` is byte-identical across canonical and `malecns-sign-s2`), retagging a zero-weight
+neuron's sign is a no-op — the s2 convention could not have acted through histamine, so its null
+probe result is not evidence about the sign hypothesis. Restoring modulatory transmission requires
+rebuilding `graph.bin` upstream; see
+[`superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md`](superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md) §4.
+
 ### Silencing
 
 A silenced neuron is clamped every tick: `v = v_reset`, `s = 0`, no propagation. Its inputs are
@@ -95,6 +107,23 @@ readout in [`results/sensory-assay.json`](results/sensory-assay.json):
 `power_l = thrust = 0.5031` (the remaining 0.003 is noise and synaptic input). In general a
 constant drive `b` produces a free-running cell whenever the fixed point `b/(1−λ)` exceeds
 `v_th`, i.e. `b > 1 − λ ≈ 0.221`.
+
+**Two fidelity gaps this exposes.**
+
+_Only one population is ever tonically driven._ `BrainRuntime` biases the DLMn/DVMn set and nothing
+else (`brain.py:202-203`); the other 166,698 neurons sit at `b = 0` under `v_th = 1`, so each needs
+sustained drive above 0.221 to fire at all. At rest `mean_feature_activity = 0.0048` and 24 of the
+2,022 descending/VNC traces exceed 0.05. A brain with no ongoing activity can only be reactive.
+Notably the fly's _steering_ motoneurons (`steer_l`/`steer_r`: `b1/b2/b3 MN`, `i1/i2 MN`,
+`iii1/iii3 MN`, `hg1-4 MN`) get no tonic drive, although in a flying fly they fire about once per
+wingbeat continuously and steering modulates that ongoing train rather than recruiting it from
+silence.
+
+_There is no refractory period._ `refrac_ticks = round(refrac_ms / dt_ms) = round(2.0 / 5.0) = 0`
+(`crates/brain-core/src/core/lif.rs:40-44`), so the only refractoriness is the reset itself. A cell
+is silent or fires every tick, with no graded rate code between — the regime is bimodal. Shortening
+`dt` would fix it and would change every downstream constant, so this is recorded rather than
+acted on.
 
 ## 3. Sensory injection
 

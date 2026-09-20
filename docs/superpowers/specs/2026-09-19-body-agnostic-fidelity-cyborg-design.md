@@ -24,10 +24,19 @@ an additive alternate bundle (`data/malecns-dynamics`, marker `dynamics`). The p
 canonical constants (identical leak/threshold; only `noise_sigma` differs), and the causal gate
 **failed to beat uniform LIF**, so the canonical bundle is kept per the §6 falsifier. No recorded
 activity is in-repo, so no fit has been run; the recording-fitted array is the remaining P2 step.
+**Read this negative narrowly.** The only degree of freedom the gate actually varied was
+`noise_sigma` (0.02 -> 0.00); leak and threshold were numerically identical to canonical. It is
+evidence that removing membrane noise makes idling worse (`slow_fraction` 0.627 -> 0.673), not
+evidence about per-neuron dynamics, which have never been varied. The lever was not pulled.
 Evidence: [`../../results/dynamics/FINDING-2026-09-19.md`](../../results/dynamics/FINDING-2026-09-19.md).
 
+**P3 closed 2026-09-20 (negative); succeeded by P4.** The relay is wired and causal but does not
+make the drone alive. The idling has since been traced to a measured arithmetic cause in the codec
+and to a brain with no ongoing activity; the successor spec is
+[`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md).
+
 **P3 liveness bar landed 2026-09-19; relay planned.** A teacher-free `liveness-check` scores whether
-the connectome-driven body is *alive* (mobility, exploration, sense-causality, anti-luck,
+the connectome-driven body is _alive_ (mobility, exploration, sense-causality, anti-luck,
 non-degeneracy) independently of A1–A7. It is an additive diagnostic and a prerequisite for
 expanding capability, not a relaxation of acceptance. The declared optic-flow relay and its targets
 are specified in
@@ -98,6 +107,12 @@ generalised.
   deprecated, optional path (see §8), so parts remain available.
 - **Additive identities.** Every new bundle gets a distinct `bundle_hash`; a policy can only run
   against the bundle it was trained/fitted on (the `sign-v2` pattern).
+- **Liveness is generated in the brain, read by the bridge.** A constant in the codec is
+  forbidden; tonic drive on identified neurons, background excitability and membrane noise are
+  permitted, each as a declared, versioned, silenceable identity. The project already caught and
+  reversed this once: the constant explore drive was "the source of 'the drone flies like it has a
+  life of its own'" (`../../free-roam.md:85`). A bridge constant produces motion no ablation can
+  remove; neural tonic drive is silenceable and therefore falsifiable.
 - **No long run without sign-off.** Fits and training runs ask the user first (AGENTS.md).
 
 ## 4. P0 — Declared body adapter (core de-overfit move)
@@ -155,7 +170,7 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 
 - **P3 Visual relay.** Validate/activate photoreceptor→lamina rather than only pooled v4 cues
   (fly.ai finding #2: the histaminergic relay). Validate the motion path against FlyView optic-flow
-  ground truth. *Landed 2026-09-19:* a declared, opt-in optic-flow front-end (`relay.py`) drives the
+  ground truth. _Landed 2026-09-19:_ a declared, opt-in optic-flow front-end (`relay.py`) drives the
   T4/T5 direction-selective subtypes; the liveness bar is the prerequisite gate. Validation against
   simulator egomotion is recorded (`results/liveness/relay-flow-validation.json`); FlyView remains
   the external follow-on. The 15-seed liveness smoke is **negative** (relay neutral-to-worse; v4
@@ -190,10 +205,16 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 | 1    | P0 declared adapter + teacher-free gate (landed; gate negative) | none              | calibration          |
 | 2    | P1 ascending feedback (landed; weak positive)                   | C1 (new identity) | probes               |
 | 3    | P2 connectome-constrained fit (infra landed; prior negative)    | C2 (new identity) | fit — ask first      |
-| 4    | P4 transfer/domain randomization                                | none              | training — ask first |
-| 5    | P3 liveness bar (landed) + visual relay                         | none              | probes               |
-| 6    | P5 evaluation additions                                         | none              | eval runs            |
-| 7    | P6 Scope A fly body                                             | goal broadening   | separate plan        |
+| 4    | P3 liveness bar (landed) + visual relay (closed negative)       | none              | probes               |
+| 5    | **P4 ongoing state + faithful readout** (successor spec)        | C3 (new identity) | probes — ask first   |
+| 6    | P4 transfer/domain randomization                                | none              | training — ask first |
+| 7    | P5 evaluation additions                                         | none              | eval runs            |
+| 8    | P6 Scope A fly body                                             | goal broadening   | separate plan        |
+
+Step 5 is [`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md):
+the codec cannot command a speed above the "moving" threshold for any stimulus but a full loom, and
+exactly one neuron population in the model carries tonic drive. It comes before transfer and
+evaluation because both measure a body that currently idles.
 
 Each step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`,
 `.venv/bin/ruff format python tests && .venv/bin/ruff check python tests`, then commit and push.

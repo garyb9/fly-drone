@@ -1,5 +1,14 @@
 # Liveness bar + P3 visual relay — plan
 
+**CLOSED 2026-09-20.** Part A (the liveness bar) is landed and kept. Part B (the relay) is a
+recorded negative and v4 stays the default. The idling this plan set out to fix has since been
+traced to a measured arithmetic cause in the codec and to a brain with no ongoing activity; the
+work continues in
+[`../specs/2026-09-20-ongoing-state-and-faithful-readout.md`](../specs/2026-09-20-ongoing-state-and-faithful-readout.md).
+Two findings here need re-reading in light of that spec: the relay bypasses a histaminergic relay
+layer that is electrically dead (6,179 cells with zero out-weight), and the liveness bar's L1/L2
+thresholds are teacher-anchored and cannot measure motion structure.
+
 **Status: Part A landed, Part B landed, relay smoke negative (2026-09-20).** The liveness bar
 (`liveness.py`, `liveness-check`) and the declared optic-flow relay (`relay.py`, `--visual relay`)
 are in. The relay's yaw flow validates against simulator egomotion (r ≈ 0.97–0.99); the pitch channel
@@ -43,13 +52,13 @@ liveness bar measures whether that makes the drone move like it is being driven 
 **A1. `python/fly_drone/liveness.py`.** Pre-registered thresholds and `liveness(results, policy)`
 returning per-criterion detail and `passed`. Teacher-free:
 
-| Criterion | Metric | Bar |
-| --- | --- | --- |
-| L1 mobility | `slow_fraction` | ≤ 0.25 |
-| L2 exploration | `coverage = mean_visited_cells / 256` | ≥ 0.15 |
-| L3 sense-causality | paired-bootstrap CI of intact − `sensory` on `slow_fraction` | upper bound < 0 |
-| L4 anti-luck | `ghost`, `random`, `cue_script` | each fails L1∧L2 |
-| L5 non-degenerate | `mean_abs_yaw_bias` ≤ 0.25, no loss-of-control | — |
+| Criterion          | Metric                                                       | Bar              |
+| ------------------ | ------------------------------------------------------------ | ---------------- |
+| L1 mobility        | `slow_fraction`                                              | ≤ 0.25           |
+| L2 exploration     | `coverage = mean_visited_cells / 256`                        | ≥ 0.15           |
+| L3 sense-causality | paired-bootstrap CI of intact − `sensory` on `slow_fraction` | upper bound < 0  |
+| L4 anti-luck       | `ghost`, `random`, `cue_script`                              | each fails L1∧L2 |
+| L5 non-degenerate  | `mean_abs_yaw_bias` ≤ 0.25, no loss-of-control               | —                |
 
 Baseline evidence: canonical 0.622 slow / 3.2 % coverage (fails L1, L2); random 0.070 / 4.3 %
 (fails L2); cue-script 9.8 % (fails L2); teacher 0.009 / 26.2 % (passes). The teacher appears only
@@ -115,9 +124,9 @@ env -u PYTHONPATH .venv/bin/python -m pytest -q
 
 ## Risks
 
-| Risk | Mitigation |
-| --- | --- |
-| Coarse flow estimator | validate vs sim egomotion before any behaviour run; a null result is reportable |
-| T4/T5 direct drive is a shortcut | state it in the FINDING; subtype tuning is the declared prior |
-| Liveness unreachable without more control channels | that is the next lever, not a reason to relax the bar |
-| New identity touches canonical artifacts | guard with a canonical-adapter-unchanged test |
+| Risk                                               | Mitigation                                                                      |
+| -------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Coarse flow estimator                              | validate vs sim egomotion before any behaviour run; a null result is reportable |
+| T4/T5 direct drive is a shortcut                   | state it in the FINDING; subtype tuning is the declared prior                   |
+| Liveness unreachable without more control channels | that is the next lever, not a reason to relax the bar                           |
+| New identity touches canonical artifacts           | guard with a canonical-adapter-unchanged test                                   |

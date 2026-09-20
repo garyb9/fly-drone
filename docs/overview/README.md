@@ -26,15 +26,16 @@ contract changes (body feedback, fitted dynamics) and the cleanup are specified 
 "The brain controls the body" is easy to fake: script the body and let the neurons flicker on a
 screen. Each clause below exists to rule out one way of faking it.
 
-| Clause                                                                                                                                                                                  | Rules out                                                                    | Enforced by                                                                 |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| **Only neurons reach the bridge.** The body bridge's input is the 2,022 descending + VNC motor traces (plus declared body feedback once C1 lands).                                      | A bridge that secretly reads pose, target position or pixels                 | `BrainRuntime.features`, actor identity binding                             |
-| **The connectome is frozen.** Wiring, weights, signs, neuron parameters and tonic bias never change; fitted dynamics and feedback are additive identities.                              | "Training the brain" into an arbitrary network that merely has 166,700 units | the declared adapter and the deprecated learned path update only the bridge |
-| **One bridge, no mode switch.**                                                                                                                                                         | A hidden state machine choosing behaviours                                   | the server loads one bridge (declared by default) for free roam             |
-| **Feedback informs, never decides (C1).** Ascending/proprioceptive inputs (declared in `feedback-mappings.json`) are an opt-in, versioned additive identity (`bundle_hash`, alternate). | A body that hands the brain targets or actions instead of its own state      | alternate-bundle pin; the `feedback-check` silencing gate                   |
-| **The body only executes.** The PID keeps the drone upright and tracks the intended velocity.                                                                                           | A planner in the body                                                        | the PID sees true state but receives only velocity intent                   |
-| **Skills are causal.** A skill counts only if silencing its pathway removes it, and a blind (ghost) brain cannot pass by chance.                                                        | Behaviour that would happen anyway, such as drifting out of a ball's path    | pre-registered `roam_eval.ACCEPTANCE`                                       |
-| **Honest labels.** Any label uses simulator geometry only for objects the eyes can see; the default bridge uses no teacher at all.                                                      | Asking neurons to encode information that never entered them                 | `teacher.visible`, range gates                                              |
+| Clause                                                                                                                                                                                                     | Rules out                                                                    | Enforced by                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Only neurons reach the bridge.** The body bridge's input is the 2,022 descending + VNC motor traces (plus declared body feedback once C1 lands).                                                         | A bridge that secretly reads pose, target position or pixels                 | `BrainRuntime.features`, actor identity binding                             |
+| **The connectome is frozen.** Wiring, weights, signs, neuron parameters and tonic bias never change; fitted dynamics and feedback are additive identities.                                                 | "Training the brain" into an arbitrary network that merely has 166,700 units | the declared adapter and the deprecated learned path update only the bridge |
+| **One bridge, no mode switch.**                                                                                                                                                                            | A hidden state machine choosing behaviours                                   | the server loads one bridge (declared by default) for free roam             |
+| **Feedback informs, never decides (C1).** Ascending/proprioceptive inputs (declared in `feedback-mappings.json`) are an opt-in, versioned additive identity (`bundle_hash`, alternate).                    | A body that hands the brain targets or actions instead of its own state      | alternate-bundle pin; the `feedback-check` silencing gate                   |
+| **The body only executes.** The PID keeps the drone upright and tracks the intended velocity.                                                                                                              | A planner in the body                                                        | the PID sees true state but receives only velocity intent                   |
+| **Skills are causal.** A skill counts only if silencing its pathway removes it, and a blind (ghost) brain cannot pass by chance.                                                                           | Behaviour that would happen anyway, such as drifting out of a ball's path    | pre-registered `roam_eval.ACCEPTANCE`                                       |
+| **Honest labels.** Any label uses simulator geometry only for objects the eyes can see; the default bridge uses no teacher at all.                                                                         | Asking neurons to encode information that never entered them                 | `teacher.visible`, range gates                                              |
+| **Liveness comes from the brain.** Ongoing motion must trace to tonic drive on identified neurons, excitability or noise — never to a constant in the bridge. Each is declared, versioned and silenceable. | A bridge constant that fakes life and that no ablation can remove            | the C3 silencing gates; `free-roam.md` §4 records the reversed precedent    |
 
 **Where the goal leads.** The same brain should forage for light, avoid pillars and walls, and
 dodge thrown objects in arenas it has never seen, with every skill attributable to neurons.
@@ -377,19 +378,37 @@ better than it is, and the ghost condition is what catches that.
 
 ## 10. Next
 
-**P0 landed (negative).** The declared, teacher-free adapter is the default bridge and `adapter-check`
-is the gate; it failed (`docs/results/adapter/FINDING-2026-09-19.md`). The steps below are the
-superseded learned-decoder plan; the v1 route is now P0 → P1 ascending feedback → P2
-connectome-constrained dynamics in the
-[body-agnostic spec](../superpowers/specs/2026-09-19-body-agnostic-fidelity-cyborg-design.md).
+**Where the v1 route stands.** P0 declared adapter — landed, gate negative
+(`docs/results/adapter/FINDING-2026-09-19.md`). P1 ascending feedback — landed, weak positive on
+`slow_fraction` only (`docs/results/feedback/FINDING-2026-09-19.md`). P2 connectome-constrained
+dynamics — infrastructure landed, declared prior negative, but only `noise_sigma` was ever varied,
+so the per-neuron lever is untested (`docs/results/dynamics/FINDING-2026-09-19.md`). P3 liveness bar
+— landed and kept; the optic-flow relay is a recorded negative
+(`docs/results/liveness/FINDING-2026-09-20.md`).
 
-1. Finish the teacher gate: `roam-feasibility` for collisions and foraging (the dodge part passed).
-2. Realisability probe: can features (and, separately, raw cues) predict each drive's label with R² ≥ 0.5?
-3. DAgger iterations 0–3, screening each student.
-4. PPO fine-tune from the last student.
-5. Full evaluation (A1–A7), accepted actor to `docs/results/accepted-policies.json`, viewer probe and attribution panels.
-6. Later, proposed: ascending/proprioceptive feedback from the body into the connectome; senses beyond two
-   luminance statistics; onboard compute that runs the full graph (estimate:
-   [`../hardware-estimate.md`](../hardware-estimate.md)). A state-in-synapses (path-integration)
-   milestone that would require opt-in plasticity is scoped, and deliberately not scheduled, in
-   [`../connectome-navigation-findings.md`](../connectome-navigation-findings.md) §6.
+**P4 is the current route**, specified in
+[`../superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md`](../superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md).
+The drone idles for a measured reason, not a mysterious one:
+
+1. **The codec cannot command a speed that counts as moving.** With the committed
+   `g_fwd = 0.69203` and `rest_power = 0.439525`, no declared stimulus but a full one-sided loom
+   commands more than the 0.05 m/s "moving" threshold; a bright light in both eyes commands 3 cm/s.
+   The ceiling is 39 % of the body's speed range.
+2. **The brain has no ongoing activity.** Exactly one population carries tonic drive (DLMn/DVMn,
+   `b = 0.85`); the other 166,698 neurons sit at `bias = 0` under a unit threshold, with
+   `mean_feature_activity = 0.0048` at rest.
+3. **9,189 neurons (5.5 %) transmit nothing** — every out-edge weight is zero for histamine,
+   dopamine, octopamine, serotonin and unresolved transmitters. Restoring modulatory transmission
+   needs an upstream bundle rebuild and is deferred.
+4. **The liveness bar cannot see the complaint.** L1/L2 are teacher-anchored and blind to motion
+   structure; they are being re-anchored on published fly free-flight statistics.
+
+Workstream A fixes the codec (bridge only, no contract change); workstream B adds ongoing state as
+contract change C3 (additive, versioned, silenceable). Both are gated on a 2×2 against the existing
+causal controls, with `ACCEPTANCE` A1–A7 untouched.
+
+**Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
+fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:
+[`../hardware-estimate.md`](../hardware-estimate.md)). A state-in-synapses (path-integration)
+milestone that would require opt-in plasticity is scoped, and deliberately not scheduled, in
+[`../connectome-navigation-findings.md`](../connectome-navigation-findings.md) §6.
