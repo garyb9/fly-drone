@@ -6,10 +6,12 @@ import pytest
 from fly_drone.brain import ROOT, BrainRuntime
 from fly_drone.dynamics import (
     DT_MS,
+    EXCITABLE_PARAMS,
     MAGIC,
     SHIU_PARAMS,
     VERSION,
     encode,
+    excitable_arrays,
     sha256,
     shiu_leak,
     shiu_threshold,
@@ -61,3 +63,25 @@ def test_dynamics_bundle_is_additive_and_alternate(dynamics_bundle):
     assert marker["sha256"] == sha256(raw)
     assert marker["n_neurons"] == len(bundle.cells)
     assert marker["noise_sigma"] == 0.0
+
+
+def test_excitable_prior_scales_only_the_threshold():
+    leak, threshold = excitable_arrays(7, 0.85)
+    assert np.allclose(leak, shiu_leak())
+    assert np.allclose(threshold, 0.85 * shiu_threshold())
+
+
+def test_excitable_bundle_is_declared_additive_and_calibratable(tmp_path):
+    builder = _load_builder()
+    output = tmp_path / "malecns-excitable"
+    _, marker = builder.build(ROOT / "data" / "malecns", output, "excitable", 0.85)
+    assert marker["version"] == EXCITABLE_PARAMS["version"]
+    assert marker["threshold_scale"] == 0.85
+    assert marker["noise_sigma"] == 0.02
+    bundle = BrainRuntime(data=output)
+    assert bundle.alternate and bundle.bundle_hash != BrainRuntime().bundle_hash
+
+
+def test_builder_rejects_an_unknown_prior(tmp_path):
+    with pytest.raises(ValueError, match="unknown prior"):
+        _load_builder().build(ROOT / "data" / "malecns", tmp_path / "x", "invented")

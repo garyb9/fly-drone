@@ -1,0 +1,6150 @@
+{
+  "seeds": [
+    1000,
+    1014
+  ],
+  "seconds": 120.0,
+  "level": 3,
+  "wall_seconds": 1867.9669443010353,
+  "results": {
+    "adapter:docs/results/adapter/adapter-excitable.json|none": {
+      "near_threats": 57,
+      "near_dodge_rate": 0.7719298245614035,
+      "near_dodge_by_side": {
+        "left": 0.8,
+        "right": 0.75
+      },
+      "balanced_dodge_rate": 0.75,
+      "beacons_per_min": 0.0,
+      "collisions_per_min": 0.6333333333333333,
+      "threat_dodge_rate": 0.5945945945945946,
+      "threats": 74,
+      "mean_visited_cells": 17.2,
+      "mean_abs_yaw_bias": 0.014908853988070979,
+      "slow_fraction": 0.14791111111111113,
+      "runs": [
+        {
+          "seed": 1000,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "threat": 1
+          },
+          "threats": 4,
+          "threats_dodged": 2,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.4625204192727996,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9339938383773124,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.310327222493363,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.37426999634564123,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.36751686530252986,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.4140603768873407,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6233048356596735,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.01084426100982377,
+              "peak_vz": 7.952368785043337e-42
+            }
+          ],
+          "visited_cells": 16,
+          "mean_yaw_command": 0.009982079990633493,
+          "slow_fraction": 0.22466666666666665,
+          "wall_seconds": 110.70149006601423
+        },
+        {
+          "seed": 1001,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 1,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.30287267602351503,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.23569671205749,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3105831147111426,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.735012896883218,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.45817818014689604,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.41384654298577045,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2829386257375818,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.37229635442781767,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6915568775662173,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.005842925789752624,
+              "peak_vz": 2.2955195870654306e-29
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.9641196188847205,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0007070802680605319,
+              "peak_vz": 9.686113746609156e-18
+            },
+            {
+              "side": -1.0,
+              "min_distance": 3.4372449056057097,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.023474867339713143,
+              "peak_vz": 2.1223910380285815e-06
+            }
+          ],
+          "visited_cells": 20,
+          "mean_yaw_command": -0.01691157304038077,
+          "slow_fraction": 0.023666666666666666,
+          "wall_seconds": 114.10280678898562
+        },
+        {
+          "seed": 1002,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "threat": 1
+          },
+          "threats": 4,
+          "threats_dodged": 2,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.302513225404354,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.37845622385559713,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.33686320272086373,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.4175661960276545,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.337606252505678,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3085119239434138,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.5485777181048674,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.01994359234423873,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 15,
+          "mean_yaw_command": 0.002884675144892191,
+          "slow_fraction": 0.33366666666666667,
+          "wall_seconds": 108.79948798997793
+        },
+        {
+          "seed": 1003,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 3,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.3496853044159982,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3869654457018294,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.42557147823461766,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.35344498973799887,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.39763000510017893,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.36892215160264485,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 18,
+          "mean_yaw_command": -0.010460136749609049,
+          "slow_fraction": 0.31666666666666665,
+          "wall_seconds": 100.55215610802406
+        },
+        {
+          "seed": 1004,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 3,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.37744611005805584,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.6656035650961664,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2812118346833636,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.2797316467001534,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3400935181531199,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3928176471607515,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 16,
+          "mean_yaw_command": -0.02524028467704387,
+          "slow_fraction": 0.31866666666666665,
+          "wall_seconds": 109.7310763830319
+        },
+        {
+          "seed": 1005,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 7,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.42769062806484753,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.8249154093074076,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3460508912824088,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.5585010826526783,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.37724991537038693,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.29491779458167283,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6680738219756415,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.002678177327359301,
+              "peak_vz": 1.0169717783278971e-13
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.9949203185244344,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0147882481634463,
+              "peak_vz": 6.473775475153629e-29
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.643641195362202,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.010433285627423588,
+              "peak_vz": 1.6296260361019028e-40
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.9512269685780033,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0012381996575588207,
+              "peak_vz": 7.350912308424976e-23
+            }
+          ],
+          "visited_cells": 19,
+          "mean_yaw_command": -0.007449655211155144,
+          "slow_fraction": 0.074,
+          "wall_seconds": 107.65307862899499
+        },
+        {
+          "seed": 1006,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.40580723673541785,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.35905394051685147,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29618856800238275,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.43803986579429033,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.41970717046287714,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.4085944236603609,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2898204156777664,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.4211421596261658,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4332735186227061,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.29618171538884747,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4829624446312,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.4060333617023949,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 15,
+          "mean_yaw_command": 0.027626801550163827,
+          "slow_fraction": 0.014666666666666666,
+          "wall_seconds": 102.64408138999715
+        },
+        {
+          "seed": 1007,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 3,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.5603735824481693,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3882240265244458,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30585828237169704,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3706110918014274,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.31114303838466206,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3919239684440503,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 16,
+          "mean_yaw_command": 0.001958887756250211,
+          "slow_fraction": 0.24533333333333332,
+          "wall_seconds": 103.85833581304178
+        },
+        {
+          "seed": 1008,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.3477353158755082,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.37988223817064587,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4768316360123752,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3655217618343484,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30747528806217445,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.18194475135750468,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3360966841848704,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.34296448046311667,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.672310923401778,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.011039179275220653,
+              "peak_vz": 1.1964687327303996e-20
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.7437346783859757,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.010956916136894214,
+              "peak_vz": 2.4858543245237725e-26
+            }
+          ],
+          "visited_cells": 14,
+          "mean_yaw_command": 0.006266834688340829,
+          "slow_fraction": 0.07466666666666667,
+          "wall_seconds": 106.22238528396701
+        },
+        {
+          "seed": 1009,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 4,
+          "threats_dodged": 4,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.4130413710342547,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.37859496063778453,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.43740425025138446,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3105764966371241,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2817260025119862,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.32127173844406004,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.33006588284767263,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.3801384025369801,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 16,
+          "mean_yaw_command": -0.005267860801167388,
+          "slow_fraction": 0.26166666666666666,
+          "wall_seconds": 99.3352474590065
+        },
+        {
+          "seed": 1010,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 4,
+          "threats_dodged": 4,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.321488927203522,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.24824387083311633,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29271905343509386,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.34625765346858656,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3482258022480276,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.35879905026752035,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.27361520791917116,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.41039533540641154,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 17,
+          "mean_yaw_command": -0.011907999534806177,
+          "slow_fraction": 0.11833333333333333,
+          "wall_seconds": 99.35517670103582
+        },
+        {
+          "seed": 1011,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 2,
+            "pillar": 1
+          },
+          "threats": 5,
+          "threats_dodged": 1,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.4349552222847454,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.2509272944305195,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29759475730757473,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.38998698058576403,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2985181605883097,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.14946414635120997,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6862945290550484,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.024050544041704855,
+              "peak_vz": 1.3770930755128478e-18
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.544185690176189,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0023134381456035597,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 16,
+          "mean_yaw_command": -0.0036524759746159557,
+          "slow_fraction": 0.06766666666666667,
+          "wall_seconds": 107.85972602397669
+        },
+        {
+          "seed": 1012,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1,
+            "threat": 1
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.4025640169650045,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.32017593723892734,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3536182039281768,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.7181057140879824,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5101913193517525,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.2591343291985967,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2827891569872425,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.4049962728554113,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.45362166303733303,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.17949425182648274,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.8354007017971874,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.010309041141835236,
+              "peak_vz": 7.73528810449342e-12
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.681016760362481,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.020508168299981797,
+              "peak_vz": 0.005002002697438002
+            }
+          ],
+          "visited_cells": 22,
+          "mean_yaw_command": -0.04160773357615587,
+          "slow_fraction": 0.023,
+          "wall_seconds": 131.91952218703227
+        },
+        {
+          "seed": 1013,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "threat": 1
+          },
+          "threats": 5,
+          "threats_dodged": 3,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.41090357787505105,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.26275739749910554,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30534585400161435,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.2819929594524715,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3348975731883092,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.2864076740391983,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.26830790600139065,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.13359138480439733,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.778413144344089,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.15868822518474118,
+              "peak_vz": 0.19691429287195206
+            }
+          ],
+          "visited_cells": 18,
+          "mean_yaw_command": -0.036083072582475714,
+          "slow_fraction": 0.11066666666666666,
+          "wall_seconds": 124.52155119995587
+        },
+        {
+          "seed": 1014,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 6,
+          "threats_dodged": 3,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.2908495930505691,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.30338963394756535,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2967187280284524,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.9063099659043317,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.36495450143055513,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.18947878619207328,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2841489369815757,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.3179780090211187,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3546180765647065,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.40183017211691996,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6904606712751296,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.000577728906719704,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 20,
+          "mean_yaw_command": 0.016332738543374165,
+          "slow_fraction": 0.011333333333333334,
+          "wall_seconds": 113.25529940996785
+        }
+      ]
+    },
+    "adapter:docs/results/adapter/adapter-excitable.json|sensory": {
+      "near_threats": 102,
+      "near_dodge_rate": 0.0,
+      "near_dodge_by_side": {
+        "left": 0.0,
+        "right": 0.0
+      },
+      "balanced_dodge_rate": 0.0,
+      "beacons_per_min": 0.03333333333333333,
+      "collisions_per_min": 3.4,
+      "threat_dodge_rate": 0.0,
+      "threats": 102,
+      "mean_visited_cells": 10.666666666666666,
+      "mean_abs_yaw_bias": 0.005086103765051495,
+      "slow_fraction": 0.0976888888888889,
+      "runs": [
+        {
+          "seed": 1000,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.3086918859867909,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03042694334971042,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29618697168868807,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03952628547842405,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3064166166847674,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028134962406467977,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2936192624628696,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03169255233667514,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3078443986498544,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.029962471463650192,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30359455720942696,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03269982048023542,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3028118690303273,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.029733426080003116,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 13,
+          "mean_yaw_command": -0.0041910917656696614,
+          "slow_fraction": 0.09833333333333333,
+          "wall_seconds": 106.04872697900282
+        },
+        {
+          "seed": 1001,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.30096573984174013,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.031182113327278417,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3068533000921873,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030701077546040224,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30773937085920855,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03148714340151286,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30082216371311216,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03495738155451187,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2955567275819912,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03284988449090366,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3043789145767208,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.025551943579765358,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30102199256368395,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03543117257683996,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.004111578241619243,
+          "slow_fraction": 0.1,
+          "wall_seconds": 102.23791046300903
+        },
+        {
+          "seed": 1002,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.295009763145057,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.035290043475650505,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30656415634959383,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.031443619988943815,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29773371238325397,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.031181751666285566,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29851339341300853,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03289460226522728,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3014694369164461,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0324214271196442,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3054444256243061,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.037214954351563516,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30623357964663483,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.038214853152186506,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 12,
+          "mean_yaw_command": -0.00363674949189111,
+          "slow_fraction": 0.09966666666666667,
+          "wall_seconds": 103.76710693503264
+        },
+        {
+          "seed": 1003,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.3003395486929549,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0319357203064377,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2962192873111958,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030298840875349835,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30007546373252675,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03501667701928262,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2969215991275021,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04640911303858504,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3039481865038566,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03633118110140109,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30991462269181425,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.023927730958611452,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2953710909398053,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.024764321768695745,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 12,
+          "mean_yaw_command": -0.006422374118647848,
+          "slow_fraction": 0.09633333333333334,
+          "wall_seconds": 103.03632869495777
+        },
+        {
+          "seed": 1004,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 4.5,
+          "collision_kinds": {
+            "threat": 9
+          },
+          "threats": 9,
+          "threats_dodged": 0,
+          "threats_hit": 9,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30929599932662416,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.026054691022081692,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3072742162630424,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.029434064940002915,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3076979627988628,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03993747280473654,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30148531426728875,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.041245607218283624,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30283255631572537,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.027383689386139127,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2993095110896156,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03170433518064936,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3091429771459261,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02583934750850165,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3036560296131215,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03602593550722418,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30185893864282226,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03670677010442714,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 12,
+          "mean_yaw_command": -0.002337491012513405,
+          "slow_fraction": 0.12333333333333334,
+          "wall_seconds": 101.51658527797554
+        },
+        {
+          "seed": 1005,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30725145946283106,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.026817558472908662,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29336573438055835,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02395992382939191,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2970830734517681,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.027020324981553843,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29961383075237746,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.029765618204171947,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29783945261841593,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.029320040132326104,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3068780788272427,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028804820105156077,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3038565430657345,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0259593196977632,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.007435096244279686,
+          "slow_fraction": 0.09833333333333333,
+          "wall_seconds": 98.8385664059897
+        },
+        {
+          "seed": 1006,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 5,
+          "threats_dodged": 0,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.308173343564579,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03491955730266743,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3002532953525053,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03220200379593548,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2997144650681218,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02470665046306878,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3033531591545968,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03798518788000433,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30244823650122815,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03515061249303825,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 9,
+          "mean_yaw_command": -0.006069123490106798,
+          "slow_fraction": 0.073,
+          "wall_seconds": 97.9391958930064
+        },
+        {
+          "seed": 1007,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 5,
+          "threats_dodged": 0,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.299402284994436,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05949546221039752,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.307803971478596,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.022744057342283002,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2995360723454081,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04198330603373936,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29817875496424956,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028162106119825343,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30548019635762264,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03294686311445565,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.0023681626721619225,
+          "slow_fraction": 0.074,
+          "wall_seconds": 101.80995111202355
+        },
+        {
+          "seed": 1008,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 6
+          },
+          "threats": 6,
+          "threats_dodged": 0,
+          "threats_hit": 6,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.29971266053377077,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02964414219941765,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2957876525481837,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.024402430969828064,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2984064896085169,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03276444614048948,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3096687800400376,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02799513384749152,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3025142107026546,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.022886520086898454,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2949441534738968,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02564895136018034,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.0038684034153062086,
+          "slow_fraction": 0.119,
+          "wall_seconds": 108.5088401529938
+        },
+        {
+          "seed": 1009,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 6
+          },
+          "threats": 6,
+          "threats_dodged": 0,
+          "threats_hit": 6,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.2947645505412445,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04389841335589192,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3064741606796565,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03353348090565384,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29642545222499134,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02963214177953268,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29730563149550593,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03146248259032683,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29693314676504684,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.035180737733826226,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3082424970576305,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.023168175555953848,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.006049408105480309,
+          "slow_fraction": 0.08866666666666667,
+          "wall_seconds": 102.63290828099707
+        },
+        {
+          "seed": 1010,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 4.0,
+          "collision_kinds": {
+            "threat": 8
+          },
+          "threats": 8,
+          "threats_dodged": 0,
+          "threats_hit": 8,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2989242248439974,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030184519367624882,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3015548022426601,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03073637762576455,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30219374015471545,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.039660674591435845,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2971852178361272,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.034230421875282684,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.293216828978598,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030328065122971426,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2982843100602901,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030273065517586094,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29672731740590697,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04083023460356704,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29827253584887653,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04089058145378463,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 9,
+          "mean_yaw_command": -0.005979678943672794,
+          "slow_fraction": 0.10566666666666667,
+          "wall_seconds": 101.61311014700914
+        },
+        {
+          "seed": 1011,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 6
+          },
+          "threats": 6,
+          "threats_dodged": 0,
+          "threats_hit": 6,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.29579254650748726,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.038215277210983306,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3090825081717464,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0329572266603644,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29185070745450814,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03505717171743986,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30589718898050366,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05474422850423185,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3006252162090051,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04101218795959837,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3011082806525482,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.035490030816815815,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.00709843027643837,
+          "slow_fraction": 0.084,
+          "wall_seconds": 105.42801119800424
+        },
+        {
+          "seed": 1012,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 4.0,
+          "collision_kinds": {
+            "threat": 8
+          },
+          "threats": 8,
+          "threats_dodged": 0,
+          "threats_hit": 8,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.3084174617083995,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.036339411009032166,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3076774217697662,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.024788446635030176,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3066831264030822,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.034580065649496505,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2961116025754383,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.039696931420773254,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29683798484534435,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03632057053284381,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30514151692499253,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03073141545976141,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30222239159258024,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.020717627189186377,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29211085797085146,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05243908762509393,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 11,
+          "mean_yaw_command": -0.0047539999335867,
+          "slow_fraction": 0.109,
+          "wall_seconds": 116.05594202800421
+        },
+        {
+          "seed": 1013,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2973596721049692,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028034245910000984,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.298923579659334,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03254992279656081,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2986157452225781,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.031189940248395203,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3095759128019378,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.027600497729817236,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29372478479986525,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028997285504843536,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.303691316432737,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.032698116912506445,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2968951452607109,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.046418092800779985,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 12,
+          "mean_yaw_command": -0.006731979334345103,
+          "slow_fraction": 0.09633333333333334,
+          "wall_seconds": 115.99158159794752
+        },
+        {
+          "seed": 1014,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.2984356372019618,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03874734979923451,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3063489590253647,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.029411261632157033,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30744083984880766,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04297269168178727,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30213541919836334,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.025840459926823527,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30965695521023406,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02636674549345046,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29880656698879676,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.046420100022076256,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30886372492416486,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.032953562033266826,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.0052379894300532675,
+          "slow_fraction": 0.09966666666666667,
+          "wall_seconds": 112.71853987302165
+        }
+      ]
+    },
+    "adapter:docs/results/adapter/adapter-excitable.json|ghost": {
+      "near_threats": 74,
+      "near_dodge_rate": 0.05405405405405406,
+      "near_dodge_by_side": {
+        "left": 0.02631578947368421,
+        "right": 0.08333333333333333
+      },
+      "balanced_dodge_rate": 0.02631578947368421,
+      "beacons_per_min": 0.0,
+      "collisions_per_min": 2.8333333333333335,
+      "threat_dodge_rate": 0.04597701149425287,
+      "threats": 87,
+      "mean_visited_cells": 15.6,
+      "mean_abs_yaw_bias": 0.009078643893442295,
+      "slow_fraction": 0.1324888888888889,
+      "runs": [
+        {
+          "seed": 1000,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 4,
+          "threats_dodged": 0,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.29877056385571493,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.42797977138116455,
+              "peak_vz": 0.7089495658874512
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30652800738943803,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.052942556257164736,
+              "peak_vz": 3.2193574878713223e-34
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.591092612562701,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.010947344810749958,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.604766408664315,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.002488088725872974,
+              "peak_vz": 5.8886963794724085e-24
+            }
+          ],
+          "visited_cells": 15,
+          "mean_yaw_command": -0.009190355708884747,
+          "slow_fraction": 0.23633333333333334,
+          "wall_seconds": 107.60502991598332
+        },
+        {
+          "seed": 1001,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 5,
+            "pillar": 1
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.29963885660771417,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.34328163042799786,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30300658299711103,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.2564836313303875,
+              "peak_vz": 0.884253978729248
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3033869517239567,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.4885448965218172,
+              "peak_vz": 0.9463010132312775
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29995333801264595,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.16141842323974653,
+              "peak_vz": 0.9232327938079834
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3022315975080245,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.046922594493910987,
+              "peak_vz": 0.5802642405033112
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.5663158067408376,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.009335692052786448,
+              "peak_vz": 0.005815489450469613
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.9804871674228406,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.005706006737719479,
+              "peak_vz": 0.000736715825041756
+            }
+          ],
+          "visited_cells": 22,
+          "mean_yaw_command": 0.016186280512443536,
+          "slow_fraction": 0.118,
+          "wall_seconds": 112.71331645100145
+        },
+        {
+          "seed": 1002,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 7.0,
+          "collision_kinds": {
+            "threat": 5,
+            "pillar": 9
+          },
+          "threats": 6,
+          "threats_dodged": 1,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.29518755160474863,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05076050384142847,
+              "peak_vz": 0.009796923724934459
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3099163202921642,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04080259295437536,
+              "peak_vz": 0.20960406213998795
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.36573537610586704,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.050844610523976486,
+              "peak_vz": 0.5257819592952728
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2937090855326728,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03295023832306855,
+              "peak_vz": 0.029278491623699665
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3005789356471991,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05735036834334985,
+              "peak_vz": 0.7029544115066528
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2996867270427386,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.09844524868474086,
+              "peak_vz": 0.7702928781509399
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.0011548693579162546,
+          "slow_fraction": 0.05566666666666667,
+          "wall_seconds": 105.81562530697556
+        },
+        {
+          "seed": 1003,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 7
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 7,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.3003395486929549,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0319357203064377,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2962293163477632,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030298840875349835,
+              "peak_vz": 5.01286805595794e-23
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3000754637325273,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03501667701928262,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29692159912750227,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04640911303858504,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.303948186594386,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03633118110140109,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2978328798797609,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.023927730958611452,
+              "peak_vz": 3.177101592957905e-32
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29648024225144104,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.024764321768695745,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 12,
+          "mean_yaw_command": -0.007079812108117626,
+          "slow_fraction": 0.09266666666666666,
+          "wall_seconds": 97.6179435919621
+        },
+        {
+          "seed": 1004,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 4,
+          "threats_dodged": 0,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30382398198084554,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.386580387926471,
+              "peak_vz": 0.7853583097457886
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2990304358644124,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.30866971419447187,
+              "peak_vz": 0.03971546143293381
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30917933328592273,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05037844924564456,
+              "peak_vz": 0.33631376922130585
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.8206727549196606,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.014604173452713167,
+              "peak_vz": 0.09614380449056625
+            }
+          ],
+          "visited_cells": 16,
+          "mean_yaw_command": -0.00527608867261878,
+          "slow_fraction": 0.26966666666666667,
+          "wall_seconds": 108.12703521398362
+        },
+        {
+          "seed": 1005,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 4
+          },
+          "threats": 4,
+          "threats_dodged": 0,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30493745219600227,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.4186152653182577,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30916481551988145,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.31813847894143493,
+              "peak_vz": 0.9178281724452972
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.298983527516281,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028024356766707215,
+              "peak_vz": 5.5429891579472645e-11
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2931230238174882,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04897975427402788,
+              "peak_vz": 0.33316195011138916
+            }
+          ],
+          "visited_cells": 17,
+          "mean_yaw_command": -0.011009372782296235,
+          "slow_fraction": 0.3406666666666667,
+          "wall_seconds": 104.47170788800577
+        },
+        {
+          "seed": 1006,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 3,
+          "threats_dodged": 0,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30906287238198826,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.06074750846837935,
+              "peak_vz": 0.14557147026062012
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30904878132665964,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03678677682908103,
+              "peak_vz": 1.105395668332676e-07
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30823713095074196,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03355390281297154,
+              "peak_vz": 1.0101900652786933e-11
+            }
+          ],
+          "visited_cells": 18,
+          "mean_yaw_command": -0.005227914631969167,
+          "slow_fraction": 0.378,
+          "wall_seconds": 96.29747591097839
+        },
+        {
+          "seed": 1007,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 5,
+          "threats_dodged": 0,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.299402284994436,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05949546221039752,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30800050939938545,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.023467032234307676,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2979864701355911,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04270628092576403,
+              "peak_vz": 1.135751529669459e-33
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30871000215905653,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0370869639497657,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.309800479316616,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02714562158020192,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 13,
+          "mean_yaw_command": 0.005650193982594748,
+          "slow_fraction": 0.07166666666666667,
+          "wall_seconds": 98.75162118900334
+        },
+        {
+          "seed": 1008,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 6,
+          "threats_dodged": 0,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.29971266053377077,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02964414219941765,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2957882752782357,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.024402430969828064,
+              "peak_vz": 6.670450580270358e-38
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29840826129515,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03276444614048948,
+              "peak_vz": 1.1943561450964858e-30
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.309668780040028,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02799513384749152,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3006373877669316,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.022886520086898454,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.9252577255386214,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.023533447785868817,
+              "peak_vz": 0.07071736454963684
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": 0.0015876901472881002,
+          "slow_fraction": 0.08133333333333333,
+          "wall_seconds": 102.26631435798481
+        },
+        {
+          "seed": 1009,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 4
+          },
+          "threats": 7,
+          "threats_dodged": 0,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.2947645505412445,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04389841335589192,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3064741606796565,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03353348090565384,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29642545222499134,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02963214177953268,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29637663674312864,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.034985266365008705,
+              "peak_vz": 7.450348748148434e-25
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.99922363252737,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.019164384059555416,
+              "peak_vz": 0.3189367204904556
+            },
+            {
+              "side": -1.0,
+              "min_distance": 3.2053385112518513,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.025596496360717973,
+              "peak_vz": 0.11562711000442505
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6267646137519494,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.034960352801139585,
+              "peak_vz": 0.06374639086425304
+            }
+          ],
+          "visited_cells": 14,
+          "mean_yaw_command": -0.020694511198018434,
+          "slow_fraction": 0.04833333333333333,
+          "wall_seconds": 96.44629066099878
+        },
+        {
+          "seed": 1010,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 4.0,
+          "collision_kinds": {
+            "threat": 8
+          },
+          "threats": 8,
+          "threats_dodged": 0,
+          "threats_hit": 8,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2989242248439974,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.030184519367624882,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3015589935169727,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03073637762576455,
+              "peak_vz": 2.1156205657277748e-22
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3021937401547155,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.039660674591435845,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.297172491334599,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03350744698325801,
+              "peak_vz": 4.206697989903101e-41
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30299615292854615,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0310510400149961,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3063877997273498,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02955009062556142,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30898929421785337,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.040107259711542366,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29927890272719004,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04016760656175987,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 9,
+          "mean_yaw_command": -0.0051990478624187,
+          "slow_fraction": 0.104,
+          "wall_seconds": 96.74368888704339
+        },
+        {
+          "seed": 1011,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 6,
+          "threats_dodged": 1,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.29579254650748726,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.038215277210983306,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.33090381061478835,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.15921335692496483,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30956051752319874,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.031100401491952492,
+              "peak_vz": 1.5537221407834264e-18
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30516654483300415,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.027193286933405416,
+              "peak_vz": 5.324934164434305e-44
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2989954479203933,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.033811385076565906,
+              "peak_vz": 8.961424303129014e-36
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30048453187240687,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03163442839792374,
+              "peak_vz": 5.324934164434305e-44
+            }
+          ],
+          "visited_cells": 14,
+          "mean_yaw_command": -0.0028646771880282743,
+          "slow_fraction": 0.06233333333333333,
+          "wall_seconds": 99.91500676498981
+        },
+        {
+          "seed": 1012,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.5,
+          "collision_kinds": {
+            "threat": 5,
+            "pillar": 2
+          },
+          "threats": 8,
+          "threats_dodged": 1,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.30080900364046814,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03948618381833105,
+              "peak_vz": 0.2849636375904083
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3048470692381036,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03258385604483807,
+              "peak_vz": 0.48425574600696564
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2961437150270093,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03275437608043482,
+              "peak_vz": 1.0187856417862018e-12
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29839018846601306,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.02771128424875796,
+              "peak_vz": 1.046001691445002e-21
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3053387238994758,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.025308135409909678,
+              "peak_vz": 0.00014482627011602744
+            },
+            {
+              "side": -1.0,
+              "min_distance": 3.072478378234953,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.006832297585319138,
+              "peak_vz": 1.5974250459731276e-12
+            },
+            {
+              "side": -1.0,
+              "min_distance": 3.0180786978216374,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.020522083907008444,
+              "peak_vz": 2.2059459230645515e-31
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.475201966795725,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.04034480656217349,
+              "peak_vz": 0.008032023441046476
+            }
+          ],
+          "visited_cells": 22,
+          "mean_yaw_command": -0.013983221471436392,
+          "slow_fraction": 0.027,
+          "wall_seconds": 117.75719489698531
+        },
+        {
+          "seed": 1013,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 5,
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 0,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2973596721049692,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028034245910000984,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2989245791826854,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03254992279656081,
+              "peak_vz": 1.4885068729536077e-39
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29405110305893495,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04993816472044916,
+              "peak_vz": 0.43116746842861176
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3009270762394596,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.03235704517364985,
+              "peak_vz": 8.032313427506594e-20
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3085361061519272,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04158879136638917,
+              "peak_vz": 0.0032545136054977775
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.5620856399020258,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0156251103469154,
+              "peak_vz": 5.912933556828648e-05
+            }
+          ],
+          "visited_cells": 18,
+          "mean_yaw_command": -0.015387191449155435,
+          "slow_fraction": 0.07366666666666667,
+          "wall_seconds": 109.26050967205083
+        },
+        {
+          "seed": 1014,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 4,
+            "pillar": 2
+          },
+          "threats": 6,
+          "threats_dodged": 1,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30226580093399047,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.21948995783144404,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.34712711971298094,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.5246896839644958,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30561358219306944,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.05810625670414841,
+              "peak_vz": 0.8856294751167297
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2984859627174938,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.028081581550672252,
+              "peak_vz": 0.20405162125825882
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3093928666148005,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.04812914888256911,
+              "peak_vz": 3.808226673053918e-15
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.671232420637463,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.00022421185853714815,
+              "peak_vz": 1.121076365961926e-05
+            }
+          ],
+          "visited_cells": 24,
+          "mean_yaw_command": 0.015688431328447994,
+          "slow_fraction": 0.028,
+          "wall_seconds": 126.47090488299727
+        }
+      ]
+    },
+    "teacher|none": {
+      "near_threats": 61,
+      "near_dodge_rate": 0.9180327868852459,
+      "near_dodge_by_side": {
+        "left": 0.918918918918919,
+        "right": 0.9166666666666666
+      },
+      "balanced_dodge_rate": 0.9166666666666666,
+      "beacons_per_min": 0.7333333333333333,
+      "collisions_per_min": 0.4,
+      "threat_dodge_rate": 0.6086956521739131,
+      "threats": 92,
+      "mean_visited_cells": 64.73333333333333,
+      "mean_abs_yaw_bias": 0.06166479119437804,
+      "slow_fraction": 0.014044444444444443,
+      "runs": [
+        {
+          "seed": 1000,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "threat": 1
+          },
+          "threats": 6,
+          "threats_dodged": 2,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.2872533822122446,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.9999878779309167,
+              "peak_vz": 0.9999878779309167
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6606402239722535,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5029869765704512,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999536890968242,
+              "peak_vz": 0.9999536890968242
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.7478004477883093,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.6179216956442968,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 1.2224026862384356,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9924306195937215,
+              "peak_vz": 0.9924306195937215
+            }
+          ],
+          "visited_cells": 41,
+          "mean_yaw_command": -0.08029574640891711,
+          "slow_fraction": 0.017,
+          "wall_seconds": 129.89971776399761
+        },
+        {
+          "seed": 1001,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 6,
+          "threats_dodged": 5,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 2.6367442557054344,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4413149316319975,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999969300509177,
+              "peak_vz": 0.999969300509177
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.43732845667671205,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999968144993521,
+              "peak_vz": 0.999968144993521
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.37055303410083595,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999808459988504,
+              "peak_vz": 0.9999808459988504
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.6174672217507688,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999900662213545,
+              "peak_vz": 0.999900662213545
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.6315330706295792,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9998908974149411,
+              "peak_vz": 0.9998908974149411
+            }
+          ],
+          "visited_cells": 56,
+          "mean_yaw_command": 0.05138307014699088,
+          "slow_fraction": 0.019333333333333334,
+          "wall_seconds": 127.57602532400051
+        },
+        {
+          "seed": 1002,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.9725030290478887,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9989416442162994,
+              "peak_vz": 0.9989416442162994
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.564335530199587,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.6289941173172038,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9998714145291556,
+              "peak_vz": 0.9998714145291556
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.465528153850482,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999634243472221,
+              "peak_vz": 0.9999634243472221
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.578774085155861,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5403968024344168,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999405721397273,
+              "peak_vz": 0.9999405721397273
+            }
+          ],
+          "visited_cells": 66,
+          "mean_yaw_command": 0.1015079217274906,
+          "slow_fraction": 0.010666666666666666,
+          "wall_seconds": 131.57985528296558
+        },
+        {
+          "seed": 1003,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 6,
+          "threats_dodged": 5,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.43409650508938247,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999707428301234,
+              "peak_vz": 0.9999707428301234
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3563965953315079,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999825709719024,
+              "peak_vz": 0.9999825709719024
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4682556694365163,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999632607763868,
+              "peak_vz": 0.9999632607763868
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.8632763147233917,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3660160351069564,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999814166588586,
+              "peak_vz": 0.9999814166588586
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3832276346378721,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999791572267964,
+              "peak_vz": 0.9999791572267964
+            }
+          ],
+          "visited_cells": 62,
+          "mean_yaw_command": -0.03205011716527515,
+          "slow_fraction": 0.006666666666666667,
+          "wall_seconds": 120.59011882002233
+        },
+        {
+          "seed": 1004,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 5,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 1.0073940118052107,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9986648468837137,
+              "peak_vz": 0.9986648468837137
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5360786243014409,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999929855889738,
+              "peak_vz": 0.999929855889738
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3529642224335202,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999829652562922,
+              "peak_vz": 0.9999829652562922
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.5112751098656565,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.48165792689454734,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999598272101518,
+              "peak_vz": 0.9999598272101518
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4949945917450435,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999560919681764,
+              "peak_vz": 0.9999560919681764
+            }
+          ],
+          "visited_cells": 68,
+          "mean_yaw_command": -0.058665550621132,
+          "slow_fraction": 0.006333333333333333,
+          "wall_seconds": 118.11607392301084
+        },
+        {
+          "seed": 1005,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "pillar": 1,
+            "threat": 2
+          },
+          "threats": 7,
+          "threats_dodged": 2,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.4465179277311032,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999682169977641,
+              "peak_vz": 0.9999682169977641
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.6108595291389918,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.31051155839747013,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.9999847569872866,
+              "peak_vz": 0.9999847569872866
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4765458549122583,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999611731987065,
+              "peak_vz": 0.9999611731987065
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.5025657851078646,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30650329497938117,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.9999843671857178,
+              "peak_vz": 0.9999843671857178
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.846107566863518,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 72,
+          "mean_yaw_command": 0.005511785728755555,
+          "slow_fraction": 0.007,
+          "wall_seconds": 114.35663593001664
+        },
+        {
+          "seed": 1006,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "threat": 1
+          },
+          "threats": 6,
+          "threats_dodged": 3,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 2.513257523859687,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29862328604844873,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.9999855055861224,
+              "peak_vz": 0.9999855055861224
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.36018048612865117,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999821257238787,
+              "peak_vz": 0.9999821257238787
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5268325009508983,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999457100239815,
+              "peak_vz": 0.9999457100239815
+            },
+            {
+              "side": 1.0,
+              "min_distance": 3.418674609392332,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4513572598932403,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999671749219382,
+              "peak_vz": 0.9999671749219382
+            }
+          ],
+          "visited_cells": 55,
+          "mean_yaw_command": 0.04474817209255452,
+          "slow_fraction": 0.045,
+          "wall_seconds": 128.13996400299948
+        },
+        {
+          "seed": 1007,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 7,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.3645072434873363,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999816026410862,
+              "peak_vz": 0.9999816026410862
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.4898507950689344,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5755735762254307,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999248670460325,
+              "peak_vz": 0.9999248670460325
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.547968329831192,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.5405463928069287,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3486658150291299,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999834464689126,
+              "peak_vz": 0.9999834464689126
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.5119546053631026,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 76,
+          "mean_yaw_command": 0.0794438708658991,
+          "slow_fraction": 0.0016666666666666668,
+          "wall_seconds": 122.75469071697444
+        },
+        {
+          "seed": 1008,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.36695602240362496,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999812998413649,
+              "peak_vz": 0.9999812998413649
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.9504880732058116,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.407562846442201,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999754861478064,
+              "peak_vz": 0.9999754861478064
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.41271130710810744,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999746301726442,
+              "peak_vz": 0.9999746301726442
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.42044766251022214,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999732874116409,
+              "peak_vz": 0.9999732874116409
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.769574681481451,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 74,
+          "mean_yaw_command": 0.09098213540749703,
+          "slow_fraction": 0.0016666666666666668,
+          "wall_seconds": 117.95653914898867
+        },
+        {
+          "seed": 1009,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 2.5772667426960423,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.42889986449564976,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999655097931212,
+              "peak_vz": 0.9999655097931212
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3177830387944445,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999865266003803,
+              "peak_vz": 0.9999865266003803
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.641614167773649,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.573504285920524,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5139650693096692,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999950172791434,
+              "peak_vz": 0.999950172791434
+            }
+          ],
+          "visited_cells": 73,
+          "mean_yaw_command": -0.07592023961224603,
+          "slow_fraction": 0.0033333333333333335,
+          "wall_seconds": 119.39519025600748
+        },
+        {
+          "seed": 1010,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "pillar": 1
+          },
+          "threats": 5,
+          "threats_dodged": 4,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.4288603118099034,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999717464894784,
+              "peak_vz": 0.9999717464894784
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3558942723102885,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999826292399497,
+              "peak_vz": 0.9999826292399497
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.8852247805479705,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9992897560588491,
+              "peak_vz": 0.9992897560588491
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.5793053611851113,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3956981593447261,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999773503974629,
+              "peak_vz": 0.9999773503974629
+            }
+          ],
+          "visited_cells": 59,
+          "mean_yaw_command": -0.022343171581185647,
+          "slow_fraction": 0.005333333333333333,
+          "wall_seconds": 140.64787218498532
+        },
+        {
+          "seed": 1011,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 6,
+          "threats_dodged": 6,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.40438801775415273,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999759995317101,
+              "peak_vz": 0.9999759995317101
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.7193865249270521,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9998040437509149,
+              "peak_vz": 0.9998040437509149
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5909667143092515,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999167480073285,
+              "peak_vz": 0.9999167480073285
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4455235911479171,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999684269810418,
+              "peak_vz": 0.9999684269810418
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.38778286309844817,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999785145743978,
+              "peak_vz": 0.9999785145743978
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.34385937137690925,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999839684765078,
+              "peak_vz": 0.9999839684765078
+            }
+          ],
+          "visited_cells": 65,
+          "mean_yaw_command": 0.019085497896914962,
+          "slow_fraction": 0.027666666666666666,
+          "wall_seconds": 133.93916663504206
+        },
+        {
+          "seed": 1012,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 7,
+          "threats_dodged": 3,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 1.034754815437586,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9983981099594046,
+              "peak_vz": 0.9983981099594046
+            },
+            {
+              "side": 1.0,
+              "min_distance": 3.0632599601255155,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.8063203092989752,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4236913826543357,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999727034820773,
+              "peak_vz": 0.9999727034820773
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.662761151067686,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4144115745653195,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999721058647493,
+              "peak_vz": 0.9999721058647493
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.671940895119707,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 62,
+          "mean_yaw_command": -0.07428770440805413,
+          "slow_fraction": 0.039,
+          "wall_seconds": 127.40258744696621
+        },
+        {
+          "seed": 1013,
+          "beacons_per_min": 2.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "pillar": 2,
+            "threat": 1
+          },
+          "threats": 6,
+          "threats_dodged": 5,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.8498610551566735,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9994361115894991,
+              "peak_vz": 0.9994361115894991
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.49704770479522287,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999554868756092,
+              "peak_vz": 0.9999554868756092
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.32428407262260384,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999985929829742,
+              "peak_vz": 0.999985929829742
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.7877529502221826,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9996909341237886,
+              "peak_vz": 0.9996909341237886
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3783031579061206,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9999798303679875,
+              "peak_vz": 0.9999798303679875
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2936152819149858,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.9999866081868268,
+              "peak_vz": 0.9999866081868268
+            }
+          ],
+          "visited_cells": 72,
+          "mean_yaw_command": 0.11314856946017557,
+          "slow_fraction": 0.008666666666666666,
+          "wall_seconds": 109.19832975097233
+        },
+        {
+          "seed": 1014,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 6,
+          "threats_dodged": 2,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.5788882001935337,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.999923188445498,
+              "peak_vz": 0.999923188445498
+            },
+            {
+              "side": -1.0,
+              "min_distance": 3.296794839324021,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.647961936765181,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.6775160901894495,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.9049791047819,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 1.5005947221639566,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9502250347307981,
+              "peak_vz": 0.9502250347307981
+            }
+          ],
+          "visited_cells": 70,
+          "mean_yaw_command": -0.07559831479258242,
+          "slow_fraction": 0.011333333333333334,
+          "wall_seconds": 106.5879465379985
+        }
+      ]
+    },
+    "cue_script|none": {
+      "near_threats": 100,
+      "near_dodge_rate": 0.44,
+      "near_dodge_by_side": {
+        "left": 0.4166666666666667,
+        "right": 0.46153846153846156
+      },
+      "balanced_dodge_rate": 0.4166666666666667,
+      "beacons_per_min": 0.4666666666666667,
+      "collisions_per_min": 2.1,
+      "threat_dodge_rate": 0.42718446601941745,
+      "threats": 103,
+      "mean_visited_cells": 25.933333333333334,
+      "mean_abs_yaw_bias": 0.037170238262144495,
+      "slow_fraction": 0.025399999999999995,
+      "runs": [
+        {
+          "seed": 1000,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 3,
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 3,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.30593105117017755,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.6982655250866636,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3063505654921795,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.46512308938693153,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30399746056388655,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3896303527674036,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 21,
+          "mean_yaw_command": 0.03460143088058637,
+          "slow_fraction": 0.023333333333333334,
+          "wall_seconds": 134.67121621995466
+        },
+        {
+          "seed": 1001,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 4.5,
+          "collision_kinds": {
+            "threat": 8,
+            "pillar": 1
+          },
+          "threats": 8,
+          "threats_dodged": 0,
+          "threats_hit": 8,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.30204669317528077,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3040182880614995,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3089583076499071,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29966566095940134,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3079961583835563,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30865138158116046,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30047413122453565,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30633850619350034,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 23,
+          "mean_yaw_command": 0.019192656801077942,
+          "slow_fraction": 0.050333333333333334,
+          "wall_seconds": 123.10138155403547
+        },
+        {
+          "seed": 1002,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 3,
+            "pillar": 1
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30228546984220783,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.299630568838508,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.40810282729071856,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.49712583905416,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29962834345989114,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3220343673603034,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3003299550601796,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 22,
+          "mean_yaw_command": 0.08069014902204233,
+          "slow_fraction": 0.018333333333333333,
+          "wall_seconds": 128.92156281799544
+        },
+        {
+          "seed": 1003,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.512159262265895,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4935553149816374,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.7033309960810082,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3067180877174718,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30605918300903534,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30636930435768617,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.37297799399360365,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 30,
+          "mean_yaw_command": -0.07001936445084507,
+          "slow_fraction": 0.028666666666666667,
+          "wall_seconds": 123.48790295701474
+        },
+        {
+          "seed": 1004,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "pillar": 1,
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 2,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.5137479551490587,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.8869105430892814,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 2.9488676894083676,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4780637862733917,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2976619201607011,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2989370281181122,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29734772099377826,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 34,
+          "mean_yaw_command": -0.045560061048291675,
+          "slow_fraction": 0.019,
+          "wall_seconds": 121.40370854502544
+        },
+        {
+          "seed": 1005,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 6,
+          "threats_dodged": 3,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 1.3736621667728928,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30434222100384717,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2943363671404043,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3050039208513568,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5131393094364582,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.32497549499625816,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 27,
+          "mean_yaw_command": 0.019707721614384652,
+          "slow_fraction": 0.013666666666666667,
+          "wall_seconds": 116.06472624500748
+        },
+        {
+          "seed": 1006,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 3.0,
+          "collision_kinds": {
+            "threat": 6
+          },
+          "threats": 7,
+          "threats_dodged": 1,
+          "threats_hit": 6,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30163312645888274,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30367469455760193,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30625816930107413,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.308771856928157,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29994549943835463,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4353660407092092,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29763889594377935,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 31,
+          "mean_yaw_command": -0.03675107845836388,
+          "slow_fraction": 0.04066666666666666,
+          "wall_seconds": 127.22508674900746
+        },
+        {
+          "seed": 1007,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 4
+          },
+          "threats": 6,
+          "threats_dodged": 2,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30949417742133195,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2954588412145639,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4607606496149745,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3096273955332227,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.38869293306856656,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30598175246728404,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 28,
+          "mean_yaw_command": 0.048210917663008786,
+          "slow_fraction": 0.014666666666666666,
+          "wall_seconds": 130.26377313601552
+        },
+        {
+          "seed": 1008,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 7,
+          "threats_dodged": 1,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.3065110593010188,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29400706325186904,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2948079583488811,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.32073205002649235,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.917320369250821,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30052624476596784,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.31056929027659663,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            }
+          ],
+          "visited_cells": 31,
+          "mean_yaw_command": 0.04232486533029939,
+          "slow_fraction": 0.03233333333333333,
+          "wall_seconds": 107.08859642100288
+        },
+        {
+          "seed": 1009,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 3,
+            "pillar": 1
+          },
+          "threats": 6,
+          "threats_dodged": 3,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.30503058584401876,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30255692179700905,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.9272106828676143,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3704476986453431,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3095842597470625,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.6060917140317094,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 21,
+          "mean_yaw_command": -0.004516616223134899,
+          "slow_fraction": 0.02033333333333333,
+          "wall_seconds": 128.6228264029487
+        },
+        {
+          "seed": 1010,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.47369814969870533,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2975512055517261,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3011189644547891,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3464533122427941,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5487392859361321,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3188328854249801,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3059977705917318,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 21,
+          "mean_yaw_command": 0.04846900859378311,
+          "slow_fraction": 0.029,
+          "wall_seconds": 142.66980444896035
+        },
+        {
+          "seed": 1011,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 3,
+            "pillar": 2
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 1.0418461057986828,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3550347819179419,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2942971040129467,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29923740815950217,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4288939715783522,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.8165043581231952,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3059954150065203,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 25,
+          "mean_yaw_command": 0.0030475552342829624,
+          "slow_fraction": 0.020666666666666667,
+          "wall_seconds": 143.45448496803874
+        },
+        {
+          "seed": 1012,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 4
+          },
+          "threats": 8,
+          "threats_dodged": 4,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.42073794810448156,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2995468308397416,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30975176068061794,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30890204444007857,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4306910587677161,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.8359398461366141,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30279311277241355,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3440519011328879,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 18,
+          "mean_yaw_command": 0.03738771687067491,
+          "slow_fraction": 0.034,
+          "wall_seconds": 121.036452920991
+        },
+        {
+          "seed": 1013,
+          "beacons_per_min": 0.5,
+          "collisions_per_min": 0.5,
+          "collision_kinds": {
+            "threat": 1
+          },
+          "threats": 7,
+          "threats_dodged": 6,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.7102184386034512,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.33096694958052436,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30217971710099334,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4704278535928035,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4246018854644691,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.47939181112491364,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4945881751814512,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 33,
+          "mean_yaw_command": 0.018140558006423474,
+          "slow_fraction": 0.017333333333333333,
+          "wall_seconds": 106.46473058796255
+        },
+        {
+          "seed": 1014,
+          "beacons_per_min": 1.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 4
+          },
+          "threats": 7,
+          "threats_dodged": 3,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.7200133005429228,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3017000874767635,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.30907557232306554,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30758979870064107,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.0,
+              "peak_vz": 0.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29584722882462117,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30874083314620887,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5420868732848368,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 24,
+          "mean_yaw_command": -0.0489338737349679,
+          "slow_fraction": 0.018666666666666668,
+          "wall_seconds": 110.25753560999874
+        }
+      ]
+    },
+    "random|none": {
+      "near_threats": 98,
+      "near_dodge_rate": 0.6530612244897959,
+      "near_dodge_by_side": {
+        "left": 0.6363636363636364,
+        "right": 0.6744186046511628
+      },
+      "balanced_dodge_rate": 0.6363636363636364,
+      "beacons_per_min": 0.0,
+      "collisions_per_min": 1.2333333333333334,
+      "threat_dodge_rate": 0.6464646464646465,
+      "threats": 99,
+      "mean_visited_cells": 10.8,
+      "mean_abs_yaw_bias": 0.03254228183919003,
+      "slow_fraction": 0.07597777777777777,
+      "runs": [
+        {
+          "seed": 1000,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 7,
+          "threats_dodged": 7,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.8475875449579674,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4152062209982876,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3578513928969148,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3058669641881108,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.34625962804383387,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.6230187363687129,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 1.710265670980069,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": -0.06181110789373244,
+          "slow_fraction": 0.056666666666666664,
+          "wall_seconds": 130.1381187629886
+        },
+        {
+          "seed": 1001,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 7,
+          "threats_dodged": 5,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2950412852993729,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.43205811553803836,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4209087485777955,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.38140147548634873,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 0.8912666138411176
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2990391619107735,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 0.9969300221275672
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.8725261634709487,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.6086092931160749,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 15,
+          "mean_yaw_command": 0.016984084709543098,
+          "slow_fraction": 0.07466666666666667,
+          "wall_seconds": 119.48332322202623
+        },
+        {
+          "seed": 1002,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.34929842971171304,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3370618572056766,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.49093002286131643,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9859241420478491,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.2954871009054668,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.7307498925032543,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30114394721784404,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 8,
+          "mean_yaw_command": -0.003969975215112027,
+          "slow_fraction": 0.063,
+          "wall_seconds": 126.31379747501342
+        },
+        {
+          "seed": 1003,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 7,
+          "threats_dodged": 6,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.4207187482147522,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 2.2414779388355677,
+              "hit": false,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4791690146770669,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.7990657871442367,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.40124918935129084,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4720387008826964,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3033374993966358,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 13,
+          "mean_yaw_command": 0.012601591391838089,
+          "slow_fraction": 0.06666666666666667,
+          "wall_seconds": 123.43902498297393
+        },
+        {
+          "seed": 1004,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 5
+          },
+          "threats": 7,
+          "threats_dodged": 2,
+          "threats_hit": 5,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.30242554869828703,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3066877985532745,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3018979124202198,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.36654314968398993,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3013477609013599,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 1.031639740163413,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 0.9450590975416053,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30692363987919513,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 6,
+          "mean_yaw_command": -0.014716737827004868,
+          "slow_fraction": 0.12666666666666668,
+          "wall_seconds": 123.195439955045
+        },
+        {
+          "seed": 1005,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.306243936374956,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3041719539528048,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.7420506014208682,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30011562962722116,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5386768876092666,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.2943915693394049,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 0.9503377720162258
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5607647891756746,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 9,
+          "mean_yaw_command": 0.033087957543887145,
+          "slow_fraction": 0.06966666666666667,
+          "wall_seconds": 120.01853903796291
+        },
+        {
+          "seed": 1006,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 0.2954788744799155,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3022569436162444,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.8728327481004661,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5591891164277331,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3914759183932946,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.9711055537067723,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 1.444644923611759,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 0.8753963204232599
+            }
+          ],
+          "visited_cells": 11,
+          "mean_yaw_command": -0.04312572925875955,
+          "slow_fraction": 0.08133333333333333,
+          "wall_seconds": 121.96461113000987
+        },
+        {
+          "seed": 1007,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "pillar": 1,
+            "threat": 1
+          },
+          "threats": 6,
+          "threats_dodged": 5,
+          "threats_hit": 1,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.48110697001592867,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4914398630124774,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 1.4169285617469076,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.48996431052712286,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30711405156467647,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.482666279340426,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 11,
+          "mean_yaw_command": 0.02685611754475749,
+          "slow_fraction": 0.071,
+          "wall_seconds": 122.99466401000973
+        },
+        {
+          "seed": 1008,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 4
+          },
+          "threats": 6,
+          "threats_dodged": 2,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2958591240685742,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.8219156514600126,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.508547605923995,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3018365504823729,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29623928785887427,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29381030788592566,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.4024646372654527,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 9,
+          "mean_yaw_command": 0.008737733145362758,
+          "slow_fraction": 0.092,
+          "wall_seconds": 116.90931338799419
+        },
+        {
+          "seed": 1009,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.0,
+          "collision_kinds": {
+            "threat": 3,
+            "pillar": 1
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.32904946782701766,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 0.8860325878407345
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3028697115114197,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.298434805607839,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.999040602790112,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.31093319730361196,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.29657926811828283,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.8842956121363049,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4983073258581731,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.4293923518086064,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 11,
+          "mean_yaw_command": 0.04916739774117568,
+          "slow_fraction": 0.097,
+          "wall_seconds": 120.48423850495601
+        },
+        {
+          "seed": 1010,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 0.0,
+          "collision_kinds": {},
+          "threats": 6,
+          "threats_dodged": 6,
+          "threats_hit": 0,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.5161653938824142,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.35279004419556975,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.6297684180962877,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.42267396391542567,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.7337804603775775,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5647702912998764,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 0.9241896877435198
+            }
+          ],
+          "visited_cells": 14,
+          "mean_yaw_command": -0.014585670718213883,
+          "slow_fraction": 0.06533333333333333,
+          "wall_seconds": 130.27804626798024
+        },
+        {
+          "seed": 1011,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 2.5,
+          "collision_kinds": {
+            "threat": 4,
+            "pillar": 1
+          },
+          "threats": 7,
+          "threats_dodged": 3,
+          "threats_hit": 4,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.2767072062807868,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5226978504374864,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3032810835327186,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3515417120956451,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3065242817436014,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3007468029552861,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.572632101480949,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 13,
+          "mean_yaw_command": 0.07297633698515125,
+          "slow_fraction": 0.066,
+          "wall_seconds": 133.88799204898532
+        },
+        {
+          "seed": 1012,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.3082844481426455,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 0.8395180932573054,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3044079753384405,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.9314594726498384,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5642155908408125,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 1.3616260781530933,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5367812191052796,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.30730528934737333,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 11,
+          "mean_yaw_command": -0.039410459454602545,
+          "slow_fraction": 0.08633333333333333,
+          "wall_seconds": 130.2107777419733
+        },
+        {
+          "seed": 1013,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.5,
+          "collision_kinds": {
+            "threat": 3
+          },
+          "threats": 7,
+          "threats_dodged": 4,
+          "threats_hit": 3,
+          "threat_log": [
+            {
+              "side": 1.0,
+              "min_distance": 0.5308492004657597,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.453366275675216,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3031691518454005,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5014953145797205,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3111689330426232,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.3005470732721604,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.33769571338950594,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 10,
+          "mean_yaw_command": 0.0343121529641139,
+          "slow_fraction": 0.07233333333333333,
+          "wall_seconds": 108.00860851898324
+        },
+        {
+          "seed": 1014,
+          "beacons_per_min": 0.0,
+          "collisions_per_min": 1.0,
+          "collision_kinds": {
+            "threat": 2
+          },
+          "threats": 6,
+          "threats_dodged": 4,
+          "threats_hit": 2,
+          "threat_log": [
+            {
+              "side": -1.0,
+              "min_distance": 1.4372143670507807,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.3096044134734315,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.5130539792614671,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 0.29822654154216977,
+              "hit": true,
+              "dodged": false,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": -1.0,
+              "min_distance": 0.5272929826625048,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            },
+            {
+              "side": 1.0,
+              "min_distance": 1.968647011298466,
+              "hit": false,
+              "dodged": true,
+              "peak_vy": 1.0,
+              "peak_vz": 1.0
+            }
+          ],
+          "visited_cells": 11,
+          "mean_yaw_command": 0.055791175194595685,
+          "slow_fraction": 0.051,
+          "wall_seconds": 105.76539080700604
+        }
+      ]
+    }
+  },
+  "encoder": null,
+  "policy": "adapter:docs/results/adapter/adapter-excitable.json",
+  "bundle": "data/malecns-excitable",
+  "bridge": "declared",
+  "task": "free_roam",
+  "teacher_in_behaviour_path": false,
+  "liveness": {
+    "L1_mobility": {
+      "slow_fraction": 0.14791111111111113,
+      "max": 0.25,
+      "passed": true
+    },
+    "L2_exploration": {
+      "coverage": 0.0671875,
+      "min": 0.15,
+      "passed": false
+    },
+    "L3_sense_causality": {
+      "metric": "slow_fraction",
+      "intact": 0.14791111111111113,
+      "silenced": 0.0976888888888889,
+      "ci_intact_minus_silenced": [
+        -0.00993722222222222,
+        0.10893333333333333
+      ],
+      "passed": false
+    },
+    "L4_anti_luck": {
+      "controls": {
+        "ghost": false,
+        "random": false,
+        "cue_script": false
+      },
+      "passed": true
+    },
+    "L5_non_degenerate": {
+      "abs_yaw_bias": 0.014908853988070979,
+      "max": 0.25,
+      "loss_of_control": {
+        "tilt": 0,
+        "bounds": 0,
+        "altitude": 0
+      },
+      "passed": true
+    },
+    "passed": false,
+    "thresholds": {
+      "L1_max_slow_fraction": 0.25,
+      "L2_min_coverage": 0.15,
+      "L3_causal_metric": "slow_fraction",
+      "L5_max_abs_yaw_bias": 0.25
+    }
+  }
+}
