@@ -1,0 +1,536 @@
+{
+  "source": "/home/gb/projects/fly-drone/docs/results/liveness/readout-audit.json",
+  "moving_threshold_ms": 0.05,
+  "plant_limits": [
+    0.4,
+    0.4,
+    0.2,
+    0.8
+  ],
+  "codecs": {
+    "v1": {
+      "path": "/home/gb/projects/fly-drone/docs/results/adapter/adapter.json",
+      "adapter_version": "declared-v1:6a7de373f09cd571",
+      "stimuli": {
+        "v4:light_l": {
+          "delta_power": 0.03621,
+          "command": [
+            0.025055,
+            0.005754,
+            0.0,
+            0.011509
+          ],
+          "physical": [
+            0.010022,
+            0.002302,
+            0.0,
+            0.009207
+          ],
+          "vx_ge_threshold": false
+        },
+        "v4:light_r": {
+          "delta_power": 0.07428,
+          "command": [
+            0.051404,
+            0.010107,
+            0.0,
+            0.020214
+          ],
+          "physical": [
+            0.020562,
+            0.004043,
+            0.0,
+            0.016171
+          ],
+          "vx_ge_threshold": false
+        },
+        "v4:loom_l": {
+          "delta_power": 0.15263,
+          "command": [
+            0.105628,
+            0.001146,
+            1.0,
+            0.002292
+          ],
+          "physical": [
+            0.042251,
+            0.000458,
+            0.2,
+            0.001833
+          ],
+          "vx_ge_threshold": false
+        },
+        "v4:loom_r": {
+          "delta_power": 0.19689,
+          "command": [
+            0.136254,
+            -0.249997,
+            1.0,
+            -0.499993
+          ],
+          "physical": [
+            0.054502,
+            -0.099999,
+            0.2,
+            -0.399995
+          ],
+          "vx_ge_threshold": true
+        },
+        "v4:light_both": {
+          "delta_power": 0.10873,
+          "command": [
+            0.075248,
+            0.020441,
+            0.0,
+            0.040882
+          ],
+          "physical": [
+            0.030099,
+            0.008176,
+            0.0,
+            0.032706
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:all_0.6": {
+          "delta_power": 0.05345,
+          "command": [
+            0.036989,
+            -0.087722,
+            1.0,
+            -0.175445
+          ],
+          "physical": [
+            0.014796,
+            -0.035089,
+            0.2,
+            -0.140356
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:cruise_yaw": {
+          "delta_power": 0.01584,
+          "command": [
+            0.010965,
+            0.010391,
+            0.0,
+            0.020782
+          ],
+          "physical": [
+            0.004386,
+            0.004156,
+            0.0,
+            0.016625
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:cruise_pitch": {
+          "delta_power": 0.0,
+          "command": [
+            0.0,
+            0.0,
+            0.0,
+            1e-06
+          ],
+          "physical": [
+            0.0,
+            0.0,
+            0.0,
+            1e-06
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_dn_l": {
+          "delta_power": 0.0,
+          "command": [
+            0.0,
+            0.000998,
+            0.09702,
+            0.001997
+          ],
+          "physical": [
+            0.0,
+            0.000399,
+            0.019404,
+            0.001597
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_dn_r": {
+          "delta_power": 0.0,
+          "command": [
+            0.0,
+            -0.002978,
+            0.12554,
+            -0.005956
+          ],
+          "physical": [
+            0.0,
+            -0.001191,
+            0.025108,
+            -0.004765
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_up_l": {
+          "delta_power": 0.12135,
+          "command": [
+            0.083981,
+            0.028835,
+            0.0,
+            0.057671
+          ],
+          "physical": [
+            0.033593,
+            0.011534,
+            0.0,
+            0.046137
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_up_r": {
+          "delta_power": 0.1839,
+          "command": [
+            0.127261,
+            0.04059,
+            0.12066,
+            0.081181
+          ],
+          "physical": [
+            0.050904,
+            0.016236,
+            0.024132,
+            0.064945
+          ],
+          "vx_ge_threshold": true
+        },
+        "relay:yaw_neg_l": {
+          "delta_power": 0.0,
+          "command": [
+            0.0,
+            0.0,
+            0.0,
+            1e-06
+          ],
+          "physical": [
+            0.0,
+            0.0,
+            0.0,
+            1e-06
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:yaw_neg_r": {
+          "delta_power": 0.0,
+          "command": [
+            0.0,
+            0.0,
+            0.0,
+            1e-06
+          ],
+          "physical": [
+            0.0,
+            0.0,
+            0.0,
+            1e-06
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:yaw_pos_l": {
+          "delta_power": -0.00136,
+          "command": [
+            0.0,
+            0.039713,
+            0.0,
+            0.079425
+          ],
+          "physical": [
+            0.0,
+            0.015885,
+            0.0,
+            0.06354
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:yaw_pos_r": {
+          "delta_power": 0.00557,
+          "command": [
+            0.003851,
+            -0.044439,
+            0.0,
+            -0.088878
+          ],
+          "physical": [
+            0.00154,
+            -0.017776,
+            0.0,
+            -0.071102
+          ],
+          "vx_ge_threshold": false
+        }
+      }
+    },
+    "v2": {
+      "path": "/home/gb/projects/fly-drone/docs/results/adapter/adapter-v2.json",
+      "adapter_version": "declared-v2:ad5ac1ac31955651",
+      "stimuli": {
+        "v4:light_l": {
+          "delta_power": 0.03621,
+          "command": [
+            0.246328,
+            0.010336,
+            0.0,
+            0.020672
+          ],
+          "physical": [
+            0.098531,
+            0.004134,
+            0.0,
+            0.016538
+          ],
+          "vx_ge_threshold": true
+        },
+        "v4:light_r": {
+          "delta_power": 0.07428,
+          "command": [
+            0.50538,
+            -0.072535,
+            0.0,
+            -0.145071
+          ],
+          "physical": [
+            0.202152,
+            -0.029014,
+            0.0,
+            -0.116057
+          ],
+          "vx_ge_threshold": true
+        },
+        "v4:loom_l": {
+          "delta_power": 0.15263,
+          "command": [
+            1.0,
+            0.057763,
+            1.0,
+            0.115526
+          ],
+          "physical": [
+            0.4,
+            0.023105,
+            0.2,
+            0.092421
+          ],
+          "vx_ge_threshold": true
+        },
+        "v4:loom_r": {
+          "delta_power": 0.19689,
+          "command": [
+            1.0,
+            -0.5,
+            1.0,
+            -1.0
+          ],
+          "physical": [
+            0.4,
+            -0.2,
+            0.2,
+            -0.8
+          ],
+          "vx_ge_threshold": true
+        },
+        "v4:light_both": {
+          "delta_power": 0.10873,
+          "command": [
+            0.739802,
+            -0.008964,
+            0.0,
+            -0.017928
+          ],
+          "physical": [
+            0.295921,
+            -0.003586,
+            0.0,
+            -0.014342
+          ],
+          "vx_ge_threshold": true
+        },
+        "relay:all_0.6": {
+          "delta_power": 0.05345,
+          "command": [
+            0.363659,
+            -0.207042,
+            1.0,
+            -0.414083
+          ],
+          "physical": [
+            0.145463,
+            -0.082817,
+            0.2,
+            -0.331267
+          ],
+          "vx_ge_threshold": true
+        },
+        "relay:cruise_yaw": {
+          "delta_power": 0.01584,
+          "command": [
+            0.107805,
+            0.029773,
+            0.0,
+            0.059547
+          ],
+          "physical": [
+            0.043122,
+            0.011909,
+            0.0,
+            0.047637
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:cruise_pitch": {
+          "delta_power": 0.0,
+          "command": [
+            -0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "physical": [
+            -0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_dn_l": {
+          "delta_power": 0.0,
+          "command": [
+            -0.0,
+            0.004128,
+            0.09702,
+            0.008257
+          ],
+          "physical": [
+            -0.0,
+            0.001651,
+            0.019404,
+            0.006605
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_dn_r": {
+          "delta_power": 0.0,
+          "command": [
+            -0.0,
+            -0.008426,
+            0.12554,
+            -0.016852
+          ],
+          "physical": [
+            -0.0,
+            -0.00337,
+            0.025108,
+            -0.013481
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:pitch_up_l": {
+          "delta_power": 0.12135,
+          "command": [
+            0.825665,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "physical": [
+            0.330266,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "vx_ge_threshold": true
+        },
+        "relay:pitch_up_r": {
+          "delta_power": 0.1839,
+          "command": [
+            1.0,
+            0.018321,
+            0.12066,
+            0.036641
+          ],
+          "physical": [
+            0.4,
+            0.007328,
+            0.024132,
+            0.029313
+          ],
+          "vx_ge_threshold": true
+        },
+        "relay:yaw_neg_l": {
+          "delta_power": 0.0,
+          "command": [
+            -0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "physical": [
+            -0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:yaw_neg_r": {
+          "delta_power": 0.0,
+          "command": [
+            -0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "physical": [
+            -0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:yaw_pos_l": {
+          "delta_power": -0.00136,
+          "command": [
+            -0.009287,
+            0.139446,
+            0.0,
+            0.278891
+          ],
+          "physical": [
+            -0.003715,
+            0.055778,
+            0.0,
+            0.223113
+          ],
+          "vx_ge_threshold": false
+        },
+        "relay:yaw_pos_r": {
+          "delta_power": 0.00557,
+          "command": [
+            0.037863,
+            -0.124216,
+            0.0,
+            -0.248432
+          ],
+          "physical": [
+            0.015145,
+            -0.049686,
+            0.0,
+            -0.198745
+          ],
+          "vx_ge_threshold": false
+        }
+      }
+    }
+  }
+}

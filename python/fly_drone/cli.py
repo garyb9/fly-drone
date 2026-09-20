@@ -7,6 +7,15 @@ from pathlib import Path
 from .env import TASKS
 
 
+def _resolve_adapter(value):
+    """Map a ``v1``/``v2`` alias to its committed artifact; leave a path unchanged."""
+    if value in ("v1", "v2"):
+        from .adapter import DEFAULT_PATH, DEFAULT_V2_PATH
+
+        return str(DEFAULT_PATH if value == "v1" else DEFAULT_V2_PATH)
+    return value
+
+
 def _infer_spatial(learner, encoder, init):
     """Whether a round runs the v6 spatial encoder, from the frozen partner it names."""
     from .brain import _is_spatial
@@ -283,6 +292,12 @@ def main():
         default="v4",
         help="declared sensory front-end this adapter is pinned to",
     )
+    p.add_argument(
+        "--codec",
+        choices=["v1", "v2"],
+        default="v1",
+        help="codec revision (v2: steering from wing steering MNs, two-sided drive)",
+    )
     p = sub.add_parser(
         "adapter-check",
         help="teacher-free causal gate for the declared body adapter (P0)",
@@ -297,7 +312,10 @@ def main():
     p.add_argument(
         "--bundle", help="alternate bundle to evaluate (e.g. data/malecns-dynamics)"
     )
-    p.add_argument("--adapter", help="adapter .json pinned to that bundle")
+    p.add_argument(
+        "--adapter",
+        help="adapter .json pinned to that bundle, or a v1/v2 alias for the committed one",
+    )
     p.add_argument(
         "--visual",
         choices=["v4", "relay"],
@@ -326,7 +344,10 @@ def main():
     )
     p.add_argument("--output", default="runs/liveness/check.json")
     p.add_argument("--bundle", help="alternate bundle dir (default data/malecns)")
-    p.add_argument("--adapter", help="adapter .json pinned to that bundle")
+    p.add_argument(
+        "--adapter",
+        help="adapter .json pinned to that bundle, or a v1/v2 alias for the committed one",
+    )
     p.add_argument("--episodes", type=int, default=50)
     p.add_argument("--seconds", type=float, default=120)
     p.add_argument("--level", type=int, default=3)
@@ -513,7 +534,8 @@ def main():
 
         brain = BrainRuntime(data=args.bundle) if args.bundle else None
         visual = None if args.visual == "v4" else args.visual
-        adapter = Adapter.calibrate(brain, visual=visual)
+        codec = None if args.codec == "v1" else args.codec
+        adapter = Adapter.calibrate(brain, visual=visual, codec=codec)
         adapter.save(args.output)
         print(
             json.dumps(
@@ -537,7 +559,7 @@ def main():
             args.seed_base,
             probes=not args.no_probes,
             bundle=args.bundle,
-            adapter=args.adapter,
+            adapter=_resolve_adapter(args.adapter),
             relay=args.visual == "relay",
         )
         print(json.dumps(report["acceptance"], indent=2))
@@ -590,7 +612,7 @@ def main():
             args.workers,
             args.seed_base,
             bundle=args.bundle,
-            adapter=args.adapter,
+            adapter=_resolve_adapter(args.adapter),
             relay=args.visual == "relay",
         )
         print(json.dumps(report["liveness"], indent=2))
