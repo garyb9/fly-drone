@@ -4748,7 +4748,13 @@
           "passed": false
         }
       },
-      "passed": false
+      "passed": null,
+      "deferred": true,
+      "reason": "body yaw authority 0.8 rad/s is below the declared saccade detector 3 rad/s; a fly-like body re-enables this criterion",
+      "fly_target": {
+        "saccade_rate_hz": 0.5,
+        "saccade_threshold_rad_s": 3.0
+      }
     },
     "L8_exploration_structure": {
       "statistics": {
@@ -4772,6 +4778,7 @@
       "isi_cv": null,
       "bout_length_cv": 0.9308096161314403
     },
+    "body_yaw_limit_rad_s": 0.8,
     "criteria": {
       "L1": true,
       "L2": false,
@@ -4779,9 +4786,12 @@
       "L4": true,
       "L5": true,
       "L6": true,
-      "L7": false,
+      "L7": null,
       "L8": false
     },
+    "deferred": [
+      "L7"
+    ],
     "not_evaluable": [],
     "passed": false,
     "thresholds": {

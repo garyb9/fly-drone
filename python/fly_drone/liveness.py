@@ -18,8 +18,14 @@ not-evaluable and does not pass.
 
 import numpy as np
 
-from .motion_stats import in_window
+from .motion_stats import FLY_REFERENCE, SACCADE_THRESHOLD, in_window
 
+# L7 is only evaluable on a body whose yaw authority can reach the declared saccade detector
+# (``SACCADE_THRESHOLD`` rad/s, anchored on the fly's ~35 rad/s saccades). The simulated quadrotor's
+# limit is 0.8 rad/s, so no commanded turn can register and a measured rate of zero would describe
+# the body, not the connectome. Below the threshold L7 is *deferred* (out of scope, not a silent
+# pass); a fly-like body re-enables it automatically. See
+# ``docs/results/liveness/FINDING-2026-09-20-l7-body-threshold.md``.
 LIVENESS = {
     "L1_max_slow_fraction": 0.25,
     "L2_min_coverage": 0.15,
@@ -66,15 +72,22 @@ def _windowed(summary, keys):
     return bool(all(outcome is True for outcome in outcomes)), detail
 
 
-def liveness(results, policy, controls=LIVENESS_CONTROLS):
+def liveness(results, policy, controls=LIVENESS_CONTROLS, yaw_limit=None):
     """Liveness criteria from ``distill.screen`` results keyed ``"controller|ablation"``.
 
     Requires the intact, sensory-silenced and ghost conditions for ``policy`` plus the
     ``random``/``cue_script`` baselines. ``ghost`` is a condition of the policy; the baselines are
     controllers flown with ablation ``none``. The teacher is intentionally not a control.
+
+    ``yaw_limit`` is the body's yaw authority in rad/s (defaults to ``plant.LIMITS[3]``); when it is
+    below the L7 saccade detector that criterion is deferred and excluded from ``passed``.
     """
     from .roam_eval import FREE_CELLS, LOSS_OF_CONTROL, _per_seed, paired_bootstrap
 
+    if yaw_limit is None:
+        from .plant import LIMITS
+
+        yaw_limit = float(LIMITS[3])
     t = LIVENESS
     none = results[f"{policy}|none"]
     silenced = results[f"{policy}|sensory"]
@@ -114,7 +127,9 @@ def liveness(results, policy, controls=LIVENESS_CONTROLS):
     l4 = not any(present.values())
     l5 = bool(yaw <= t["L5_max_abs_yaw_bias"] and not any(loss.values()))
     l6, l6_detail = _windowed(none, L6_KEYS)
-    l7, l7_detail = _windowed(none, L7_KEYS)
+    l7_stats, l7_detail = _windowed(none, L7_KEYS)
+    l7_deferred = yaw_limit < SACCADE_THRESHOLD
+    l7 = None if l7_deferred else l7_stats
     l8, l8_detail = _windowed(none, L8_KEYS)
 
     out = {
@@ -149,28 +164,53 @@ def liveness(results, policy, controls=LIVENESS_CONTROLS):
         "L7_saccadic_turning": {
             "statistics": l7_detail,
             "passed": l7,
+            "deferred": bool(l7_deferred),
+            "reason": (
+                f"body yaw authority {yaw_limit:g} rad/s is below the declared saccade "
+                f"detector {SACCADE_THRESHOLD:g} rad/s; a fly-like body re-enables this "
+                "criterion"
+            )
+            if l7_deferred
+            else None,
+            "fly_target": {
+                "saccade_rate_hz": FLY_REFERENCE["saccade_rate_hz"]["value"],
+                "saccade_threshold_rad_s": FLY_REFERENCE["saccade_threshold_rad_s"][
+                    "value"
+                ],
+            },
         },
         "L8_exploration_structure": {
             "statistics": l8_detail,
             "passed": l8,
         },
         "context": {key: none.get(key) for key in CONTEXT_KEYS},
+        "body_yaw_limit_rad_s": yaw_limit,
     }
-    criteria = {
-        f"L{index}": out[key]["passed"]
-        for index, key in (
-            (1, "L1_mobility"),
-            (2, "L2_exploration"),
-            (3, "L3_sense_causality"),
-            (4, "L4_anti_luck"),
-            (5, "L5_non_degenerate"),
-            (6, "L6_intermittency"),
-            (7, "L7_saccadic_turning"),
-            (8, "L8_exploration_structure"),
-        )
-    }
+    criterion_names = (
+        (1, "L1_mobility"),
+        (2, "L2_exploration"),
+        (3, "L3_sense_causality"),
+        (4, "L4_anti_luck"),
+        (5, "L5_non_degenerate"),
+        (6, "L6_intermittency"),
+        (7, "L7_saccadic_turning"),
+        (8, "L8_exploration_structure"),
+    )
+    criteria = {f"L{i}": out[key]["passed"] for i, key in criterion_names}
+    deferred = [f"L{i}" for i, key in criterion_names if out[key].get("deferred")]
     out["criteria"] = criteria
-    out["not_evaluable"] = [key for key, value in criteria.items() if value is None]
-    out["passed"] = bool(all(value is True for value in criteria.values()))
+    out["deferred"] = deferred
+    out["not_evaluable"] = [
+        f"L{i}"
+        for i, _ in criterion_names
+        if criteria[f"L{i}"] is None and f"L{i}" not in deferred
+    ]
+    out["passed"] = bool(
+        all(
+            criteria[f"L{i}"] is True
+            for i, _ in criterion_names
+            if f"L{i}" not in deferred
+        )
+    )
     out["thresholds"] = dict(t)
     return out

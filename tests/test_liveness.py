@@ -51,7 +51,13 @@ def alive():
 def test_an_alive_brain_driven_body_passes_every_criterion():
     report = liveness(alive(), POLICY)
     assert report["passed"]
-    assert all(report[k]["passed"] for k in report if k.startswith("L"))
+    assert report["deferred"] == ["L7"]
+    assert report["L7_saccadic_turning"]["deferred"]
+    assert all(
+        report[k]["passed"]
+        for k in report
+        if k.startswith("L") and k != "L7_saccadic_turning"
+    )
 
 
 def test_the_current_dead_adapter_fails_mobility_and_exploration():
@@ -125,8 +131,37 @@ def test_missing_structure_is_not_evaluable_and_never_passes():
     assert report["L6_intermittency"]["passed"] is None
     assert report["L7_saccadic_turning"]["passed"] is None
     assert report["L8_exploration_structure"]["passed"] is None
-    assert report["not_evaluable"] == ["L6", "L7", "L8"]
+    assert report["not_evaluable"] == ["L6", "L8"]
+    assert report["deferred"] == ["L7"]
     assert not report["passed"]
+
+
+def test_l7_is_deferred_on_a_body_below_the_saccade_detector():
+    from fly_drone.motion_stats import SACCADE_THRESHOLD
+
+    report = liveness(alive(), POLICY)
+    l7 = report["L7_saccadic_turning"]
+    assert l7["deferred"] and l7["passed"] is None
+    assert report["body_yaw_limit_rad_s"] < SACCADE_THRESHOLD
+    # The fly's target is still recorded for the fly-like-body milestone.
+    assert l7["fly_target"]["saccade_rate_hz"] == 0.5
+    # A deferred criterion cannot fail the bar.
+    assert report["passed"]
+
+
+def test_l7_is_evaluated_again_on_a_fly_like_body():
+    # A body fast enough to reach the detector: L7 is scored, and a smooth cruiser fails it.
+    slow_turn = results(
+        summary(0.10, 60, saccade_rate_hz=0.0, mean_saccade_amplitude_rad=None),
+        summary(0.90, 5),
+        summary(0.60, 10),
+    )
+    report = liveness(slow_turn, POLICY, yaw_limit=40.0)
+    assert report["deferred"] == []
+    assert not report["L7_saccadic_turning"]["passed"]
+    assert not report["passed"]
+    passing = liveness(alive(), POLICY, yaw_limit=40.0)
+    assert passing["L7_saccadic_turning"]["passed"] and passing["passed"]
 
 
 def test_liveness_never_needs_a_teacher_row():

@@ -1,8 +1,9 @@
 # L7 saccadic turning is unpassable on the quadrotor body
 
 **Status:** recorded 2026-09-20. Free audit (`scripts/yaw_audit.py`), 3 × 60 s seeds on codec v2,
-level 3, plus a 120 s teacher / scripted reference. **No threshold was changed.** L7 was already
-failing in the P4 2×2; this explains why, and it is not the connectome's fault.
+level 3, plus a 120 s teacher / scripted reference. **No threshold was changed; L7 is deferred, not
+relaxed** (user-approved, §5). L7 was already failing in the P4 2×2; this explains why, and it is
+not the connectome's fault.
 
 Artifacts: [`yaw-audit.json`](yaw-audit.json), [`../../specs/2026-09-20-ongoing-state-and-faithful-readout.md`](../../superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md).
 
@@ -56,17 +57,32 @@ seeker shows by turning at limit. The deficit is neither richness of the arena n
 body cannot turn fast enough to register, and no controller we have (including the teacher) produces
 discrete high-rate reorientations.
 
-## 5. Decision required (bar / body — user sign-off)
+## 5. Decision (adopted): defer L7 on the drone body
 
-L7 is a pre-registered criterion. Nothing below is taken without the user's choice.
+The user chose to **defer L7** until the fly-like-body milestone, keeping the fly's own value as the
+target. Implemented as a declared, automatic rule, not a hand-tuned exception:
 
-- **A — Fly-like body first.** Raise the plant's yaw authority/rate toward fly values so saccades
-  are physically possible, then L7 stands as written. This is the roadmap's stated destination, but
-  it changes the body and invalidates/needs re-validation of every accepted actor and A1–A7.
-- **B — Re-express L7 on the current body (interim).** Keep L7's *intent* (discrete reorientations,
-  not smooth cruising) but anchor the detector on the body's own yaw envelope, and record the fly's
-  35 rad/s / 0.5 Hz as the unimplemented fidelity target for the fly-like-body milestone.
-- **C — Defer L7.** Mark it not-evaluable on a non-fly body and pursue the remaining unmet
-  criterion, L2 coverage (0.104 vs 0.15), with a declared search process.
+- `liveness.liveness(..., yaw_limit=...)` takes the body's yaw authority (default
+  `plant.LIMITS[3]`). When it is below `motion_stats.SACCADE_THRESHOLD`, **L7 is marked `deferred`**
+  — reported as `passed: null` with a reason and the fly target (`0.5 Hz`, `3 rad/s`) — and is
+  **excluded from the aggregate** `passed`. It is not a silent pass: `deferred` and `reason` are in
+  the report, and the criterion is distinct from `not_evaluable` (an undefined statistic, which
+  still fails).
+- The moment a fly-like body raises the yaw limit above the detector, L7 becomes evaluable again
+  with no code change; `tests/test_liveness.py` covers both directions.
 
-The other P4 gap, **L2 coverage**, is independent of all this and remains open.
+Recomputed on the P4 smoke artifacts (the raw per-seed summaries are unchanged):
+
+| cell        | passed | deferred | not-evaluable | failing |
+| ----------- | ------ | -------- | ------------- | ------- |
+| v1 canonical| no     | L7       | —             | L1, L2, L6 |
+| **v2 canonical** | no | L7      | —             | **L2**  |
+| v1 tonic    | no     | L7       | —             | L1, L2, L6 |
+| v2 tonic    | no     | L7       | —             | L2, L3, L8 |
+
+So the codec-v2 cell is now **one criterion from alive**, and the sole remaining liveness gap is
+**L2 coverage** (0.104 vs 0.15). That is the next workstream. `ACCEPTANCE` A1–A7 were untouched.
+
+Options **A (fly-like body first)** and **B (re-express L7 body-relative)** were considered and not
+taken; B was rejected as muddy because even the accepted RL teacher sits below the 0.2 Hz floor when
+scaled to the body.

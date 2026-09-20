@@ -36,6 +36,11 @@ and `cue_script` baselines. L1–L8 as re-anchored in this spec.
 | v1 tonic      | 0.495 ✗ | 0.021 ✗| ✓   | ✓   | 0.021  | 3.0/min ✗      | 0.00 Hz ✗         | 1.80 ✓ | **✗**  |
 | v2 tonic      | 0.051 ✓ | 0.058 ✗| ✗   | ✓   | 0.009  | 13.0/min ✓     | 0.002 Hz ✗        | 1.05 ✗ | **✗**  |
 
+The **L7 column is now deferred** (see below): the body's 0.8 rad/s yaw authority cannot reach the
+3 rad/s detector, so those rates describe the body, not the brain. Recomputing the bar with L7
+deferred, the failing criteria become: v1 cells `L1, L2, L6`; **v2 canonical `L2` alone**; v2 tonic
+`L2, L3, L8`.
+
 Artifacts: [`liveness-check-v1-smoke.json`](liveness-check-v1-smoke.json),
 [`liveness-check-v2-smoke.json`](liveness-check-v2-smoke.json),
 [`liveness-check-tonic-v1-smoke.json`](liveness-check-tonic-v1-smoke.json),
@@ -77,8 +82,9 @@ Two criteria remain unmet, and neither is a threshold artefact:
 - **L7 saccadic turning** is ~0.01 Hz against the cited free-flight window 0.2–2 Hz. A follow-up
   free audit ([`FINDING-2026-09-20-l7-body-threshold.md`](FINDING-2026-09-20-l7-body-threshold.md))
   shows this is **not** a brain deficit: the detector fires at 3 rad/s but the body's yaw authority
-  is 0.8 rad/s, and every "detection" was a crash-respawn teleport. It is a body/fly-body-anchored
-  threshold mismatch, like the old L1/L2 teacher-anchoring. Still open: L2 coverage.
+  is 0.8 rad/s, and every "detection" was a crash-respawn teleport. L7 is now **deferred** on this
+  body (reported, excluded from `passed`, automatically re-enabled on a fly-like body), so the sole
+  remaining gap on the v2 cell is **L2 coverage**.
 
 L6 passes for v2 (7.9 bouts/min, 7.7 s move bouts) — with the caveat recorded in
 [`../../references.md`](../../references.md) that its window is an adult-*walking* proxy, because no
