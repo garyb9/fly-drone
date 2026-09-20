@@ -212,6 +212,8 @@ class ConnectomeEnv(gym.Env):
             self.brain.silence_feedback()
         elif self.ablation == "relay":
             self.brain.silence_relay()
+        elif self.ablation == "tonic":
+            self.brain.silence_tonic()
         if self.plant.arena is not None:
             self.plant.set_ghost(self.ablation == "ghost")
         if self.brain.learned:

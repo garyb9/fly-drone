@@ -37,6 +37,8 @@ DEFAULT_DYNAMICS_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-dynamic
 DEFAULT_RELAY_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-relay.json"
 # P4 codec v2: steering from the wing steering motoneurons, two-sided forward drive.
 DEFAULT_V2_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-v2.json"
+# The codec re-pinned to the P4 (C3a) tonic bundle (an alternate identity).
+DEFAULT_TONIC_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-tonic.json"
 # Escape readout level above rest that counts as a full loom response (rest ~0, loom
 # ~0.74-0.87 in the battery). Declared, not fitted.
 ESCAPE_SCALE = 0.5

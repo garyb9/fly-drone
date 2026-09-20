@@ -1,7 +1,9 @@
 # Ongoing state and a faithful readout — design
 
-**Status:** proposed 2026-09-20. Supersedes the "add more senses" branch of P3. Documentation
-first; no source under `python/fly_drone/` or `crates/` changes until this spec lands.
+**Status:** A0–A3 landed 2026-09-20 (`motion_stats.py`, L6–L8, `command_audit.py`, codec v2);
+B1 (C3a tonic) landed; **B2 (C3b) dropped** — no comparable published resting baseline exists, see
+[`../../results/liveness/FINDING-2026-09-20-c3b-dropped.md`](../../results/liveness/FINDING-2026-09-20-c3b-dropped.md).
+The 2×2 gate has not been run yet. Supersedes the "add more senses" branch of P3.
 
 **Why now.** The frozen connectome drives the body through a declared, teacher-free codec and threat
 escape is real and causal — but the drone idles most of the time. Three rounds of sensory-side

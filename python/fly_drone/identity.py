@@ -31,10 +31,14 @@ MODEL_KEYS = (
     # P2 (C2): a bundle that carries fitted/declared per-neuron dynamics. Value is a
     # dict with the parameter set and a sha256 of dynamics.bin, so the hash covers it.
     "dynamics",
+    # P4 (C3a): a bundle that declares a tonic drive map on identified motoneurons. Value is
+    # a dict with the roles and their constant biases. Folded into both key tuples so the
+    # canonical bundle (which lacks it) is unchanged and the C3 bundle is a pinned alternate.
+    "tonic",
 )
 
 # A bundle carrying any of these keys is an alternate, non-canonical model.
-ALTERNATE_KEYS = ("wiring", "sign_convention", "feedback", "dynamics")
+ALTERNATE_KEYS = ("wiring", "sign_convention", "feedback", "dynamics", "tonic")
 
 
 def canonical_model(manifest):

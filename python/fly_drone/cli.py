@@ -339,6 +339,21 @@ def main():
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--seed-base", type=int, default=1000)
     p = sub.add_parser(
+        "tonic-check",
+        help="P4 (C3a) causal test: the added tonic drive changes behaviour",
+    )
+    p.add_argument("--output", default="runs/tonic/check.json")
+    p.add_argument("--bundle", help="tonic bundle dir (default data/malecns-tonic)")
+    p.add_argument(
+        "--adapter",
+        help="tonic-pinned adapter .json (default: docs/results/adapter/adapter-tonic.json)",
+    )
+    p.add_argument("--episodes", type=int, default=50)
+    p.add_argument("--seconds", type=float, default=120)
+    p.add_argument("--level", type=int, default=3)
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--seed-base", type=int, default=1000)
+    p = sub.add_parser(
         "liveness-check",
         help="P3 liveness gate: the connectome drives the body from its senses (additive)",
     )
@@ -598,6 +613,37 @@ def main():
             print(
                 "feedback-check: body feedback did not causally change behaviour "
                 "(honest negative; the wiring is still additive and reversible).",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+    elif args.command == "tonic-check":
+        from .roam_eval import tonic_check
+
+        report = tonic_check(
+            args.output,
+            args.episodes,
+            args.seconds,
+            args.level,
+            args.workers,
+            args.seed_base,
+            bundle=args.bundle,
+            adapter=args.adapter,
+        )
+        print(
+            json.dumps(
+                {
+                    "bundle": report["bundle"],
+                    "changed_metrics": report["changed_metrics"],
+                    "causal": report["causal"],
+                    "passed": report["passed"],
+                },
+                indent=2,
+            )
+        )
+        if not report["passed"]:
+            print(
+                "tonic-check: the added tonic drive did not causally change behaviour "
+                "(honest negative; the C3a bundle is still additive and reversible).",
                 file=sys.stderr,
             )
             raise SystemExit(1)

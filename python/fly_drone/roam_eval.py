@@ -511,6 +511,78 @@ def feedback_check(
     return report
 
 
+# P4 (C3a) causal test, mirroring the P1 feedback gate. Silencing the added tonic drive must
+# move behaviour (paired-bootstrap 95% interval of intact - silenced excludes zero) on at least
+# one declared metric, or C3a is rejected. The ghost row is context.
+TONIC_METRICS = ("slow_fraction", "beacons_per_min", "collisions_per_min")
+
+
+def tonic_check(
+    output,
+    episodes=50,
+    seconds=120,
+    level=3,
+    workers=6,
+    seed_base=1000,
+    bundle=None,
+    adapter=None,
+):
+    """P4 gate: does the declared C3a tonic drive causally change behaviour?
+
+    Runs the declared adapter on the additive tonic bundle in three conditions: intact,
+    tonic silenced, and ghost (invisible obstacle). Reuses the free-roam machinery; reports
+    the per-metric causal interval honestly.
+    """
+    from .adapter import DEFAULT_TONIC_PATH
+    from .brain import ROOT
+    from .distill import screen
+
+    bundle = str(bundle or ROOT / "data/malecns-tonic")
+    manifest = json.loads((Path(bundle) / "manifest.json").read_text())
+    if "tonic" not in manifest:
+        raise FileNotFoundError(
+            f"tonic bundle not built: {bundle} "
+            "(run `python scripts/make_tonic_bundle.py`)"
+        )
+    # The canonical adapter is (correctly) refused on the alternate tonic bundle, so default
+    # to the tonic-pinned artifact.
+    adapter = adapter or DEFAULT_TONIC_PATH
+    key = f"adapter:{adapter}"
+    combos = [(key, c) for c in ("none", "tonic", "ghost")]
+    report = screen(
+        None,
+        output,
+        seeds=episodes,
+        seconds=seconds,
+        level=level,
+        workers=workers,
+        seed_base=seed_base,
+        combos=combos,
+        bundle=bundle,
+    )
+    results = report["results"]
+    intact, silenced = (results[f"{key}|{c}"] for c in ("none", "tonic"))
+    causal = {}
+    for metric in TONIC_METRICS:
+        ci = paired_bootstrap(_per_seed(intact, metric), _per_seed(silenced, metric))
+        causal[metric] = {
+            "intact": float(np.mean(_per_seed(intact, metric))),
+            "silenced": float(np.mean(_per_seed(silenced, metric))),
+            "ci_intact_minus_silenced": ci,
+            "changed": bool(ci[1] < 0 or ci[0] > 0),
+        }
+    report["policy"] = key
+    report["bundle"] = bundle
+    report["bridge"] = "declared+tonic"
+    report["task"] = "free_roam"
+    report["teacher_in_behaviour_path"] = False
+    report["causal"] = causal
+    report["changed_metrics"] = [m for m, c in causal.items() if c["changed"]]
+    report["passed"] = bool(report["changed_metrics"])
+    Path(output).write_text(json.dumps(report, indent=2))
+    return report
+
+
 def liveness_check(
     output,
     episodes=50,

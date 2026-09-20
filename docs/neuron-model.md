@@ -119,6 +119,17 @@ Notably the fly's _steering_ motoneurons (`steer_l`/`steer_r`: `b1/b2/b3 MN`, `i
 wingbeat continuously and steering modulates that ongoing train rather than recruiting it from
 silence.
 
+**Addressed by C3a (`declared-tonic-v1`).** The tonic drive is now a declared, additive manifest
+marker — `{"roles": {"power_l": 0.85, "power_r": 0.85, "steer_l": 0.85, "steer_r": 0.85}}` — read
+by `BrainRuntime`, applied on reset, and silenced by the `silence_tonic` ablation. The steering
+pair uses the same arithmetic as the power pair (`b = 0.85` → one spike every second tick,
+`a → 0.5`, mid-rate so input can push it both ways), so it is declared, not fitted. Build it with
+`scripts/make_tonic_bundle.py`; the canonical bundle (no marker) is byte-unchanged and keeps the
+historical power-only bias. The per-neuron _excitability_ lever (C3b) is **dropped**: no
+comparable published resting baseline exists, and a uniform threshold shift would contradict the
+sparse, structured resting activity the connectome is reported to support — see
+[`results/liveness/FINDING-2026-09-20-c3b-dropped.md`](results/liveness/FINDING-2026-09-20-c3b-dropped.md).
+
 _There is no refractory period._ `refrac_ticks = round(refrac_ms / dt_ms) = round(2.0 / 5.0) = 0`
 (`crates/brain-core/src/core/lif.rs:40-44`), so the only refractoriness is the reset itself. A cell
 is silent or fires every tick, with no graded rate code between — the regime is bimodal. Shortening

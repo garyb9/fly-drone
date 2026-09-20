@@ -199,8 +199,26 @@ class BrainRuntime:
         self.readouts = {
             k: self.core.readout_role(k, v) for k, v in self.readout_ids.items()
         }
-        self.tonic = self.readout_ids["power_l"] + self.readout_ids["power_r"]
-        self.core.bias(self.tonic, 0.85)
+        # P4 (C3a): a bundle may declare a tonic drive map on identified motoneurons. Absent
+        # the marker, this is the historical power-only bias and behaviour is byte-identical.
+        marker = manifest.get("tonic")
+        if isinstance(marker, dict) and marker.get("roles"):
+            self.tonic_roles = {str(k): float(v) for k, v in marker["roles"].items()}
+        else:
+            self.tonic_roles = {"power_l": 0.85, "power_r": 0.85}
+        self.tonic_ids = {
+            r: list(self.readout_ids.get(r, [])) for r in self.tonic_roles
+        }
+        missing = [r for r in self.tonic_roles if not self.tonic_ids[r]]
+        if missing:
+            raise ValueError(f"tonic bundle names empty readout roles: {missing}")
+        # Roles beyond the historical flight-power pair are the C3a addition; the silencing
+        # gate restores exactly these to zero.
+        self.tonic_added = {
+            r: v for r, v in self.tonic_roles.items() if r not in ("power_l", "power_r")
+        }
+        self.tonic = sorted({i for ids in self.tonic_ids.values() for i in ids})
+        self._apply_tonic()
         names = groups["groups"]
         self.feature_ids = [
             i
@@ -263,9 +281,14 @@ class BrainRuntime:
     def learned(self):
         return self.encoder is not None
 
+    def _apply_tonic(self):
+        """Apply the declared tonic drive map (P4 C3a; power-only when no marker)."""
+        for role, value in self.tonic_roles.items():
+            self.core.bias(self.tonic_ids[role], value)
+
     def reset(self, seed):
         self.core.reset(seed)
-        self.core.bias(self.tonic, 0.85)
+        self._apply_tonic()
         self.tick = 0
         self.cues[:] = 0
         if self.current_maps is not None:
@@ -427,6 +450,16 @@ class BrainRuntime:
         ids = sorted(set(sum(self.relay_ids.values(), [])))
         if ids:
             self.core.silence(ids, True)
+
+    def silence_tonic(self):
+        """Zero the added tonic roles; the P4 (C3a) causal control.
+
+        Only the roles beyond the historical power pair are restored to zero, so the gate
+        isolates the C3a addition rather than the pre-existing flight-power tone.
+        """
+        ids = sorted({i for role in self.tonic_added for i in self.tonic_ids[role]})
+        if ids:
+            self.core.bias(ids, 0.0)
 
     def clear_vision_history(self):
         """Forget previous frames so a respawn does not read as dark-area growth."""

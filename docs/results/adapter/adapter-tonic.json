@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "adapter_version": "declared-v1:d09b7f2193164cce",
+  "dataset_hash": "60cb182151d80d910a9f23a1550908fefe2233234fa7f33bb7bc0f3d70311c39",
+  "bundle_hash": "03047ea9d787c490e543c83edbf58a5c7727695cfef35bdbd4a42ba7ca7afc6f",
+  "alternate": true,
+  "note": "Declared body adapter (P0); no teacher, no learned policy.",
+  "params": {
+    "escape_scale": 0.5,
+    "side_fraction": 0.5,
+    "rest_escape": 0.0,
+    "rest_power": 0.439525,
+    "rest_lat": -9.989e-05,
+    "g_yaw": 191.99048,
+    "g_climb": 1.0,
+    "g_fwd": 0.680398
+  }
+}
