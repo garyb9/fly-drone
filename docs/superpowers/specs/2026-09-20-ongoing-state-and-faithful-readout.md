@@ -11,7 +11,9 @@ machinery stays but is a recorded negative. B2 (C3b) is **dropped** (no comparab
 resting baseline). The 50-seed step-3 gate was skipped: L7 cannot pass, so no seed count would
 change the verdict. On the **definitive 15-seed 120 s** run the v2 cell clears L1–L8 except **L4**
 (anti-luck): the blind ghost body is nearly as alive as the sighted one (coverage 0.177 vs 0.189),
-because locomotion is the brain's own tonic drive and vision only steers — an open bar question
+because locomotion is the brain's own tonic drive and vision only steers. By user decision the bar
+is left exactly as pre-registered and L4 stands as a **recorded near-miss** (liveness is intrinsic,
+not vision-attributable); P4 closes here
 ([`FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md)).
 Evidence:
 [`../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md).

@@ -412,8 +412,8 @@ so no controller — not even the accepted RL teacher — can register a saccade
 fly-like body raises the yaw authority), the fly's value kept as that milestone's target. On the
 definitive 15-seed **120 s** run, the v2 codec clears L1–L8 except **L4**: the blind (ghost) body is
 nearly as alive (coverage 0.177 vs 0.189), because locomotion is the brain's own tonic drive and
-vision only steers. Whether that invalidates "alive" or means L4 tests the wrong thing is an open
-bar question. Evidence:
+vision only steers. By user decision the bar is left as pre-registered and L4 stands as a **recorded
+near-miss** (liveness is intrinsic, not vision-attributable); P4 closes here. Evidence:
 [`../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md),
 [`../results/liveness/FINDING-2026-09-20-l7-body-threshold.md`](../results/liveness/FINDING-2026-09-20-l7-body-threshold.md),
 [`../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md).

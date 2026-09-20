@@ -68,18 +68,23 @@ demands that a blind body be *immobile*, which an intrinsically-driven body is n
   liveness is not attributable: a blind connectome-driven body still covers 17.7 %. Whether that
   invalidates "alive" or means L4 tests the wrong thing is a **bar question** (below).
 
-## 5. Decision required (bar — user sign-off)
+## 5. Decision (adopted): leave L4 failing as a recorded near-miss
 
-- **A — Re-express L4's control as the causal test.** A blind body may still move (the fly's own
-  tonic drive is intrinsic), but must not *steer toward things*. Score the control on the steering
-  causality (L3's sensory-silencing difference, which already passes) rather than on `move ∧ cover`.
-  Keeps "behaviour must be causal" honest while acknowledging intrinsic locomotion.
-- **B — Gate the forward drive on vision.** Make the tonic forward drive require visual drive, so a
-  blind drone does not cruise. This removes intrinsic locomotion — arguably contrary to the fly,
-  which walks and flies without vision, and to the purpose of C3.
-- **C — Leave L4 failing as a recorded near-miss.** The drone is alive by L1–L8, but liveness is
-  intrinsic rather than vision-attributable; report it and move on.
+The user chose to **leave the bar exactly as pre-registered**. No rule or threshold was changed:
 
-Nothing is changed without the user's choice. The 60 s "fails only L2" statement in
+- The v2/canonical cell is **alive by L1–L8 with L7 deferred, except L4**, which fails because a
+  blind connectome-driven body still covers 17.7 %. `passed` remains `false`.
+- This is reported as a **recorded near-miss**: the drone moves because of its neurons (its own
+  tonic drive), but the liveness is **intrinsic, not vision-attributable**, and the project's
+  anti-luck rule ("a blind condition cannot pass by chance") therefore does not clear.
+- The two non-connectome controls do fail (`random` 0.043, `cue_script` 0.096), and L3 shows vision
+  is causally used for steering, so the picture is coherent — it is the strict ghost rule that
+  stands.
+
+Options A (move ghost into the causal test) and B (gate the forward drive on vision) were
+considered and **not** taken. P4 closes here: the idling is fixed and measured, and the remaining
+gap is an honest, recorded attribution caveat rather than an open workstream.
+
+The 60 s "fails only L2" statement in
 [`FINDING-2026-09-20-c3-and-codec-v2.md`](FINDING-2026-09-20-c3-and-codec-v2.md) is superseded by
 this run.
