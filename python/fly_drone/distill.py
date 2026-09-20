@@ -12,9 +12,34 @@ from pathlib import Path
 import numpy as np
 
 from .brain import ENCODER_VERSION
+from .motion_stats import FRAME_SECONDS, episode_stats
 from .teacher import DRIVES
 
 NOISE_AXES = (0, 1, 3)
+
+# Per-episode motion-structure scalars (``motion_stats.episode_stats``). They reach the
+# liveness report only through ``summarise``; ``None`` episodes are skipped, not counted as 0.
+MOTION_KEYS = (
+    "bouts_per_min",
+    "mean_move_bout_s",
+    "median_move_bout_s",
+    "mean_pause_bout_s",
+    "bout_length_cv",
+    "saccade_rate_hz",
+    "mean_saccade_amplitude_rad",
+    "median_isi_s",
+    "isi_cv",
+    "median_speed",
+    "p90_speed",
+    "speed_cv",
+    "msd_exponent",
+)
+
+
+def _motion_mean(runs, key):
+    """Mean of one motion scalar across seeds, skipping episodes where it is undefined."""
+    values = [r[key] for r in runs if r.get(key) is not None]
+    return float(np.mean(values)) if values else None
 
 
 def _roam_env(level, brain=None, feedback=False, relay=False):
@@ -354,6 +379,7 @@ def _screen_job(job):
             )
             frames = int(seconds / 0.04)
             yaw_commands = []
+            speeds, positions, headings = [], [], []
             stuck = 0
             start = time.perf_counter()
             for _ in range(frames):
@@ -382,10 +408,15 @@ def _screen_job(job):
                 yaw_commands.append(float(action[3]))
                 obs, _, _, _, info = env.step(action)
                 stuck += info["speed"] < 0.05
+                speeds.append(float(info["speed"]))
+                positions.append(tuple(float(v) for v in env.plant.pos[0][:2]))
+                headings.append(float(env.plant.rpy[0, 2]))
             threats = info["threats"]
             minutes = seconds / 60
+            motion = episode_stats(speeds, headings, positions, dt=FRAME_SECONDS)
             runs.append(
                 {
+                    **motion,
                     "seed": int(seed),
                     "beacons_per_min": info["beacons_collected"] / minutes,
                     "collisions_per_min": info["collisions"] / minutes,
@@ -433,6 +464,7 @@ def near_dodge_rates(runs):
 def summarise(runs):
     threats = sum(r["threats"] for r in runs)
     return {
+        **{key: _motion_mean(runs, key) for key in MOTION_KEYS},
         **near_dodge_rates(runs),
         "beacons_per_min": float(np.mean([r["beacons_per_min"] for r in runs])),
         "collisions_per_min": float(np.mean([r["collisions_per_min"] for r in runs])),

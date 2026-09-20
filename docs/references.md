@@ -133,4 +133,48 @@ References for fitting dynamics to recordings with the wiring frozen, and for a 
 - **NeuroMechFly v2 / FlyGym** (NeLy-EPFL): biomechanical fly with retina, olfaction and
   mechanosensory feedback; the body used by the Eon embodiment. <https://neuromechfly.org>.
 - **FlyView** (NeurIPS 2022): bio-informed optic-flow ground truth for panoramic stereo vision,
-  for validating a motion encoder. <https://proceedings.neurips.cc/paper_files/paper/2022/hash/b4005da5affc3ba527dcb992495ecd20-Abstract-Datasets_and_Benchmarks.html>.
+  for validating a motion encoder. <https://proceedings.neurips.cc/paper_files/paper/2022/hash/b4005da5affc3ba527dcb992495ecd20-Abstract-Datasets_and_Benchmarks.html>
+
+## Drosophila free-flight statistics (the P4 liveness bar)
+
+Sources for L6-L8 of [`superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md`](superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md) §7. Each statistic carries its species and condition; an entry that could not be verified against a published free-flight measurement is marked as such and is **not scored**. The values and windows are encoded as `FLY_REFERENCE` in `python/fly_drone/motion_stats.py`, which maps each key to the citation key below.
+
+| citation key    | statistic                                | value                                                     | condition                                                |
+| --------------- | ---------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------- |
+| `tammero2002`   | body-saccade amplitude                   | ~90° (1.57 rad) over ~50 ms                               | free flight, *D. melanogaster*, 1 m arena                |
+| `schnell2017`   | spontaneous body-saccade rate            | ~0.5 Hz                                                   | free flight, enclosed chamber                            |
+| `reynolds2007`  | inter-saccade interval / exploration     | scale-free, structure-function exponent α ≈ 0.9 (MSD ~ τ¹·⁸), τ ≤ 1 s | free flight, 1 m arena                    |
+| `david1982`     | translational speed                      | preferred ground speed ~0.10 m/s; 0.285-0.356 m/s at inter-saccade onset | free flight              |
+| `fry2005`       | saccade angular velocity                 | can exceed 2000°/s (~35 rad/s)                            | free flight                                              |
+| `martin1999`    | move/pause bout durations                | intermittent bouts (~1-3 min fresh, ~1 s acclimated)      | **adult walking**, not flight; proxy only                |
+
+Citations:
+
+- **Tammero & Dickinson 2002**, "The influence of visual landscape on the free flight behavior of
+  the fruit fly *Drosophila melanogaster*", *J. Exp. Biol.* 205:327-343.
+  <https://doi.org/10.1242/jeb.205.3.327>. Body saccades change heading ~90° over ~50 ms; the
+  0.5 Hz spontaneous rate in free-flight chambers is reported in **Schnell, Ros & Dickinson 2017**,
+  "A descending neuron correlated with the rapid steering maneuvers of flying *Drosophila*",
+  *Curr. Biol.* 27:1200-1205. <https://doi.org/10.1016/j.cub.2017.03.004>.
+- **Reynolds & Frye 2007**, "Free-flight odor tracking in *Drosophila* is consistent with an optimal
+  intermittent scale-free search", *PLoS ONE* 2(4):e354.
+  <https://doi.org/10.1371/journal.pone.0000354>. Structure functions scale as `ζ = αq` with
+  α ≈ 0.9 for τ ≤ 1 s, so the second moment (`q = 2`) scales as τ¹·⁸; the authors fit μ ≈ 2 Lévy
+  flight. Inter-saccade segments are truncated by the 1 m arena, so no clean median inter-saccade
+  interval is used as a bar.
+- **Fry, Sayaman & Dickinson 2005**, "The aerodynamics of hovering flight in *Drosophila*",
+  *J. Exp. Biol.* 208:2303-2315. <https://doi.org/10.1242/jeb.208.12.2303>. Cites David (1982) for
+  the ~0.10 m/s preferred ground speed and notes free-flight saccade angular velocity exceeding
+  2000°/s.
+- **Wolf, Wittig, Liu, Wustmann, Eyding & Heisenberg 2002**, "High-resolution analysis of
+  ethanol-induced locomotor stimulation in *Drosophila*", *J. Neurosci.* 22:11035-11044,
+  reporting **Martin et al. 1999** for walking bout/pause durations.
+  <https://doi.org/10.1523/JNEUROSCI.22-24-11035.2002>.
+
+**Not citable as free flight.** No published free-flight distribution of *stop-start speed bouts*
+was found: in free flight *Drosophila* hover rather than stop, and the intermittency Reynolds &
+Frye report is slow-short versus fast-long inter-saccade segments, not stationary pauses. The
+move/pause bout criterion is therefore anchored on adult *walking* bout durations, labelled as a
+proxy, with the pause statistic reported as context only and never scored. The saccade-rate bar is
+set with a free-flight anchor (0.5 Hz) and a wide upper bound (2 Hz); magnetic-tether bar-tracking
+saccades reach ~1 Hz and are not used as the free-flight reference..
