@@ -409,10 +409,14 @@ resting baseline. No cell passed L1–L8, but a follow-up free audit showed the 
 **body** gap: the saccade detector fires at 3 rad/s while the quadrotor's yaw authority is 0.8 rad/s,
 so no controller — not even the accepted RL teacher — can register a saccade. L7 is therefore
 **deferred** on the drone body (reported and excluded from `passed`, automatically re-enabled when a
-fly-like body raises the yaw authority), the fly's value kept as that milestone's target. With L7
-deferred, the v2 codec's only failing criterion is **L2 coverage**. Evidence:
+fly-like body raises the yaw authority), the fly's value kept as that milestone's target. On the
+definitive 15-seed **120 s** run, the v2 codec clears L1–L8 except **L4**: the blind (ghost) body is
+nearly as alive (coverage 0.177 vs 0.189), because locomotion is the brain's own tonic drive and
+vision only steers. Whether that invalidates "alive" or means L4 tests the wrong thing is an open
+bar question. Evidence:
 [`../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md),
-[`../results/liveness/FINDING-2026-09-20-l7-body-threshold.md`](../results/liveness/FINDING-2026-09-20-l7-body-threshold.md).
+[`../results/liveness/FINDING-2026-09-20-l7-body-threshold.md`](../results/liveness/FINDING-2026-09-20-l7-body-threshold.md),
+[`../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md).
 `ACCEPTANCE` A1–A7 were untouched.
 
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a

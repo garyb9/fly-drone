@@ -41,6 +41,12 @@ The **L7 column is now deferred** (see below): the body's 0.8 rad/s yaw authorit
 deferred, the failing criteria become: v1 cells `L1, L2, L6`; **v2 canonical `L2` alone**; v2 tonic
 `L2, L3, L8`.
 
+**Correction (120 s).** This table is 60 s; L2 coverage accumulates with time and the
+pre-registered liveness duration is **120 s**. On the definitive 15-seed 120 s run, v2 canonical
+clears L2 (0.189) and the sole failure is **L4** — the blind (ghost) body is nearly as alive
+(coverage 0.177). See
+[`FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](FINDING-2026-09-20-l2-coverage-and-l4-attribution.md).
+
 Artifacts: [`liveness-check-v1-smoke.json`](liveness-check-v1-smoke.json),
 [`liveness-check-v2-smoke.json`](liveness-check-v2-smoke.json),
 [`liveness-check-tonic-v1-smoke.json`](liveness-check-tonic-v1-smoke.json),
