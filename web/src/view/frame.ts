@@ -143,9 +143,9 @@ function updateFreeRoam(f: Frame): void {
   setPressed(els["roam-silence-light"], roam.silenced.includes("light"));
   setPressed(els["roam-silence-loom"], roam.silenced.includes("loom"));
   setPressed(els["roam-ghost"], roam.ghost);
-  const codec = f.codec ?? "v1";
+  const codec = f.codec ?? "v3";
   setText(els["roam-codec"], `Codec ${codec}`);
-  setPressed(els["roam-codec"], codec === "v2");
+  setPressed(els["roam-codec"], codec === "v3");
   els["roam-levels"]
     .querySelectorAll<HTMLButtonElement>("button")
     .forEach((button) =>

@@ -50,11 +50,11 @@ def test_canonical_adapter_stays_byte_identical(brain, tmp_path):
     assert adapter_module.DEFAULT_PATH.read_bytes() == before
 
 
-def test_shipped_default_bridge_is_codec_v2(brain):
-    assert adapter_module.DEFAULT_CODEC == "v2"
-    assert adapter_module.DEFAULT_BRIDGE_PATH == adapter_module.DEFAULT_V2_PATH
-    # The default path (no --adapter/--codec) loads the v2 identity, not the legacy one.
-    assert adapter_module.load_default().version.startswith("declared-v2:")
+def test_shipped_default_bridge_is_codec_v3(brain):
+    assert adapter_module.DEFAULT_CODEC == "v3"
+    assert adapter_module.DEFAULT_BRIDGE_PATH == adapter_module.DEFAULT_V3_PATH
+    # The default path (no --adapter/--codec) loads the v3 identity (C4a lateral escape).
+    assert adapter_module.load_default().version.startswith("declared-v3:")
 
 
 def test_codec_adapter_maps_the_switch_and_rejects_unknown():

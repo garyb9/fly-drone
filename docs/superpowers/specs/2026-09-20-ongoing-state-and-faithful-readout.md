@@ -20,7 +20,8 @@ Evidence:
 Supersedes the "add more senses" branch of P3. The next route is
 [`2026-09-20-c4-escape-and-loom-selectivity-design.md`](2026-09-20-c4-escape-and-loom-selectivity-design.md):
 the brain's escape response fires but the bridge climbs instead of steering, and loom is not
-selective.
+selective. (The shipped default is now codec v3 from that spec — see
+[`../../HANDOFF.md`](../../HANDOFF.md).)
 
 **Why now.** The frozen connectome drives the body through a declared, teacher-free codec and threat
 escape is real and causal — but the drone idles most of the time. Three rounds of sensory-side

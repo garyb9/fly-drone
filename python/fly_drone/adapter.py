@@ -18,10 +18,10 @@ The command is one fixed formula. When calm it steers toward the more active sid
 is a declared reflex-level interpretation of the connectome's activity, not a hidden
 mode switch: the same constants run for every frame of a run.
 
-The shipped default is **codec v2** (``DEFAULT_BRIDGE_PATH``), which reads steering from the wing
-steering motoneurons and drives forward two-sided; it fixed the idling measured in P4. Codec v1
-(the readouts below) remains as ``DEFAULT_PATH`` and is selected with ``--codec v1`` / ``--adapter
-v1``.
+The shipped default is **codec v3** (``DEFAULT_BRIDGE_PATH``; C4a: steering from the wing steering
+motoneurons, two-sided forward drive, lateral escape from the two ``DNp01`` giant-fibre cells).
+Codec v2 is the P4 faithful readout and codec v1 the legacy canonical one; both are selected with
+``--codec v2`` / ``--codec v1`` (or ``--adapter v2`` / ``--adapter v1``).
 """
 
 import hashlib
@@ -46,12 +46,13 @@ DEFAULT_V2_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-v2.json"
 DEFAULT_TONIC_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-tonic.json"
 # C4a codec v3: the escape response is used laterally (see ESCAPE_SIDE_GAIN below).
 DEFAULT_V3_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-v3.json"
-# The shipped declared bridge. P4 made codec v2 (which fixes the idling) the default; pass
-# ``--codec v1`` / ``--adapter v1`` to fly the legacy canonical codec. The canonical files
-# (``adapter.json``, ``adapter-check.json``) are unchanged either way. v3 (C4a) is opt-in until
-# it clears its gate.
-DEFAULT_CODEC = "v2"
-DEFAULT_BRIDGE_PATH = DEFAULT_V2_PATH
+# The shipped declared bridge. The latest rig (codec v3, C4a lateral escape) is the default; pass
+# ``--codec v2`` / ``--codec v1`` to fly an earlier codec. The canonical files (``adapter.json``,
+# ``adapter-check.json``) are unchanged either way. NOTE: v3 was made the default by user direction
+# ahead of its A3 seed gate (see docs/HANDOFF.md); the gate is still required before any capability
+# claim.
+DEFAULT_CODEC = "v3"
+DEFAULT_BRIDGE_PATH = DEFAULT_V3_PATH
 # The committed codec artifacts, by the name used on the command line and in the viewer.
 CODEC_PATHS = {"v1": DEFAULT_PATH, "v2": DEFAULT_V2_PATH, "v3": DEFAULT_V3_PATH}
 

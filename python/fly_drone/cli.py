@@ -101,8 +101,8 @@ def main():
     p.add_argument(
         "--codec",
         choices=["v3", "v2", "v1"],
-        default="v2",
-        help="declared bridge codec: v2 (default, P4), v3 (C4a lateral escape), v1 (legacy)",
+        default="v3",
+        help="declared bridge codec: v3 (default, C4a lateral escape), v2 (P4), v1 (legacy)",
     )
     p.add_argument(
         "--feedback",
@@ -207,8 +207,8 @@ def main():
     p.add_argument(
         "--codec",
         choices=["v3", "v2", "v1"],
-        default="v2",
-        help="declared bridge codec for the 'adapter' controller: v2 (default) or v1/v3",
+        default="v3",
+        help="declared bridge codec for the 'adapter' controller: v3 (default) or v1/v2",
     )
     p.add_argument(
         "--encoder", help="learned encoder .pt for policy/bypass controllers"

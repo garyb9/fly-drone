@@ -175,8 +175,10 @@ export function initControls(viewer: Viewer): void {
     viewer.send({ op: "ghost", value: !viewer.latest?.free_roam?.ghost });
   els["roam-restore"].onclick = () => viewer.send({ op: "restore" });
   els["roam-codec"].onclick = () => {
-    // Switch the declared bridge and reset the sim so the new codec flies from a clean state.
-    const next = (viewer.latest?.codec ?? "v2") === "v2" ? "v1" : "v2";
+    // Cycle the declared bridge and reset the sim so the new codec flies from a clean state.
+    const order = ["v3", "v2", "v1"];
+    const current = viewer.latest?.codec ?? "v3";
+    const next = order[(order.indexOf(current) + 1) % order.length];
     viewer.send({ op: "codec", value: next });
   };
   els["cb-safe"].onclick = () => {

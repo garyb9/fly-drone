@@ -4,7 +4,9 @@
 `declared-v3:467faae753cef735`, free falsifier passed — see
 [`../../results/adapter/FINDING-2026-09-20-c4a-a0.md`](../../results/adapter/FINDING-2026-09-20-c4a-a0.md)
 and [`FINDING-2026-09-20-c4a-a1-a2.md`](../../results/adapter/FINDING-2026-09-20-c4a-a1-a2.md)).
-A3 (the seed gate) and C4b are not yet run. The default stays v2 until v3 clears its gate.
+A3 (the seed gate) and C4b are not yet run. By user direction codec **v3 is now the shipped
+default** ahead of its gate; the gate is still required before any capability claim (and before the
+50-seed stage).
 Successor to the P4 spec
 ([`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md)).
 Contract changes **C4a** (bridge uses the connectome's escape/loom response on the lateral axis) and

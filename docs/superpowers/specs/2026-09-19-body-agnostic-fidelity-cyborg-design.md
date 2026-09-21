@@ -35,6 +35,28 @@ make the drone alive. The idling has since been traced to a measured arithmetic 
 and to a brain with no ongoing activity; the successor spec is
 [`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md).
 
+**P4 closed 2026-09-20 (alive, not capable).** Codec **v2** (steering from the wing steering
+motoneurons, two-sided span-normalised drive) is the **shipped default declared bridge** and fixes
+the idling: on the canonical bundle `slow_fraction` 0.444 → 0.031 and coverage 2.1 % → 18.9 %
+(120 s), causally. C3a tonic was **rejected** by its silencing gate; C3b **dropped**. The L6–L8
+liveness criteria were re-anchored on published free-flight statistics, and **L7 (saccadic turning)
+is deferred** on this body (yaw authority 0.8 rad/s < the 3 rad/s detector). L1–L8 pass except
+**L4** (a blind body is nearly as alive — intrinsic tonic locomotion), recorded as a near-miss. On
+the A1–A7 skill gate the new default is **not capable**: every capability criterion fails (A1 beacon
+rate 0.033/min vs teacher 0.733). Evidence: [`FINDING-2026-09-20-c3-and-codec-v2.md`](../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md),
+[`FINDING-2026-09-20-l7-body-threshold.md`](../../results/liveness/FINDING-2026-09-20-l7-body-threshold.md),
+[`FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md),
+[`FINDING-2026-09-20-v2-acceptance.md`](../../results/adapter/FINDING-2026-09-20-v2-acceptance.md).
+
+**C4 in progress 2026-09-20 (escape use + loom selectivity).** Spec:
+[`2026-09-20-c4-escape-and-loom-selectivity-design.md`](2026-09-20-c4-escape-and-loom-selectivity-design.md).
+A free audit showed the connectome *senses* a looming object (its `escape` readout fires ~0.9, like
+the teacher) but the declared bridge **climbs** instead of steering and has **no wall avoidance**.
+C4a **A0/A1/A2 landed**: the sided `DNp01` escape signal exists, codec **v3**
+(`declared-v3:467faae753cef735`) strafes away from the looming side, and the free falsifier passes.
+**The A3 seed gate has not been run, and C4b (selective loom) has not started.** Full operational
+state and the exact next command: [`docs/HANDOFF.md`](../../HANDOFF.md).
+
 **P3 liveness bar landed 2026-09-19; relay planned.** A teacher-free `liveness-check` scores whether
 the connectome-driven body is _alive_ (mobility, exploration, sense-causality, anti-luck,
 non-degeneracy) independently of A1–A7. It is an additive diagnostic and a prerequisite for
@@ -206,8 +228,8 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 | 2    | P1 ascending feedback (landed; weak positive)                   | C1 (new identity) | probes               |
 | 3    | P2 connectome-constrained fit (infra landed; prior negative)    | C2 (new identity) | fit — ask first      |
 | 4    | P3 liveness bar (landed) + visual relay (closed negative)       | none              | probes               |
-| 5    | **P4 ongoing state + faithful readout** (successor spec)        | C3 (new identity) | probes — ask first   |
-| 5b   | **C4 escape use + loom selectivity** (successor spec)           | C4 (new identity) | probes — ask first   |
+| 5    | P4 ongoing state + faithful readout (**closed**: v2 default; C3a rejected, C3b dropped; alive, not capable) | C3 (new identity) | probes |
+| 5b   | **C4 escape use + loom selectivity** (**in progress**: C4a A0–A2 landed, A3 gate pending; C4b not started) | C4 (new identity) | probes — ask first |
 | 6    | P4 transfer/domain randomization                                | none              | training — ask first |
 | 7    | P5 evaluation additions                                         | none              | eval runs            |
 | 8    | P6 Scope A fly body                                             | goal broadening   | separate plan        |
