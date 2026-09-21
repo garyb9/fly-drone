@@ -1,0 +1,54 @@
+{
+  "cells": {
+    "L": 1,
+    "R": 0,
+    "type": "DNp01"
+  },
+  "seeds": 8,
+  "rest_noise_floor": 0.0,
+  "stimuli": {
+    "rest": {
+      "left": 0.0,
+      "right": 0.0,
+      "left_minus_right": 0.0,
+      "left_minus_right_std": 0.0
+    },
+    "light_l": {
+      "left": 0.0,
+      "right": 0.0,
+      "left_minus_right": 0.0,
+      "left_minus_right_std": 0.0
+    },
+    "light_r": {
+      "left": 0.0,
+      "right": 0.0,
+      "left_minus_right": 0.0,
+      "left_minus_right_std": 0.0
+    },
+    "loom_l": {
+      "left": 0.864679,
+      "right": 0.608126,
+      "left_minus_right": 0.256553,
+      "left_minus_right_std": 0.017393
+    },
+    "loom_r": {
+      "left": 0.688664,
+      "right": 0.864679,
+      "left_minus_right": -0.176016,
+      "left_minus_right_std": 0.0296
+    },
+    "light_both": {
+      "left": 0.0,
+      "right": 0.0,
+      "left_minus_right": 0.0,
+      "left_minus_right_std": 0.0
+    },
+    "loom_both": {
+      "left": 0.864679,
+      "right": 0.864679,
+      "left_minus_right": 0.0,
+      "left_minus_right_std": 0.0
+    }
+  },
+  "side_signal_separated": true
+}
