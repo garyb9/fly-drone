@@ -60,8 +60,9 @@ def test_shipped_default_bridge_is_codec_v2(brain):
 def test_codec_adapter_maps_the_switch_and_rejects_unknown():
     assert adapter_module.codec_adapter("v1") == adapter_module.DEFAULT_PATH
     assert adapter_module.codec_adapter("v2") == adapter_module.DEFAULT_V2_PATH
+    assert adapter_module.codec_adapter("v3") == adapter_module.DEFAULT_V3_PATH
     with pytest.raises(ValueError, match="unknown codec"):
-        adapter_module.codec_adapter("v3")
+        adapter_module.codec_adapter("v9")
 
 
 def test_forward_drive_is_two_sided(v2, brain):

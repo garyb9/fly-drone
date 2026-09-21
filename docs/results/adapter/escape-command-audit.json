@@ -1,0 +1,50 @@
+{
+  "artifact": "/home/gb/projects/fly-drone/docs/results/adapter/adapter-v3.json",
+  "adapter_version": "declared-v3:467faae753cef735",
+  "escape_side_gain": 0.8,
+  "min_lateral": 0.7,
+  "stimuli": {
+    "rest": {
+      "vy": -0.0,
+      "vz": 0.0,
+      "yaw": 0.0
+    },
+    "light_l": {
+      "vy": -0.0,
+      "vz": 0.0,
+      "yaw": 0.029375
+    },
+    "light_r": {
+      "vy": -0.0,
+      "vz": 0.0,
+      "yaw": -0.085172
+    },
+    "loom_l": {
+      "vy": -0.8,
+      "vz": 0.25,
+      "yaw": 0.07167
+    },
+    "loom_r": {
+      "vy": 0.8,
+      "vz": 0.25,
+      "yaw": -1.0
+    },
+    "light_both": {
+      "vy": -0.0,
+      "vz": 0.0,
+      "yaw": -0.016273
+    },
+    "loom_both": {
+      "vy": -0.0,
+      "vz": 0.25,
+      "yaw": -0.39635
+    }
+  },
+  "checks": {
+    "loom_l_left": true,
+    "loom_r_right": true,
+    "loom_both_symmetric": true,
+    "calm_no_strafe": true
+  },
+  "passed": true
+}

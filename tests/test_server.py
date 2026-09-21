@@ -22,7 +22,7 @@ def test_service_pause_reset_and_disconnect():
         with client.websocket_connect("/ws") as ws:
             metadata = ws.receive_json()
             assert metadata["type"] == "metadata" and metadata["neurons"] == 166700
-            assert metadata["codecs"] == ["v1", "v2"]
+            assert metadata["codecs"] == ["v1", "v2", "v3"]
             next_frame(ws)
             ws.send_json({"op": "pause", "value": True})
             while not (frame := next_frame(ws))["paused"]:

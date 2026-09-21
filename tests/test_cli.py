@@ -18,7 +18,7 @@ def test_bridge_codec_adapter_defaults_to_v2():
 
     assert _bridge_codec_adapter("v2") == str(DEFAULT_V2_PATH)
     with pytest.raises(ValueError, match="unknown codec"):
-        _bridge_codec_adapter("v3")
+        _bridge_codec_adapter("v9")
 
 
 def test_roam_controller_expands_the_adapter_codec():

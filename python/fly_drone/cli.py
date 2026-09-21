@@ -8,11 +8,11 @@ from .env import TASKS
 
 
 def _resolve_adapter(value):
-    """Map a ``v1``/``v2`` alias to its committed artifact; leave a path unchanged."""
-    if value in ("v1", "v2"):
-        from .adapter import DEFAULT_PATH, DEFAULT_V2_PATH
+    """Map a ``v1``/``v2``/``v3`` alias to its committed artifact; leave a path unchanged."""
+    from .adapter import CODEC_PATHS, codec_adapter
 
-        return str(DEFAULT_PATH if value == "v1" else DEFAULT_V2_PATH)
+    if value in CODEC_PATHS:
+        return str(codec_adapter(value))
     return value
 
 
@@ -100,9 +100,9 @@ def main():
     p.add_argument("--adapter", help="adapter .json pinned to --bundle")
     p.add_argument(
         "--codec",
-        choices=["v2", "v1"],
+        choices=["v3", "v2", "v1"],
         default="v2",
-        help="declared bridge codec: v2 (default, P4 faithful readout) or v1 (legacy canonical)",
+        help="declared bridge codec: v2 (default, P4), v3 (C4a lateral escape), v1 (legacy)",
     )
     p.add_argument(
         "--feedback",
@@ -206,9 +206,9 @@ def main():
     p.add_argument("--seed-base", type=int, default=5000)
     p.add_argument(
         "--codec",
-        choices=["v2", "v1"],
+        choices=["v3", "v2", "v1"],
         default="v2",
-        help="declared bridge codec for the 'adapter' controller: v2 (default, P4) or v1",
+        help="declared bridge codec for the 'adapter' controller: v2 (default) or v1/v3",
     )
     p.add_argument(
         "--encoder", help="learned encoder .pt for policy/bypass controllers"
@@ -336,9 +336,9 @@ def main():
     )
     p.add_argument(
         "--codec",
-        choices=["v1", "v2"],
+        choices=["v1", "v2", "v3"],
         default="v1",
-        help="codec revision (v2: steering from wing steering MNs, two-sided drive)",
+        help="codec revision (v2: steering MNs, two-sided drive; v3: C4a lateral escape)",
     )
     p = sub.add_parser(
         "adapter-check",

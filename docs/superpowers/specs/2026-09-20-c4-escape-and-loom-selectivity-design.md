@@ -1,6 +1,11 @@
 # C4 — use the brain's escape response, and make loom selective
 
-**Status:** draft 2026-09-20, awaiting sign-off. Successor to the P4 spec
+**Status:** A0 feasibility passed and A1/A2 landed 2026-09-20 (codec `v3` =
+`declared-v3:467faae753cef735`, free falsifier passed — see
+[`../../results/adapter/FINDING-2026-09-20-c4a-a0.md`](../../results/adapter/FINDING-2026-09-20-c4a-a0.md)
+and [`FINDING-2026-09-20-c4a-a1-a2.md`](../../results/adapter/FINDING-2026-09-20-c4a-a1-a2.md)).
+A3 (the seed gate) and C4b are not yet run. The default stays v2 until v3 clears its gate.
+Successor to the P4 spec
 ([`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md)).
 Contract changes **C4a** (bridge uses the connectome's escape/loom response on the lateral axis) and
 **C4b** (a selective loom front-end), with **C4c** optional (read the descending giant-fibre cells).

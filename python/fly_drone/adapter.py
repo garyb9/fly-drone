@@ -44,13 +44,16 @@ DEFAULT_RELAY_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-relay.json
 DEFAULT_V2_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-v2.json"
 # The codec re-pinned to the P4 (C3a) tonic bundle (an alternate identity).
 DEFAULT_TONIC_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-tonic.json"
+# C4a codec v3: the escape response is used laterally (see ESCAPE_SIDE_GAIN below).
+DEFAULT_V3_PATH = ROOT / "docs" / "results" / "adapter" / "adapter-v3.json"
 # The shipped declared bridge. P4 made codec v2 (which fixes the idling) the default; pass
 # ``--codec v1`` / ``--adapter v1`` to fly the legacy canonical codec. The canonical files
-# (``adapter.json``, ``adapter-check.json``) are unchanged either way.
+# (``adapter.json``, ``adapter-check.json``) are unchanged either way. v3 (C4a) is opt-in until
+# it clears its gate.
 DEFAULT_CODEC = "v2"
 DEFAULT_BRIDGE_PATH = DEFAULT_V2_PATH
 # The committed codec artifacts, by the name used on the command line and in the viewer.
-CODEC_PATHS = {"v1": DEFAULT_PATH, "v2": DEFAULT_V2_PATH}
+CODEC_PATHS = {"v1": DEFAULT_PATH, "v2": DEFAULT_V2_PATH, "v3": DEFAULT_V3_PATH}
 
 
 def codec_adapter(name):
@@ -68,6 +71,12 @@ def codec_adapter(name):
 ESCAPE_SCALE = 0.5
 # Sidestep gain as a fraction of the steering command. Declared, not fitted.
 SIDE_FRACTION = 0.5
+# C4a (codec v3): use the escape response on the lateral axis. The side comes from the connectome's
+# two ``DNp01`` giant-fibre descending neurons (``escape_l - escape_r``); the magnitude from the
+# escape latch. A full lateral loom strafes at ESCAPE_SIDE_GAIN and climbs at CLIMB_FRACTION of the
+# v2 climb. Declared, not fitted.
+ESCAPE_SIDE_GAIN = 0.8
+CLIMB_FRACTION = 0.25
 
 # Declared stimulus battery: (name, injected v4 cues [light_l, light_r, loom_l, loom_r],
 # target body command [vx, vy, vz, yaw_rate]). Targets are fly ethology, not a teacher:
@@ -149,6 +158,27 @@ def _steer_diff(brain, features):
         if key in ("steer_l", "steer_r")
     }
     return means["steer_l"] - means["steer_r"]
+
+
+def _escape_sides(brain, features):
+    """Left and right ``DNp01`` giant-fibre escape activity (C4a codec v3).
+
+    The ``escape`` readout averages both cells, discarding the side; a lateral loom drives them
+    differentially (``scripts/escape_side_probe.py``). Read from the same possibly-ablated vector
+    as everything else, so the causal conditions act on the escape side too.
+    """
+    positions = feature_positions(brain)
+    by_side = {"l": [], "r": []}
+    for cell in brain.readout_ids["escape"]:
+        side = brain.cells[cell]["side"].lower()
+        if side in by_side:
+            by_side[side].append(positions[cell])
+    if not by_side["l"] or not by_side["r"]:
+        raise ValueError("connectome has no sided DNp01 escape cells")
+    return (
+        float(np.mean([features[j] for j in by_side["l"]])),
+        float(np.mean([features[j] for j in by_side["r"]])),
+    )
 
 
 def _gain(x, y):
@@ -275,6 +305,14 @@ def _params_v2(brain, settle=SETTLE_TICKS):
     return params
 
 
+def _params_v3(brain, settle=SETTLE_TICKS):
+    """Codec v3 = the v2 calibration plus the two declared C4a constants (never fitted)."""
+    params = _params_v2(brain, settle)
+    params["escape_side_gain"] = ESCAPE_SIDE_GAIN
+    params["climb_fraction"] = CLIMB_FRACTION
+    return params
+
+
 def _version(params, dataset_hash, visual=None, codec=None):
     payload = {"params": params, "dataset_hash": dataset_hash}
     if visual:
@@ -310,7 +348,12 @@ class Adapter:
     @classmethod
     def calibrate(cls, brain=None, settle=SETTLE_TICKS, visual=None, codec=None):
         brain = brain or BrainRuntime(relay=visual == "relay")
-        params = _params_v2(brain, settle) if codec == "v2" else _params(brain, settle)
+        if codec == "v2":
+            params = _params_v2(brain, settle)
+        elif codec == "v3":
+            params = _params_v3(brain, settle)
+        else:
+            params = _params(brain, settle)
         return cls(
             params,
             brain.dataset_hash,
@@ -386,7 +429,7 @@ class Adapter:
         )
         escape, power = _readouts(brain, vector)
         loom = _latch(escape, p["rest_escape"])
-        if self.codec == "v2":
+        if self.codec in ("v2", "v3"):
             # A3.1/A3.3: steering from the wing steering motoneurons, normalised by their
             # battery excursion. A3.2: two-sided forward drive (slowing is commandable).
             raw = (_steer_diff(brain, vector) - p["rest_steer"]) / p["steer_span"]
@@ -396,15 +439,23 @@ class Adapter:
             )
             yaw = steer
             vx = p["g_fwd"] * drive
+            if self.codec == "v3":
+                # C4a: use the escape response laterally. A full lateral loom strafes away from
+                # the side the connectome's DNp01 cells report, and climbs only a declared fraction.
+                escape_l, escape_r = _escape_sides(brain, vector)
+                side = float(np.sign(escape_l - escape_r))
+                vy = -p["escape_side_gain"] * loom * side
+                vz = p["climb_fraction"] * p["g_climb"] * loom
+            else:
+                vy = p["side_fraction"] * yaw
+                vz = p["g_climb"] * loom
         else:
             steer = (_laterality(brain, vector) - p["rest_lat"]) * (1.0 - 2.0 * loom)
             yaw = p["g_yaw"] * steer
             vx = p["g_fwd"] * max(0.0, power - p["rest_power"])
-        return np.clip(
-            [vx, p["side_fraction"] * yaw, p["g_climb"] * loom, yaw],
-            -1.0,
-            1.0,
-        )
+            vy = p["side_fraction"] * yaw
+            vz = p["g_climb"] * loom
+        return np.clip([vx, vy, vz, yaw], -1.0, 1.0)
 
 
 _DEFAULT: dict = {}
