@@ -424,6 +424,14 @@ out of the box). Use `fly-drone serve --codec v1` (or `--adapter v1`) to fly the
 codec, or the viewer's free-roam **bridge → Codec** switch, which swaps the bridge and resets the
 sim live. The canonical `adapter.json` and `adapter-check.json` are unchanged.
 
+**Alive ≠ capable.** On the A1–A7 skill gate the new default fails every capability criterion (A1
+beacon rate 0.033/min vs teacher 0.733; A2 collisions 6.67/min vs ≤0.5; A3 dodging not causal;
+A4/A5 loom steering absent; A6 coverage 0.185 vs 0.4). v2 fixed the idling (A6 `slow_fraction`
+0.62 → 0.03) but traded it for collisions and lost loom causality, because the readout carries no
+target-seeking or threat-avoidance signal. The next workstream is closed-loop senses/feedback into
+the connectome (C4+). Evidence:
+[`../results/adapter/FINDING-2026-09-20-v2-acceptance.md`](../results/adapter/FINDING-2026-09-20-v2-acceptance.md).
+
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
 fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:
 [`../hardware-estimate.md`](../hardware-estimate.md)). A state-in-synapses (path-integration)
