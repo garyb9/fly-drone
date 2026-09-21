@@ -23,6 +23,27 @@ def _bridge_codec_adapter(codec):
     return str(codec_adapter(codec))
 
 
+def _roam_controller(token, codec):
+    """Normalise a ``roam-screen`` controller token to what ``distill.screen`` expects.
+
+    ``adapter`` flies the shipped codec (``--codec``); ``adapter:v1``/``adapter:v2`` pin a
+    committed codec; ``adapter:<path>`` pins an artifact. Everything else is a built-in
+    controller, a ``.zip`` bypass or a policy path.
+    """
+    if token in ("teacher", "cue_script", "random"):
+        return token
+    if token == "adapter":
+        return f"adapter:{_bridge_codec_adapter(codec)}"
+    if token.startswith("adapter:"):
+        rest = token.split(":", 1)[1]
+        return (
+            f"adapter:{_bridge_codec_adapter(rest)}" if rest in ("v1", "v2") else token
+        )
+    if token.endswith(".zip"):
+        return f"bypass:{Path(token).resolve()}"
+    return f"policy:{Path(token).resolve()}"
+
+
 def _infer_spatial(learner, encoder, init):
     """Whether a round runs the v6 spatial encoder, from the frozen partner it names."""
     from .brain import _is_spatial
@@ -172,7 +193,9 @@ def main():
     p.add_argument("--output", default="runs/roam/step-response.json")
     p = sub.add_parser("roam-screen")
     p.add_argument(
-        "controllers", nargs="+", help="teacher, cue_script, random, or a path"
+        "controllers",
+        nargs="+",
+        help="teacher, cue_script, random, adapter, adapter:v1|v2|PATH, or a policy path",
     )
     p.add_argument("--output", required=True)
     p.add_argument("--seeds", type=int, default=10)
@@ -181,6 +204,12 @@ def main():
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--ablations", nargs="+", default=["none"])
     p.add_argument("--seed-base", type=int, default=5000)
+    p.add_argument(
+        "--codec",
+        choices=["v2", "v1"],
+        default="v2",
+        help="declared bridge codec for the 'adapter' controller: v2 (default, P4) or v1",
+    )
     p.add_argument(
         "--encoder", help="learned encoder .pt for policy/bypass controllers"
     )
@@ -527,14 +556,7 @@ def main():
                 encoder=args.encoder,
             )
         else:
-            controllers = [
-                c
-                if c in ("teacher", "cue_script", "random")
-                else f"bypass:{Path(c).resolve()}"
-                if c.endswith(".zip")
-                else f"policy:{Path(c).resolve()}"
-                for c in args.controllers
-            ]
+            controllers = [_roam_controller(c, args.codec) for c in args.controllers]
             report = distill.screen(
                 controllers,
                 args.output,
