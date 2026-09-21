@@ -61,4 +61,7 @@ A5-steer), causal dodging (A3) — are absent or lost.
 
 **Recommendation:** do not ship v2 as a *capable* default (it is correctly shipped as the *alive*
 default). Next workstream: a C4 spec for closed-loop senses/feedback into the connectome, aimed at
-A1/A3/A4, with the A1–A7 gate re-run after each declared addition.
+A1/A3/A4, with the A1–A7 gate re-run after each declared addition. A follow-up free audit
+([`FINDING-2026-09-20-loom-escape-audit.md`](FINDING-2026-09-20-loom-escape-audit.md)) locates the
+loom/escape failure: the brain's escape readout fires, but the bridge commands a weak lateral
+(climb-dominant) response and has no wall avoidance.
