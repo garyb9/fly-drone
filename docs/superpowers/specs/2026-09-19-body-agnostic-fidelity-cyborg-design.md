@@ -207,6 +207,7 @@ Fit per-neuron/per-synapse free parameters to recorded activity, with **wiring f
 | 3    | P2 connectome-constrained fit (infra landed; prior negative)    | C2 (new identity) | fit — ask first      |
 | 4    | P3 liveness bar (landed) + visual relay (closed negative)       | none              | probes               |
 | 5    | **P4 ongoing state + faithful readout** (successor spec)        | C3 (new identity) | probes — ask first   |
+| 5b   | **C4 escape use + loom selectivity** (successor spec)           | C4 (new identity) | probes — ask first   |
 | 6    | P4 transfer/domain randomization                                | none              | training — ask first |
 | 7    | P5 evaluation additions                                         | none              | eval runs            |
 | 8    | P6 Scope A fly body                                             | goal broadening   | separate plan        |
@@ -218,6 +219,12 @@ evaluation because both measure a body that currently idles.
 
 Each step: `env -u PYTHONPATH .venv/bin/python -m pytest -q`,
 `.venv/bin/ruff format python tests && .venv/bin/ruff check python tests`, then commit and push.
+
+Step 5b is [`2026-09-20-c4-escape-and-loom-selectivity-design.md`](2026-09-20-c4-escape-and-loom-selectivity-design.md):
+after P4 made the body alive, the A1–A7 gate showed the brain senses a looming object (its escape
+readout fires ~0.9) but the declared bridge commands a climb, not the lateral escape the accepted
+teacher uses, and has no wall avoidance. C4a uses the brain's escape response on the lateral axis;
+C4b restores loom selectivity (the documented v6 spatial route) so wall avoidance is causal.
 
 ## 10. Risks and honest failure modes
 

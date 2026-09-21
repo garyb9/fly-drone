@@ -432,6 +432,15 @@ target-seeking or threat-avoidance signal. The next workstream is closed-loop se
 the connectome (C4+). Evidence:
 [`../results/adapter/FINDING-2026-09-20-v2-acceptance.md`](../results/adapter/FINDING-2026-09-20-v2-acceptance.md).
 
+**Next: C4 — use the escape response, make loom selective.** A free audit shows the connectome does
+sense a looming object (its `escape` readout fires ~0.9, like the teacher), but the bridge commands a
+climb and a `0.5·yaw` sidestep instead of the teacher's full lateral escape, and has no wall
+avoidance. The C4 spec
+([`../superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md`](../superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md))
+adds C4a (lateral escape from the brain's response) and C4b (a selective, v6-spatial loom front-end),
+each declared, silenceable and falsifier-first. Evidence:
+[`../results/adapter/FINDING-2026-09-20-loom-escape-audit.md`](../results/adapter/FINDING-2026-09-20-loom-escape-audit.md).
+
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
 fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:
 [`../hardware-estimate.md`](../hardware-estimate.md)). A state-in-synapses (path-integration)

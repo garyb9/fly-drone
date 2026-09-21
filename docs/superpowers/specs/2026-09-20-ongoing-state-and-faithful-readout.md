@@ -17,7 +17,10 @@ not vision-attributable); P4 closes here
 ([`FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md)).
 Evidence:
 [`../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md).
-Supersedes the "add more senses" branch of P3.
+Supersedes the "add more senses" branch of P3. The next route is
+[`2026-09-20-c4-escape-and-loom-selectivity-design.md`](2026-09-20-c4-escape-and-loom-selectivity-design.md):
+the brain's escape response fires but the bridge climbs instead of steering, and loom is not
+selective.
 
 **Why now.** The frozen connectome drives the body through a declared, teacher-free codec and threat
 escape is real and causal — but the drone idles most of the time. Three rounds of sensory-side
