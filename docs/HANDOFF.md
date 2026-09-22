@@ -14,14 +14,18 @@ to the governing spec; read it before touching code.
   but A3 dodge **fell 0.64 → 0.34** and **liveness L6 regressed** (move bout 9.14 → 12.80 s). By the
   C4 spec's own falsifier, **C4a alone is rejected; the 50-seed gate is not spent.** Evidence:
   [`FINDING-2026-09-22-c4a-a3.md`](results/adapter/FINDING-2026-09-22-c4a-a3.md).
-- **C4b (selective loom) is now the prerequisite**, not a follow-up: until the loom cue separates a
-  closing threat from a turn sweep, the lateral gain fires constantly and hurts. A v3 variant that
-  **keeps the v2 climb and adds** the strafe is a candidate (needs sign-off).
-- **Open decision (needs user):** v3 is still the shipped default (`DEFAULT_CODEC = "v3"`) by earlier
-  user direction, but it has now failed its gate. Recommend reverting the default to v2 until a
-  cell passes; do not silently keep an ungated default.
-- **Nothing is blocked.** Next free step is B0 (C4b selectivity feasibility, §5); no long run until
-  the user decides the default and signs off on the C4b front-end.
+- **C4b B0 was run 2026-09-22 and is BLOCKED on E1.** Neither the v4 front-end (E1 **0.738**) nor
+  the frozen v6 spatial clone (E1 **0.720**, motion 0.657, union 0.710) clears the **E1 ≥ 0.8**
+  selectivity bar, and the relay route is structurally infeasible (T4/T5 do not reach LC4/LPLC2; a
+  translation model cannot represent looming). Evidence:
+  [`FINDING-2026-09-22-c4b-b0.md`](results/adapter/FINDING-2026-09-22-c4b-b0.md). So **wall
+  avoidance (A2/A4) is not reachable by the current front-ends.**
+- **Two open decisions (need the user):**
+  1. **Default codec:** v3 still ships (`DEFAULT_CODEC = "v3"`) but failed its gate. Recommend
+     reverting to v2 until a cell passes.
+  2. **C4b fork:** (a) train the v6 encoder to clear E1 (long run), (b) design a new declared
+     selective loom front-end, or (c) defer avoidance (A1/body work instead).
+- **Nothing is running.** No long run until the user decides; B0 was free and is recorded.
 
 ## 1. Read first (in order)
 
@@ -96,11 +100,11 @@ vy +0.800`, `loom_both vy 0.000`, calm 0. `passed = true`; artifact
   `docs/results/adapter/escape-command-audit.json`; `FINDING-2026-09-20-c4a-a1-a2.md`.
 - **A3 (run 2026-09-22, FAILED):** v3 dodge 0.341 / balanced 0.154 / ghost 0.205; A4 1.45; A2
   4.30/min; liveness L6 regressed. **C4a alone rejected; 50-seed gate not spent.**
-- **C4b (NOT started, now the prerequisite):** a selective loom front-end (the documented v6
-  spatial route, or the P3 relay extended to LC4/LPLC2), gated by the E1/E2 selectivity tests,
-  needed for **wall avoidance** and for A4 to be causal. A head-on wall is a symmetric loom, so C4a
-  alone will not fix A2. Until the loom is selective, the v3 strafe fires constantly (non-selective
-  cue) and lengthens move bouts (the L6 miss).
+- **C4b (B0 run 2026-09-22, BLOCKED on E1):** a selective loom front-end is needed for **wall
+  avoidance** and for A4 to be causal. B0 measured the candidates: v4 E1 **0.738**, frozen v6
+  spatial clone E1 **0.720** (motion 0.657, union 0.710) — **neither clears E1 ≥ 0.8**; the relay
+  route is structurally infeasible (its T4/T5 targets do not reach LC4/LPLC2, and a
+  global-translation model cannot represent looming). `FINDING-2026-09-22-c4b-b0.md`.
 
 ## 5. Exact next action
 
@@ -109,15 +113,17 @@ back to `"v2"` (the gate-passing _alive_ default) and keep v3 selectable as an i
 cell passes. Do not silently keep an ungated default — this is a user call (it reverses an earlier
 user override).
 
-**Then (free, no seeds), B0 of C4b:** run the documented E1/E2 selectivity gates on the current v4
-front-end and on both candidates — the **v6 spatial (retinotopic) front-end** and the **P3 relay
-extended to LC4/LPLC2** — and report which cells carry the selective signal. E1 bar ≥ 0.8
-(`sensory-model.md` §6). No cell clears E1/E2 → stop C4b (loom stays non-selective).
+**B0 is DONE (2026-09-22): no adoptable front-end, C4b blocked on E1** (§0, §4). The next action is
+a **user decision**, not a run:
 
-**Only after B0:** a 15-seed smoke of the chosen C4b front-end (C4b alone and C4a+C4b), then a
-v3-variant probe that **keeps the v2 climb** and adds the lateral escape rather than trading climb
-for strafe (declared-constant change — needs sign-off). The 50-seed stage-3 gate is spent only on a
-cell that first clears a free falsifier and a 15-seed smoke. **Ask the user before any long run.**
+- **(a) Train the v6 encoder to clear E1** (the paused Option; long run, needs sign-off), then re-run
+  B0; only if E1 ≥ 0.8 does C4b B1/B2 proceed.
+- **(b) Design a new declared selective loom front-end** (spec first; must clear E1).
+- **(c) Defer avoidance**, record C4b as blocked-on-E1, and move to A1 beacon seeking or body
+  fidelity.
+
+Also decide the **default codec** (recommend revert to v2). No 50-seed gate is spent until a cell
+clears a free falsifier and a 15-seed smoke. **Ask the user before any long run.**
 
 ## 6. Invariants that must not break
 
@@ -166,15 +172,16 @@ yarn typecheck && yarn lint && yarn test && yarn build
 `…-c3-and-codec-v2.md`, `…-c3b-dropped.md`, `…-l7-body-threshold.md`,
 `…-l2-coverage-and-l4-attribution.md`;
 `docs/results/adapter/FINDING-2026-09-20-v2-acceptance.md`,
-`…-loom-escape-audit.md`, `…-c4a-a0.md`, `…-c4a-a1-a2.md`, `…-2026-09-22-c4a-a3.md`.
+`…-loom-escape-audit.md`, `…-c4a-a0.md`, `…-c4a-a1-a2.md`, `…-2026-09-22-c4a-a3.md`,
+`…-2026-09-22-c4b-b0.md`.
 (Earlier: `docs/results/adapter/FINDING-2026-09-19.md`, `docs/results/feedback/FINDING-2026-09-19.md`,
 `docs/results/dynamics/FINDING-2026-09-19.md`.)
 
 **Codec artifacts:** `docs/results/adapter/adapter.json` (v1 canonical),
 `adapter-v2.json` (v2), `adapter-v3.json` (v3), plus `adapter-check*.json`,
 `adapter-check-v2-smoke.json`, `adapter-check-v3-smoke.json`, `escape-side-probe.json`,
-`escape-command-audit.json`. Liveness: `docs/results/liveness/liveness-check-v2-120s.json`,
-`…-v3-smoke.json`.
+`escape-command-audit.json`, `b0-v4-e1.json`, `b0-v6-e1.json`. Liveness:
+`docs/results/liveness/liveness-check-v2-120s.json`, `…-v3-smoke.json`.
 
 **Free probes (scripts):** `scripts/command_audit.py`, `scripts/readout_audit.py`,
 `scripts/escape_side_probe.py`, `scripts/escape_command_audit.py`, `scripts/yaw_audit.py`,
@@ -191,10 +198,11 @@ yarn typecheck && yarn lint && yarn test && yarn build
 - **v3 failed its A3 gate (2026-09-22)** but is still the default from an earlier user override.
   **Decide: revert `DEFAULT_CODEC` to v2 until a cell passes**, or explicitly keep v3 with the
   failure recorded. Recommended: revert.
-- **C4b is required** for A2/A4 (wall avoidance) and is now the prerequisite for any lateral use to
-  help; it is a front-end change with the documented E1/E2 selectivity gates and needs sign-off.
+- **C4b is BLOCKED on E1** (B0, 2026-09-22): no front-end clears 0.8, so A2/A4 (wall avoidance) are
+  not reachable by the current front-ends. Needs a user decision (train v6 / new front-end / defer).
 - **A v3 variant that keeps the v2 climb** and adds (rather than trades) the lateral escape is the
-  other candidate lever, given the threat-hit rise (12 → 29) tracked the climb cut.
+  other candidate lever, given the threat-hit rise (12 → 29) tracked the climb cut — but it is only
+  worth testing once a selective loom exists, since the non-selective cue fires the strafe always.
 - **A1 (beacon seeking) is untouched by C4a/C4b.** Nothing in this arc makes the drone seek a beacon
   (A1 = 4.5 % of teacher); that is likely the next workstream after avoidance, and may need the
   documented v6 spatial sensing / closed-loop search.

@@ -1,0 +1,33 @@
+{
+  "policy": "/home/gb/projects/fly-drone/docs/results/actors/v4-closed-s04/actor.json",
+  "encoder": null,
+  "controller": "teacher",
+  "seeds": [
+    1000,
+    1009
+  ],
+  "seconds": 60.0,
+  "frames": 15000,
+  "E1": {
+    "loom_auc": 0.7382580446313612,
+    "positives": 1054,
+    "negatives": 12978,
+    "passed": false
+  },
+  "E2": {
+    "auc": {
+      "loom_threat": 0.7382580446313612,
+      "loom_beacon": 0.4448110504093426,
+      "light_beacon": 0.9734762229750095,
+      "light_threat": 0.5033579670515247
+    },
+    "light_margin": 0.4701182559234848,
+    "loom_margin": 0.29344699422201864,
+    "passed": true
+  },
+  "thresholds": {
+    "E1_min_loom_auc": 0.8,
+    "E2_min_light_margin": 0.05,
+    "E2_min_loom_margin": 0.1
+  }
+}

@@ -10,6 +10,13 @@ causality test — [`FINDING-2026-09-22-c4a-a3.md`](../../results/adapter/FINDIN
 Do not spend the 50-seed gate on C4a. **C4b (selective loom) is now the prerequisite**, and the
 climb cut is a candidate to revisit. Codec v3 remains selectable; whether it stays the shipped
 default is an open user decision (see `docs/HANDOFF.md`).
+
+**B0 run 2026-09-22: no adoptable C4b candidate.** Neither the v4 front-end (E1 0.738) nor the
+frozen v6 spatial clone (E1 0.720, motion 0.657, union 0.710) clears the E1 ≥ 0.8 bar, and the
+relay route is structurally infeasible (T4/T5 do not reach LC4/LPLC2; a translation model cannot
+represent looming) — [`FINDING-2026-09-22-c4b-b0.md`](../../results/adapter/FINDING-2026-09-22-c4b-b0.md).
+**C4b is blocked on E1 and is a user decision** (train v6 to clear E1, design a new selective
+front-end, or defer avoidance).
 Successor to the P4 spec
 ([`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md)).
 Contract changes **C4a** (bridge uses the connectome's escape/loom response on the lateral axis) and
@@ -138,6 +145,11 @@ Run the documented E1/E2 gates on the current v4 front-end and on each candidate
 A candidate must clear E1 ≥ 0.8 (loom AUC on threat-positive frames) and E2 (the light/loom
 margin), else it is not adopted. Report which cells carry the selective signal.
 
+**Result (run 2026-09-22): neither candidate is adopted.** v4 E1 **0.738**; frozen v6 spatial clone
+E1 **0.720** (motion 0.657, union 0.710); both fail the 0.8 bar. The relay route is structurally
+infeasible: its T4/T5 targets do not propagate to LC4/LPLC2 (M1b ≤0.001) and a global-translation
+model cannot represent looming. See `FINDING-2026-09-22-c4b-b0.md`. C4b is blocked on E1.
+
 ### B1 — the declared change
 
 An additive, versioned front-end (bundle + identity), silenceable through the existing
@@ -174,9 +186,10 @@ Each addition is scored on the same battery, in order, before the next:
 
 1. A0 feasibility (free) → decides A1 vs C4c.
 2. A1 codec v3 + A2 offline falsifier (free).
-3. B0 selectivity feasibility (free).
-4. 15-seed smoke: C4a alone, C4b alone, C4a+C4b.
-5. 50-seed gate on the best cell; then decide the default codec.
+3. B0 selectivity feasibility (free) → **run 2026-09-22: no candidate clears E1; C4b blocked**.
+4. A3 gate → **run 2026-09-22: C4a rejected**; 15-seed smoke of a C4b cell is deferred until B0
+   has an adoptable front-end.
+5. 50-seed gate on the best cell; then decide the default codec. **Not reached.**
 
 Per step: run tests, `ruff`, commit and push.
 

@@ -436,14 +436,18 @@ target-seeking or threat-avoidance signal. The next workstream is closed-loop se
 the connectome (C4+). Evidence:
 [`../results/adapter/FINDING-2026-09-20-v2-acceptance.md`](../results/adapter/FINDING-2026-09-20-v2-acceptance.md).
 
-**Next: C4 — use the escape response, make loom selective.** A free audit shows the connectome does
-sense a looming object (its `escape` readout fires ~0.9, like the teacher), but the bridge commands a
-climb and a `0.5·yaw` sidestep instead of the teacher's full lateral escape, and has no wall
-avoidance. The C4 spec
-([`../superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md`](../superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md))
-adds C4a (lateral escape from the brain's response) and C4b (a selective, v6-spatial loom front-end),
-each declared, silenceable and falsifier-first. Evidence:
-[`../results/adapter/FINDING-2026-09-20-loom-escape-audit.md`](../results/adapter/FINDING-2026-09-20-loom-escape-audit.md).
+**C4 — use the escape response, make loom selective (both legs stopped by their gates).** A free
+audit showed the connectome senses a looming object (its `escape` readout fires ~0.9, like the
+teacher), but the bridge commanded a climb and a `0.5·yaw` sidestep instead of the teacher's full
+lateral escape, and had no wall avoidance. C4a (lateral escape from the brain's response) was built
+as codec v3 and **failed its A3 gate** (dodge 0.64 → 0.34, liveness L6 regressed) even though it
+raises near-threat `|vy|` to 0.8 and passes the ghost causality test. C4b (a selective loom
+front-end) then **failed B0**: neither v4 (E1 0.738) nor the frozen v6 spatial clone (E1 0.720)
+clears the E1 ≥ 0.8 selectivity bar, so **wall avoidance (A2/A4) is not reachable by the current
+front-ends**. C4b is a user decision (train v6 / new front-end / defer). Evidence:
+[`../results/adapter/FINDING-2026-09-22-c4a-a3.md`](../results/adapter/FINDING-2026-09-22-c4a-a3.md),
+[`../results/adapter/FINDING-2026-09-22-c4b-b0.md`](../results/adapter/FINDING-2026-09-22-c4b-b0.md);
+spec [`../superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md`](../superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md).
 
 **Further out:** senses beyond two luminance statistics; the sim-to-real transfer package; a
 fly-like body (`flybody`/NeuroMechFly); onboard compute running the full graph (estimate:
