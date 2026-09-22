@@ -1,0 +1,19 @@
+{
+  "source": {
+    "revision": "f41cfd3ce6dbd223fa7db680c1fccb10e7bfe3ac",
+    "fingerprint": "fde2ea300e1b76ed1090229d45f3d38e91961ca726f71b9b3e19989a536f6f10"
+  },
+  "files": {
+    "bundle/manifest.json": "e38fa534fadc3ea905a06084c112bcc850f6a9c244db58a4ce4776aab0352dc5",
+    "bundle/graph.bin": "60cb182151d80d910a9f23a1550908fefe2233234fa7f33bb7bc0f3d70311c39",
+    "bundle/neurons.bin": "488b0de56256a40f1644e04144c8ac904c9b92a57b2a071be8d797d7095c867f",
+    "bundle/cells.json": "044f5f540b96ed02440c0c020d976bd2af0bad3f99a6615028efe3dc66afa0d2",
+    "bundle/groups.json": "9c0650410311a541c746405749cfd71c1a6987c1ea8a2c741d6efddd2ade4dc8",
+    "bundle/sensory-mappings.json": "fce5be80faca913df38de93f61903a04c1a9b11a3172e478a03a2d5813df05e8",
+    "brain_runtime": "c5eecdf0a560c99d5e4912e1bd1853cc120e8a138aebb5a9103e2efe7463a725",
+    "controller": "c7de34cb4b6cc627cd1a96d678d18fc43e3edeba61a8d8004610736750443413"
+  },
+  "sensory": "bright-contrast-400-splay075-noaa-loom150-v4",
+  "relay": false,
+  "errors": []
+}

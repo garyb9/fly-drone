@@ -58,6 +58,10 @@ def _infer_spatial(learner, encoder, init):
 def main():
     parser = argparse.ArgumentParser(description="Fly connectome drone laboratory")
     sub = parser.add_subparsers(dest="command", required=True)
+    p = sub.add_parser("experiment", help="supervise a bounded preregistered experiment")
+    p.add_argument("operation", choices=("start", "status", "stop", "resume"))
+    p.add_argument("target", help="manifest JSON for start; run ID otherwise")
+    p.add_argument("--root", default="runs/experiments")
     p = sub.add_parser("serve")
     p.add_argument("--policy")
     p.add_argument(
@@ -428,6 +432,17 @@ def main():
     p.add_argument("--output", default="runs/probe/maps")
     p.add_argument("--encoder", default=None, help="learned-v6 .pt to visualise")
     args = parser.parse_args()
+    if args.command == "experiment":
+        from . import experiments
+
+        if args.operation == "start":
+            result = experiments.run(args.target, root=args.root)
+        elif args.operation == "resume":
+            result = experiments.run(run_id=args.target, root=args.root)
+        else:
+            result = getattr(experiments, args.operation)(args.target, root=args.root)
+        print(json.dumps(result, indent=2))
+        return
     if args.command == "spatial-maps":
         from . import maps
 

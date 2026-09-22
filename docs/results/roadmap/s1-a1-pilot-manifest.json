@@ -1,0 +1,45 @@
+{
+  "run_id": "s1-a1-pilot",
+  "stage": "S1",
+  "hypothesis": "Localize loss of light direction between v4 currents, frozen neural outputs, declared codec and drone yaw mechanics.",
+  "authorization": "Approved fidelity-first roadmap; <=2h/run, <=6h/stage; one worker; no fitting or contract changes.",
+  "decision_rules": "Diagnostic only: compare mirrored light signs, stimulus-minus-baseline readouts, escape inversion, latency and actual yaw; corroborate development findings on fixed confirmation seeds. No capability pass is assigned by this manifest. All trials required for complete transmission report; A5 remains separate.",
+  "max_seconds": 1200,
+  "workers": 1,
+  "identities": [
+    "python/fly_drone/a1_audit.py",
+    "python/fly_drone/experiments.py",
+    "data/malecns",
+    "docs/results/adapter/adapter.json",
+    "docs/results/adapter/adapter-v2.json",
+    "docs/results/adapter/adapter-v3.json"
+  ],
+  "trials": [
+    {
+      "id": "development-00-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "development-00-synthetic",
+        "--output",
+        "runs/roadmap/S1/development-00-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/development-00-synthetic.json"
+    },
+    {
+      "id": "development-00-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "development-00-rendered",
+        "--output",
+        "runs/roadmap/S1/development-00-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/development-00-rendered.json"
+    }
+  ]
+}

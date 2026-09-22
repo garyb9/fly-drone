@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from fly_drone.brain import ENCODER_VERSION
 from fly_drone.current_pointer import current_entry, current_policies, scan, update
 
@@ -109,6 +110,38 @@ def test_scan_ignores_an_evaluation_with_a_failing_criterion(tmp_path):
     )
     entry = scan(root=tmp_path)
     assert entry["status"] == "interim"
+
+
+@pytest.mark.parametrize(
+    "completeness,expected",
+    [
+        ({"eligible_for_promotion": False}, "interim"),
+        ({"eligible_for_promotion": True}, "gated"),
+        ({}, "interim"),
+        (None, "interim"),
+        ({"eligible_for_promotion": "true"}, "interim"),
+    ],
+)
+def test_new_reports_require_explicit_promotion_eligibility(
+    tmp_path, completeness, expected
+):
+    _write_actor(tmp_path / "runs/v5/dagger/it0/warm-actor.json")
+    run_dir = tmp_path / "runs/v5/roundN"
+    _write_actor(run_dir / "decoder.json")
+    (run_dir / "evaluation-free-roam.json").write_text(
+        json.dumps(
+            {
+                "task": "free_roam",
+                "policy": str(run_dir / "decoder.json"),
+                "acceptance": {
+                    **{f"A{i}": {"passed": True} for i in range(1, 8)},
+                    "passed": True,
+                },
+                "completeness": completeness,
+            }
+        )
+    )
+    assert scan(root=tmp_path)["status"] == expected
 
 
 def test_scan_skips_a_malformed_report_instead_of_crashing(tmp_path):

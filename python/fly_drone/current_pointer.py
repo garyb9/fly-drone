@@ -48,6 +48,13 @@ def _gated_candidate(root):
             continue
         if data.get("task") != "free_roam":
             continue
+        # New reports distinguish a behavioral score from complete promotion
+        # evidence. Preserve the historical interpretation of legacy reports.
+        if "completeness" in data and (
+            not isinstance(data["completeness"], dict)
+            or data["completeness"].get("eligible_for_promotion") is not True
+        ):
+            continue
         if not _combined_pass(data.get("acceptance", {})):
             continue
         actor = data.get("policy")

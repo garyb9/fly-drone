@@ -347,8 +347,10 @@ def evaluate_free_roam(
     probes=True,
     encoder=None,
     bridge="learned",
+    realtime=None,
 ):
     from .distill import screen
+    from .report_completeness import capture_provenance, report_completeness
 
     declared = bridge == "declared"
     if declared:
@@ -358,6 +360,7 @@ def evaluate_free_roam(
             raise ValueError("the learned free-roam bridge needs a policy path")
         key = f"policy:{Path(policy).resolve()}"
     combos = [(key, c) for c in CONDITIONS] + [(b, "none") for b in BASELINES]
+    before = capture_provenance(key, encoder=encoder)
     report = screen(
         None,
         output,
@@ -380,6 +383,17 @@ def evaluate_free_roam(
         else None
     )
     report["acceptance"] = acceptance(report["results"], key, report["probes"])
+    report["provenance"] = {
+        "before": before,
+        "after": capture_provenance(key, encoder=encoder),
+    }
+    report["completeness"] = report_completeness(
+        report,
+        expected_conditions=[f"{c}|{a}" for c, a in combos],
+        expected_seeds=range(seed_base, seed_base + episodes),
+        probe_names=PROBES,
+        realtime=realtime,
+    )
     Path(output).write_text(json.dumps(report, indent=2))
     return report
 
@@ -395,6 +409,7 @@ def adapter_check(
     bundle=None,
     adapter=None,
     relay=False,
+    realtime=None,
 ):
     """P0 gate: the declared adapter under the standard causal conditions, teacher-free.
 
@@ -404,11 +419,13 @@ def adapter_check(
     """
     from .adapter import DEFAULT_RELAY_PATH
     from .distill import screen
+    from .report_completeness import capture_provenance, report_completeness
 
     if relay and not adapter:
         adapter = str(DEFAULT_RELAY_PATH)
     key = f"adapter:{adapter}" if adapter else "adapter"
     combos = [(key, c) for c in CONDITIONS] + [(b, "none") for b in BASELINES]
+    before = capture_provenance(key, bundle=bundle, relay=relay)
     report = screen(
         None,
         output,
@@ -434,6 +451,17 @@ def adapter_check(
         else None
     )
     report["acceptance"] = acceptance(report["results"], key, report["probes"])
+    report["provenance"] = {
+        "before": before,
+        "after": capture_provenance(key, bundle=bundle, relay=relay),
+    }
+    report["completeness"] = report_completeness(
+        report,
+        expected_conditions=[f"{c}|{a}" for c, a in combos],
+        expected_seeds=range(seed_base, seed_base + episodes),
+        probe_names=PROBES,
+        realtime=realtime,
+    )
     Path(output).write_text(json.dumps(report, indent=2))
     return report
 

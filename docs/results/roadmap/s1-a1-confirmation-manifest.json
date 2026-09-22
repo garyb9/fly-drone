@@ -1,0 +1,227 @@
+{
+  "run_id": "s1-a1-confirmation",
+  "stage": "S1",
+  "hypothesis": "Localize loss of light direction between v4 currents, frozen neural outputs, declared codec and drone yaw mechanics.",
+  "authorization": "Approved fidelity-first roadmap; <=2h/run, <=6h/stage; one worker; no fitting or contract changes.",
+  "decision_rules": "Diagnostic only: compare mirrored light signs, stimulus-minus-baseline readouts, escape inversion, latency and actual yaw; corroborate development findings on fixed confirmation seeds. No capability pass is assigned by this manifest. All trials required for complete transmission report; A5 remains separate.",
+  "max_seconds": 7200,
+  "workers": 1,
+  "identities": [
+    "python/fly_drone/a1_audit.py",
+    "python/fly_drone/experiments.py",
+    "data/malecns",
+    "docs/results/adapter/adapter.json",
+    "docs/results/adapter/adapter-v2.json",
+    "docs/results/adapter/adapter-v3.json"
+  ],
+  "trials": [
+    {
+      "id": "confirmation-08-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-08-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-08-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-08-synthetic.json"
+    },
+    {
+      "id": "confirmation-08-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-08-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-08-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-08-rendered.json"
+    },
+    {
+      "id": "confirmation-09-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-09-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-09-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-09-synthetic.json"
+    },
+    {
+      "id": "confirmation-09-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-09-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-09-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-09-rendered.json"
+    },
+    {
+      "id": "confirmation-10-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-10-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-10-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-10-synthetic.json"
+    },
+    {
+      "id": "confirmation-10-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-10-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-10-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-10-rendered.json"
+    },
+    {
+      "id": "confirmation-11-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-11-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-11-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-11-synthetic.json"
+    },
+    {
+      "id": "confirmation-11-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-11-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-11-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-11-rendered.json"
+    },
+    {
+      "id": "confirmation-12-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-12-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-12-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-12-synthetic.json"
+    },
+    {
+      "id": "confirmation-12-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-12-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-12-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-12-rendered.json"
+    },
+    {
+      "id": "confirmation-13-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-13-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-13-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-13-synthetic.json"
+    },
+    {
+      "id": "confirmation-13-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-13-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-13-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-13-rendered.json"
+    },
+    {
+      "id": "confirmation-14-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-14-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-14-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-14-synthetic.json"
+    },
+    {
+      "id": "confirmation-14-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-14-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-14-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-14-rendered.json"
+    },
+    {
+      "id": "confirmation-15-synthetic",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-15-synthetic",
+        "--output",
+        "runs/roadmap/S1/confirmation-15-synthetic.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-15-synthetic.json"
+    },
+    {
+      "id": "confirmation-15-rendered",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "fly_drone.a1_audit",
+        "--trial",
+        "confirmation-15-rendered",
+        "--output",
+        "runs/roadmap/S1/confirmation-15-rendered.json"
+      ],
+      "output": "runs/roadmap/S1/confirmation-15-rendered.json"
+    }
+  ]
+}
