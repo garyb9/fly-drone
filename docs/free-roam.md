@@ -5,9 +5,12 @@
 `[vx, vy, vz, yaw_rate]`; pass `--bridge learned` (with a decoder) to fly the deprecated learned
 path described below. The gate is `fly-drone adapter-check`.
 
-**Default codec (C4a).** The shipped default is now **codec v3** (lateral escape from the
-connectome's `DNp01` response; made default by user direction ahead of its A3 gate, see
-[`HANDOFF.md`](HANDOFF.md)). **Codec v2** (`adapter-v2.json`) is the P4 faithful readout that fixed
+**Codec v3 (C4a).** **Codec v3** uses the connectome's `DNp01` escape response laterally. It is
+still the shipped default by earlier user direction, but its **A3 gate failed 2026-09-22** (dodge
+0.64 → 0.34, liveness L6 regressed), so the default is **pending a user decision to revert to v2**
+(see [`HANDOFF.md`](HANDOFF.md) and
+[`results/adapter/FINDING-2026-09-22-c4a-a3.md`](results/adapter/FINDING-2026-09-22-c4a-a3.md)).
+**Codec v2** (`adapter-v2.json`) is the P4 faithful readout that fixed
 the idling (`slow_fraction` 0.44 → 0.03; see
 [`results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md`](results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md)).
 Switch codecs with `fly-drone serve --codec v3|v2|v1`, or live in the viewer's free-roam bar
@@ -116,7 +119,7 @@ L3, with respawn, under seven brain conditions (intact, zeroed, shuffled, all vi
 silenced, loom silenced, ghost objects) plus teacher, cue-script and random baselines.
 
 `fly-drone liveness-check` is a separate, additive, teacher-free diagnostic: it scores whether the
-body is *alive* (mobility, exploration, sense-causality, anti-luck, non-degeneracy) before capability
+body is _alive_ (mobility, exploration, sense-causality, anti-luck, non-degeneracy) before capability
 is expanded. It never changes `ACCEPTANCE` or A1–A7.
 
 | ID  | Criterion                                                                                                                                                         |

@@ -4,9 +4,12 @@
 `declared-v3:467faae753cef735`, free falsifier passed — see
 [`../../results/adapter/FINDING-2026-09-20-c4a-a0.md`](../../results/adapter/FINDING-2026-09-20-c4a-a0.md)
 and [`FINDING-2026-09-20-c4a-a1-a2.md`](../../results/adapter/FINDING-2026-09-20-c4a-a1-a2.md)).
-A3 (the seed gate) and C4b are not yet run. By user direction codec **v3 is now the shipped
-default** ahead of its gate; the gate is still required before any capability claim (and before the
-50-seed stage).
+**A3 run 2026-09-22: v3 fails — C4a alone is rejected** by its own gate (A3 dodge 0.64 → 0.34, and
+liveness L6 regressed) even though it raises near-threat `|vy|` to 0.8 and passes the ghost
+causality test — [`FINDING-2026-09-22-c4a-a3.md`](../../results/adapter/FINDING-2026-09-22-c4a-a3.md).
+Do not spend the 50-seed gate on C4a. **C4b (selective loom) is now the prerequisite**, and the
+climb cut is a candidate to revisit. Codec v3 remains selectable; whether it stays the shipped
+default is an open user decision (see `docs/HANDOFF.md`).
 Successor to the P4 spec
 ([`2026-09-20-ongoing-state-and-faithful-readout.md`](2026-09-20-ongoing-state-and-faithful-readout.md)).
 Contract changes **C4a** (bridge uses the connectome's escape/loom response on the lateral axis) and
@@ -18,8 +21,8 @@ and [`FINDING-2026-09-20-loom-escape-audit.md`](../../results/adapter/FINDING-20
 
 ## 1. The principle this spec adds
 
-P4 established *alive* (the brain moves the body). This spec is about *using what the brain already
-computes*. The audit shows the connectome's own escape response is present and correct — it reaches
+P4 established _alive_ (the brain moves the body). This spec is about _using what the brain already
+computes_. The audit shows the connectome's own escape response is present and correct — it reaches
 ~0.9 on a looming object in both the declared bridge and the accepted teacher — while the declared
 bridge converts it into a **climb** and a fractional sidestep (`0.5 · yaw`), so the drone flies into
 threats and walls. **A sensory pathway that fires is not the same as a behaviour that uses it**: the
@@ -54,7 +57,7 @@ mode switch), and any addition is silenceable and versioned.
   `--codec v1|v2` selects committed artifacts and the default is v2
   ([`FINDING-2026-09-20-c3-and-codec-v2.md`](../../results/liveness/FINDING-2026-09-20-c3-and-codec-v2.md)).
 - The bridge **may not** read `loom_l/r`, pose, target or pixels: those are inputs to the brain, not
-  part of the feature vector. The escape *side* must come from a neural readout (motor asymmetry, or
+  part of the feature vector. The escape _side_ must come from a neural readout (motor asymmetry, or
   a declared sided descending readout — C4c).
 - Cell types and sides: `brain.cells[i]["type"]`, `["side"]` from `data/malecns/cells.json`; the
   loom sensory cells are the LC4 (165) and LPLC2 (146) per side (`sensory-model.md` §3). The free
@@ -102,13 +105,17 @@ Offline `scripts/command_audit.py` (extended): a lateralised loom must command `
 teacher's near-threat level (~0.8) with the correct sign (away from the loom side), and a head-on
 loom must command a lateral escape rather than only climb. Fail here → no seeds.
 
-### A3 — gate
+### A3 — gate (run 2026-09-22: **FAILED**)
 
 - A3 near-threat: dodge ≥ 0.8, balanced ≥ 0.8, **ghost ≤ 0.3** (the causal test — a blind drone must
   not inherit the dodge).
 - A4 loom: loom silencing must increase collisions (ratio ≥ 2.0).
 - A2 collisions/min ≤ 0.5 (needs C4b for the wall share).
 - No regression: liveness L1–L8 (L7 deferred) and A6 `slow_fraction` ≤ 0.1.
+
+Result: dodge 0.341 (balanced 0.154) vs the 0.8 bar; ghost 0.205 **passes**; A4 1.45; A2 4.30/min;
+A6 `slow_fraction` improved but coverage still 0.257; **liveness L6 regressed** (mean move bout
+9.14 → 12.80 s). Verdict and analysis: `FINDING-2026-09-22-c4a-a3.md`.
 
 ### A4 — tests
 
@@ -124,6 +131,7 @@ avoided (A2).
 ### B0 — selectivity feasibility (free)
 
 Run the documented E1/E2 gates on the current v4 front-end and on each candidate:
+
 1. the **v6 spatial encoder** ([`2026-09-16-retinotopic-sensing-v6-design.md`](2026-09-16-retinotopic-sensing-v6-design.md)) — the documented fix;
 2. the existing **P3 relay** (`relay=True`, optic flow → T4/T5) **extended to LC4/LPLC2**.
 
@@ -133,7 +141,7 @@ margin), else it is not adopted. Report which cells carry the selective signal.
 ### B1 — the declared change
 
 An additive, versioned front-end (bundle + identity), silenceable through the existing
-`relay`/`sensory` ablations. This changes the *input* mapping only; wiring, weights and neuron
+`relay`/`sensory` ablations. This changes the _input_ mapping only; wiring, weights and neuron
 parameters stay frozen.
 
 ### B2 — gate

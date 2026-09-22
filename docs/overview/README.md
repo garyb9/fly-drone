@@ -419,12 +419,14 @@ near-miss** (liveness is intrinsic, not vision-attributable); P4 closes here. Ev
 [`../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md`](../results/liveness/FINDING-2026-09-20-l2-coverage-and-l4-attribution.md).
 `ACCEPTANCE` A1–A7 were untouched.
 
-**Shipped default.** The latest rig, codec **v3** (C4a lateral escape), is the default declared
-bridge (so the simulation no longer idles out of the box; v2 is the P4 faithful readout, v1 the
+**Default codec.** The latest rig, codec **v3** (C4a lateral escape), is still the default declared
+bridge by earlier user direction, but its **A3 gate failed 2026-09-22** (A3 dodge 0.64 → 0.34,
+liveness L6 regressed; see [`HANDOFF.md`](../HANDOFF.md) and
+[`../results/adapter/FINDING-2026-09-22-c4a-a3.md`](../results/adapter/FINDING-2026-09-22-c4a-a3.md)).
+The default is **pending a user decision to revert to v2** (the P4 faithful readout; v1 is the
 legacy canonical codec). Use `fly-drone serve --codec v2|v1` (or `--adapter v2|v1`) to fly an
 earlier codec, or the viewer's free-roam **bridge → Codec** switch, which cycles v3/v2/v1 and resets
-the sim live. Note v3 was made default ahead of its A3 gate (see [`HANDOFF.md`](../HANDOFF.md)). The
-canonical `adapter.json` and `adapter-check.json` are unchanged.
+the sim live. The canonical `adapter.json` and `adapter-check.json` are unchanged.
 
 **Alive ≠ capable.** On the A1–A7 skill gate the new default fails every capability criterion (A1
 beacon rate 0.033/min vs teacher 0.733; A2 collisions 6.67/min vs ≤0.5; A3 dodging not causal;
