@@ -1,0 +1,261 @@
+{
+  "schema": "body-source-audit-v1",
+  "sibling_revision": "7e87b7595bdd89615e9ce3881f8cb19145b9d8a0",
+  "dirty_tracked_count": 45,
+  "untracked_count": 18067,
+  "source_sha256": {
+    "docs/body-causal-validation.json": "14bae4999d1c3752025af0224b3f296dcc467835e46b3f58a7bb689ec717f913",
+    "docs/body-neural-probe.json": "211d4f3a159d6d43705ec6a6125df818107138d12fe855b51d0484ba29aa41f1",
+    "examples/body-causal-validation.ts": "1b3b7bd0f9aa16f7b881331fb26fbce8bc52c85c04697bdf79a9f4dd64f1874d",
+    "examples/body-neural-probe.ts": "6fb962eaf6d619bed1239e6d2bfc2f3e87b9368743fbbde7abe03116d2532288",
+    "pipeline/build_body_mappings.py": "8bd9b96392c5baf678ccedb18965fd0a880dcc9136f7ff70021cb1229dda57f4",
+    "pipeline/build_fly_model.py": "85fb3a033e2e1cec2f44c9d4024ea0bbcc11c7685d5af6c21ff09ea8c4a4c359",
+    "public/models/fly/fly-far.glb": "0e2370bbfd491957bd90b04ac2aac3a143a4dd1f511a0928f5de40834a01b561",
+    "public/models/fly/fly-near.glb": "9cbb8ad5d6f8fd86bc92857e90e8339d1a20d6b1bcae8309fe1dd949900fbfd9",
+    "public/models/fly/manifest.json": "125f50c5697256e629fc968f2a8ee43ce0477d89081af55af0d1fde099120b8e",
+    "src/body/articulation-wire.ts": "8c833564db57880d27b0ae42c574d119e7d84bd90ad2e5608788a512bf97ca90",
+    "src/body/articulation.test.ts": "37255cdf078e9571cac541ae4d2104b89e765d257f7c039119ee9c063147507b",
+    "src/body/articulation.ts": "cb023076f964c3eb449ad0b89b098f1a389f5ae9f7827317b02cdd17eb8b12e9",
+    "src/body/body.ts": "37f8018bf1e9fca3c184a0ea3e55e770ef3b533a733c7c8256b13acd7e52d3d4",
+    "src/body/integrate.ts": "665e7115b8262166f3672ec35fdf8881ccfc33a18f82f8f13bb347a44d3783f0",
+    "src/body/movement.ts": "8991a9eef3a5078a205f5f2da65b4d835104f217261651c01bf77ba19a49ded9",
+    "src/body/rig.json": "22380fa62d3503820963f2911e281560580a9251bbbe034a221cb39b24811f91",
+    "src/body/rig.ts": "944742763d2e6dce1be766e04be85015a0b583a2b7e7b24609daf14651887060",
+    "src/body/types.ts": "3862f7a0218b808845f765f281bf394aa355934c6bb053798b38ccaa9c9cab7e",
+    "src/body/wrench.ts": "0cfe5a4ec87f41e972fe054f0828f3e06ea3ac70ba5b4de116b887da622f1b29",
+    "src/bridge/embodied.ts": "33c7ee3d63cd42dae3a11fc702fd43dc17c915ae0d1919480c51eee6adea5c6d",
+    "src/bridge/gpu-adapter-info.test.ts": "b4cd4081de3ac9cb41be25aa2d3fe758c7348b1dd5d1d45f7d80a0f1d0d31c7e",
+    "src/bridge/gpu-adapter-info.ts": "eafc77ef4ee4ff07c4e8a0afb736206ea175247ab0850c97fe646de15855487e",
+    "src/bridge/live-gpu-controller.test.ts": "6947bb7f35a597ce98de9301d15747050a31e969bafbd662409e3ce4f84b2fb3",
+    "src/bridge/live-gpu-controller.ts": "bd0a4b818682d5238d12cfc68b95e00d4af7f6d42309e975e7b3ae193eadf7eb",
+    "src/bridge/live-gpu.worker.test.ts": "4b3e4c203c0697783d05dee1892226afe6671b84de851d0eca5e270adc99cfef",
+    "src/bridge/live-gpu.worker.ts": "2f04e090839857e34dca6e6b1e7fdd2e16142461f7839b0c79cae5f2000e12ca",
+    "src/bridge/phototaxis-probe.test.ts": "5af0991576a0f3260e28f935e06298510093c16dddbc0962e4ef578ee4d94398",
+    "src/bridge/phototaxis-probe.ts": "4669900042ae87b4355f9bf85abc9c8db16474f4520722b8099b62f28ff521eb",
+    "src/bridge/protocol.ts": "ba132abc0140cd617bf8dbba2fc173512879a066ca2c91cfe4a2f5a01b732cb8",
+    "src/bridge/ring.ts": "46b98eb390de3247a086f8a596fb3474eb5595b714338c331fefa32e9d8608dd",
+    "src/bridge/sim-bridge.ts": "45c68be36049052d2aa78aa8a631cd25425d11a9b240c90fd38275afc7529350",
+    "src/bridge/sim.worker.ts": "62269463c2833b1bf47c30a6e07b8d548d24427461a2cc2fc073488fc651c9b7",
+    "src/bridge/simulation-manager.test.ts": "83ab5f3296ec07768c015eab33f8b83e36ab677bc52ceceffcfc160a32aae8b4",
+    "src/bridge/simulation-manager.ts": "931b720184e70993be9d50f87870701b2d4de84da6f84e7dc08ba56908717d0e",
+    "src/bridge/worker-core.ts": "a7b7627cb00d3a2850e898778a96abf511d62b9eae51625be0f8bda804693a28",
+    "src/sensing/body-senses.ts": "a602a910cf31ab8bb211dc6b0285490592eee71b3aa5accafe9013609b9bd49f",
+    "src/sim/body-mappings.json": "97b2e0dec5a443a573d608789415fccc72b70fd4bd2b10bf1c3d945a1d8ba3f7",
+    "src/sim/motor-registry.test.ts": "a7bd51f1ecd3c1ff34cd84575d81dcef48b77f54a83e39ca343ab092ff8be88e",
+    "src/sim/motor-registry.ts": "e2a8f290c272b8885b56187f2aeffcbaba7246f5baf4250d112920b67ee94634",
+    "src/viz/articulation-interpolation.ts": "9355418ae67e41eea8f5f7feceb7e6c1ae717a683c92449c57c025c63ade7768",
+    "src/viz/body-sources.ts": "c889ae730bf539139cd22438e101c6ea6e3f35b143f92d4ebd167744669e4f8a",
+    "src/viz/builders.test.ts": "b1521a7090f0bda65ea1aba6def130f34b07f378d920261ed9129a6899d298b9",
+    "src/viz/builders.ts": "1e6e062ebc89fb2a9e0a8656133903c0bcd49597181f6ce3023902b1004528aa",
+    "src/viz/fly-model.ts": "6f83c86f70ba63f7e18531c6c6fa5d34418a449fc14fcc6fbd35ff2e17b20169",
+    "src/viz/fly.ts": "2a46d50f53570855aef30814f53c1689ae2ed7303bd96c8057590f79418e2a9f",
+    "src/viz/post.ts": "05c6242dd777244123ef97c119023970c3308465423f40e95ed40037e3b6634e",
+    "src/viz/renderer.ts": "abab5054b761f3f4331d29f64e8031253819ef7e9e6ec5bf0e310d07913294c8"
+  },
+  "ledger": [
+    {
+      "source": "src/body/integrate.ts",
+      "lines": [
+        21
+      ],
+      "category": "passive",
+      "meaning": "gravity and damping",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/body.ts",
+      "lines": [
+        75
+      ],
+      "category": "assistance",
+      "meaning": "boundary return force",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/body.ts",
+      "lines": [
+        92
+      ],
+      "category": "assistance",
+      "meaning": "manual/landing controller",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/body.ts",
+      "lines": [
+        99
+      ],
+      "category": "assistance",
+      "meaning": "legacy threshold escape impulse",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/body.ts",
+      "lines": [
+        101
+      ],
+      "category": "passive_proxy",
+      "meaning": "sphere contact resolution",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        189
+      ],
+      "category": "neural_mechanics",
+      "meaning": "wing activation decay",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        196
+      ],
+      "category": "assistance",
+      "meaning": "support/escape flight gate",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        202
+      ],
+      "category": "neural_proxy",
+      "meaning": "neck motor joint map",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        204
+      ],
+      "category": "neural_proxy",
+      "meaning": "antenna motor joint map",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        208
+      ],
+      "category": "assistance",
+      "meaning": "DN feeding override",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        214
+      ],
+      "category": "assistance",
+      "meaning": "authored abdominal pumping",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        229
+      ],
+      "category": "assistance",
+      "meaning": "authored tripod oscillator",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        235
+      ],
+      "category": "assistance",
+      "meaning": "authored grooming waveform",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        251
+      ],
+      "category": "assistance",
+      "meaning": "surface-targeted foot IK",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        301
+      ],
+      "category": "assistance",
+      "meaning": "phase/groom/escape contact gating",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        309
+      ],
+      "category": "passive_proxy",
+      "meaning": "contact spring/damping conditional on motor drive",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        342
+      ],
+      "category": "assistance",
+      "meaning": "support alignment torque",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        346
+      ],
+      "category": "assistance",
+      "meaning": "adjacent-surface lookahead",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        371
+      ],
+      "category": "neural_proxy",
+      "meaning": "calibrated wing-power lift",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/articulation.ts",
+      "lines": [
+        374
+      ],
+      "category": "assistance",
+      "meaning": "landing destination controller",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/wrench.ts",
+      "lines": [
+        53
+      ],
+      "category": "assistance",
+      "meaning": "escape impulse independent of actuator mechanics",
+      "anchor_found": true
+    },
+    {
+      "source": "src/body/wrench.ts",
+      "lines": [
+        72
+      ],
+      "category": "assistance",
+      "meaning": "legacy non-neural cruise term (conditional)",
+      "anchor_found": true
+    }
+  ],
+  "anchors_complete": true,
+  "runtime_validated": false,
+  "canonical_brain_parity_validated": false,
+  "neural_only_certified": false,
+  "verdict": "proxy mechanics and behavioral assistance coexist; isolation required",
+  "next": "separate neural-only body path; preserve dirty originals; validate forces before biomechanics"
+}

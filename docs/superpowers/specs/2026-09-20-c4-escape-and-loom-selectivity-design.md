@@ -8,8 +8,8 @@ and [`FINDING-2026-09-20-c4a-a1-a2.md`](../../results/adapter/FINDING-2026-09-20
 liveness L6 regressed) even though it raises near-threat `|vy|` to 0.8 and passes the ghost
 causality test — [`FINDING-2026-09-22-c4a-a3.md`](../../results/adapter/FINDING-2026-09-22-c4a-a3.md).
 Do not spend the 50-seed gate on C4a. **C4b (selective loom) is now the prerequisite**, and the
-climb cut is a candidate to revisit. Codec v3 remains selectable; whether it stays the shipped
-default is an open user decision (see `docs/HANDOFF.md`).
+climb cut is a candidate to revisit. Codec v3 stays the shipped default by user decision, with the
+failed gate recorded (see `docs/HANDOFF.md`). The fidelity-first roadmap parks C4b during A1/body work.
 
 **B0 run 2026-09-22: no adoptable C4b candidate.** Neither the v4 front-end (E1 0.738) nor the
 frozen v6 spatial clone (E1 0.720, motion 0.657, union 0.710) clears the E1 ≥ 0.8 bar, and the

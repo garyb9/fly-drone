@@ -1,6 +1,23 @@
 # HANDOFF — where the project is, and where to continue
 
-**Updated 2026-09-22 after the C4a A3 gate was run (negative).** This is the operational companion
+**Active program: fidelity-first roadmap, approved 2026-09-22.** Start with
+[`the agent-ready roadmap`](superpowers/specs/2026-09-22-fidelity-first-roadmap-and-agent-handoff.md).
+It supersedes the old next-action ordering below: S0 run management/evidence → bounded S1 A1
+audit → S2 force-source audit → canonical-brain biomechanics → **whole-body articulation first**.
+Do not wait for all drone skills to pass before body work. C4b remains parked during this sequence.
+
+**Execution authorization:** autonomous approved local experiments, ≤2 hours per run including
+resumes, ≤6 experiment-hours per stage, ≤6 workers total; one heavy run at a time. Report progress
+and support mid-run stop. New biological contracts require a concrete design and sign-off.
+Keep codec v3 as default. Preserve the dirty sibling fly-playground worktree; its articulation is
+a partly assisted proxy, not verified biomechanics or canonical-brain parity.
+
+**Current package:** S0 implementation. Baseline verification, managed experiments,
+report-completeness checks and deterministic S1 audit are in progress. No long experiment is
+running. Next: finish S0 validation, then execute registered S1 trials through the manager.
+Do not run C4a's rejected 50-seed gate or start v6 retraining.
+
+**Historical C4 state follows.** This is the operational companion
 to the governing spec; read it before touching code.
 
 ## 0. TL;DR
@@ -35,7 +52,7 @@ to the governing spec; read it before touching code.
 3. [`docs/superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md`](superpowers/specs/2026-09-20-ongoing-state-and-faithful-readout.md)
    — P4 (closed).
 4. [`docs/superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md`](superpowers/specs/2026-09-20-c4-escape-and-loom-selectivity-design.md)
-   — **C4, the current work** (A0–A2 done, A3/C4b pending).
+   — C4 historical work (A0–A2 done, A3 failed, C4b B0 blocked).
 5. [`docs/overview/README.md`](overview/README.md) — architecture, math, roadmap.
 6. The findings under `docs/results/{liveness,adapter,feedback,dynamics}/` (indexed in §8).
 
@@ -50,7 +67,7 @@ path; one bridge, no mode switching.
 | **C1** (P1)  | Ascending/proprioceptive body feedback           | landed; **weak positive** (moved `slow_fraction` only)   |
 | **C2** (P2)  | Connectome-constrained per-neuron dynamics       | landed; **negative** (only `noise_sigma` varied)         |
 | **C3** (P4)  | Ongoing state (tonic drive)                      | **C3a rejected** by its silencing gate; **C3b dropped**  |
-| **C4** (now) | Use the brain's escape response + selective loom | **C4a A3 failed 2026-09-22 (rejected); C4b not started** |
+| **C4** | Use the brain's escape response + selective loom | **C4a A3 failed; C4b B0 ran and is blocked on E1** |
 
 P0 (declared adapter + teacher-free gate) and P3 (liveness bar; relay closed negative) are
 unchanged/landed. `roam_eval.ACCEPTANCE` (A1–A7) and `liveness` (L1–L8) are pre-registered and are
@@ -120,7 +137,7 @@ a **user decision**, not a run:
 - **(c) Defer avoidance**, record C4b as blocked-on-E1, and move to A1 beacon seeking or body
   fidelity.
 
-Also decide the **default codec** (recommend revert to v2). No 50-seed gate is spent until a cell
+The **default codec decision is closed: keep v3**. No 50-seed gate is spent until a cell
 clears a free falsifier and a 15-seed smoke. **Ask the user before any long run.**
 
 ## 6. Invariants that must not break

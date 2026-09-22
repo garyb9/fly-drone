@@ -32,6 +32,13 @@ for the diagrams.
 
 ## Rules that are easy to break
 
+- The approved execution order is the [fidelity-first roadmap](docs/superpowers/specs/2026-09-22-fidelity-first-roadmap-and-agent-handoff.md):
+  bounded A1 audit, then whole-body articulation/fidelity, then integrated capability and deployment.
+- The user authorized autonomous local experiments under that roadmap: ≤2 hours per run (including
+  resumes), ≤6 experiment-hours per stage, ≤6 workers total, with live progress and cancellation.
+  This standing authorization covers specified runs; ask for a new contract, increased budget,
+  or otherwise out-of-scope action. Teacher-driven behavioral training is not authorized.
+
 - Pre-registered acceptance thresholds (`roam_eval.ACCEPTANCE`) are never relaxed without the user.
 - The legacy room MJCF and accepted actors stay reproducible (`test_legacy_room_mjcf_unchanged`).
 - Body feedback and fitted dynamics are additive, versioned identities requiring explicit user

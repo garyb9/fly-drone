@@ -1,5 +1,11 @@
 # Body-agnostic, fidelity-first cyborg — design
 
+**2026-09-22 execution update:** the approved
+[`fidelity-first roadmap`](2026-09-22-fidelity-first-roadmap-and-agent-handoff.md) governs execution
+order and experiment budgets. After a bounded A1 audit, whole-body fidelity comes before completing
+drone capability. Codec v3 is the user-selected default despite its failed gate; references below
+to v2 as shipped or the default decision as open are historical.
+
 **Status:** proposed, authorized 2026-09-19. Documentation and goal reframing first; no source
 under `python/fly_drone/` or `crates/` changes until this spec and the reframed goal land.
 
