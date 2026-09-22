@@ -6,8 +6,8 @@
 path described below. The gate is `fly-drone adapter-check`.
 
 **Codec v3 (C4a).** **Codec v3** uses the connectome's `DNp01` escape response laterally. It is
-still the shipped default by earlier user direction, but its **A3 gate failed 2026-09-22** (dodge
-0.64 → 0.34, liveness L6 regressed), so the default is **pending a user decision to revert to v2**
+the shipped default by user decision, but its **A3 gate failed 2026-09-22** (dodge 0.64 → 0.34,
+liveness L6 regressed); the user chose to **keep v3 as the latest rig with the failure recorded**
 (see [`HANDOFF.md`](HANDOFF.md) and
 [`results/adapter/FINDING-2026-09-22-c4a-a3.md`](results/adapter/FINDING-2026-09-22-c4a-a3.md)).
 **Codec v2** (`adapter-v2.json`) is the P4 faithful readout that fixed

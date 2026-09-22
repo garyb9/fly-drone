@@ -423,8 +423,8 @@ near-miss** (liveness is intrinsic, not vision-attributable); P4 closes here. Ev
 bridge by earlier user direction, but its **A3 gate failed 2026-09-22** (A3 dodge 0.64 → 0.34,
 liveness L6 regressed; see [`HANDOFF.md`](../HANDOFF.md) and
 [`../results/adapter/FINDING-2026-09-22-c4a-a3.md`](../results/adapter/FINDING-2026-09-22-c4a-a3.md)).
-The default is **pending a user decision to revert to v2** (the P4 faithful readout; v1 is the
-legacy canonical codec). Use `fly-drone serve --codec v2|v1` (or `--adapter v2|v1`) to fly an
+The user chose to **keep v3 as the default with the failure recorded** (v2 is the P4 faithful
+readout; v1 is the legacy canonical codec). Use `fly-drone serve --codec v2|v1` (or `--adapter v2|v1`) to fly an
 earlier codec, or the viewer's free-roam **bridge → Codec** switch, which cycles v3/v2/v1 and resets
 the sim live. The canonical `adapter.json` and `adapter-check.json` are unchanged.
 

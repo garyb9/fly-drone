@@ -20,10 +20,10 @@ to the governing spec; read it before touching code.
   translation model cannot represent looming). Evidence:
   [`FINDING-2026-09-22-c4b-b0.md`](results/adapter/FINDING-2026-09-22-c4b-b0.md). So **wall
   avoidance (A2/A4) is not reachable by the current front-ends.**
-- **Two open decisions (need the user):**
-  1. **Default codec:** v3 still ships (`DEFAULT_CODEC = "v3"`) but failed its gate. Recommend
-     reverting to v2 until a cell passes.
-  2. **C4b fork:** (a) train the v6 encoder to clear E1 (long run), (b) design a new declared
+- **Decisions (2026-09-22):**
+  1. **Default codec: keep v3** (`DEFAULT_CODEC = "v3"`, user decision) with its A3 failure recorded;
+     v2/v1 remain selectable. It is the _latest rig_, not a _capable_ one.
+  2. **C4b fork: open** — (a) train the v6 encoder to clear E1 (long run), (b) design a new declared
      selective loom front-end, or (c) defer avoidance (A1/body work instead).
 - **Nothing is running.** No long run until the user decides; B0 was free and is recorded.
 
@@ -108,10 +108,8 @@ vy +0.800`, `loom_both vy 0.000`, calm 0. `passed = true`; artifact
 
 ## 5. Exact next action
 
-**First, decide the default (user):** v3 failed its gate. Recommended: set `adapter.DEFAULT_CODEC`
-back to `"v2"` (the gate-passing _alive_ default) and keep v3 selectable as an instrument, until a
-cell passes. Do not silently keep an ungated default — this is a user call (it reverses an earlier
-user override).
+**Default decided (2026-09-22): keep codec v3** as shipped, with the A3 failure recorded (user
+call). v2/v1 stay selectable.
 
 **B0 is DONE (2026-09-22): no adoptable front-end, C4b blocked on E1** (§0, §4). The next action is
 a **user decision**, not a run:
@@ -134,9 +132,9 @@ clears a free falsifier and a 15-seed smoke. **Ask the user before any long run.
   `edc5439e291e65233e673b5baaed069f570f5003c245e414de2aa1e41b14aff5`. `data/malecns` is never edited.
 - **Bridge rules:** reads neural activity only (no pose, target, task id or pixels); one formula; no
   mode switching; no teacher in the behaviour path.
-- **Default bridge is codec v3 pending user decision** (`adapter.DEFAULT_CODEC = "v3"`, C4a; made
-  default by earlier user direction, **now failed its A3 gate — recommended revert to v2**); v2/v1
-  are opt-in. The viewer cycle is v3/v2/v1.
+- **Default bridge is codec v3** (`adapter.DEFAULT_CODEC = "v3"`, C4a; made default by user
+  direction and **kept after its A3 failure by user decision 2026-09-22**); v2/v1 are opt-in. The
+  viewer cycle is v3/v2/v1.
 - **L7 stays deferred** on this body (auto rule in `liveness.liveness(yaw_limit=…)`).
 - Legacy room MJCF and accepted actors remain reproducible (`test_legacy_room_mjcf_unchanged`).
 
@@ -195,9 +193,8 @@ yarn typecheck && yarn lint && yarn test && yarn build
 
 ## 9. Open decisions and risks
 
-- **v3 failed its A3 gate (2026-09-22)** but is still the default from an earlier user override.
-  **Decide: revert `DEFAULT_CODEC` to v2 until a cell passes**, or explicitly keep v3 with the
-  failure recorded. Recommended: revert.
+- **v3 failed its A3 gate (2026-09-22)** but **stays the default** by user decision (2026-09-22);
+  it is the latest rig, not a capable one. The failure is recorded, not hidden.
 - **C4b is BLOCKED on E1** (B0, 2026-09-22): no front-end clears 0.8, so A2/A4 (wall avoidance) are
   not reachable by the current front-ends. Needs a user decision (train v6 / new front-end / defer).
 - **A v3 variant that keeps the v2 climb** and adds (rather than trades) the lateral escape is the
