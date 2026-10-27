@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "purpose": "S2 isolated neural-only proxy dependency snapshot; not a portable backend release",
+  "source_checkout": "/home/gb/projects/fly-playground",
+  "source_head": "7e87b7595bdd89615e9ce3881f8cb19145b9d8a0",
+  "requires_working_tree": true,
+  "files": [
+    {"path": "src/body/types.ts", "status": "modified", "sha256": "3862f7a0218b808845f765f281bf394aa355934c6bb053798b38ccaa9c9cab7e"},
+    {"path": "src/body/integrate.ts", "status": "tracked", "sha256": "665e7115b8262166f3672ec35fdf8881ccfc33a18f82f8f13bb347a44d3783f0"},
+    {"path": "src/body/quat.ts", "status": "tracked", "sha256": "6b6f5cd94e70f733a812fceb3be9e08831c13fd7e2137b8bc8457d2d52cde968"},
+    {"path": "src/body/rig.ts", "status": "untracked", "sha256": "944742763d2e6dce1be766e04be85015a0b583a2b7e7b24609daf14651887060"},
+    {"path": "src/body/wrench.ts", "status": "tracked", "sha256": "0cfe5a4ec87f41e972fe054f0828f3e06ea3ac70ba5b4de116b887da622f1b29"},
+    {"path": "src/body/articulation.ts", "status": "untracked", "sha256": "cb023076f964c3eb449ad0b89b098f1a389f5ae9f7827317b02cdd17eb8b12e9"},
+    {"path": "src/body/noise.ts", "status": "tracked", "sha256": "a0ed3d8fe57c59ab4a0c13facc48586b0f45bbc90488ce8999f383aa44786c0c"},
+    {"path": "src/body/rig.json", "status": "untracked", "sha256": "22380fa62d3503820963f2911e281560580a9251bbbe034a221cb39b24811f91"},
+    {"path": "src/app/config.ts", "status": "modified", "sha256": "daa4edf020e5d85921781608e6fb183eb89d764f3d5f88ca7acd58f8adc2833f"},
+    {"path": "package.json", "status": "modified", "sha256": "4cd5fbe0af6a54d9c949b4a1c49c6ed3d090c2f4ade105a76cbdcb5665ddd21e"},
+    {"path": "tsconfig.json", "status": "tracked", "sha256": "ccf4699d01f2741f833f110dcc03dc8db8f244b7c19c4b4da7eb512aee2a1ec1"},
+    {"path": "yarn.lock", "status": "tracked", "sha256": "24082a2d10b3d9934d29ce27ac3389e7ae6c3cff07716b9df8f058602235d8be"}
+  ]
+}
